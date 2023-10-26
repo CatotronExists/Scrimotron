@@ -8,7 +8,7 @@ class Command_end_Cog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @nextcord.slash_command(guild_ids=[guildID], name="end", description="End United")
+    @nextcord.slash_command(guild_ids=[guildID], name="end", description="End United", default_member_permissions=(nextcord.Permissions(administrator=True)))
     async def end(self, interaction: nextcord.Interaction):
         command = 'end'
         userID = interaction.user.id
