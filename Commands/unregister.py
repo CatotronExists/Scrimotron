@@ -26,8 +26,19 @@ class Command_unregister_Cog(commands.Cog):
                             await msg.delete()
                             break
                 await interaction.edit_original_message(content=f"{team_name} has been unregistered!")
-            else: 
-                await interaction.edit_original_message(content=f"You are not the captain of {team_name}!")
+            else:
+                if interaction.user.guild_permissions.administrator: # not captain, but is admin
+                    db_team_data.delete_one({"team_name": team_name})
+                    messages = await interaction.channel.history(limit=20).flatten() # delete team from channel
+                    for msg in messages:
+                        if msg.author.bot:
+                            embed = msg.embeds[0]
+                            if embed.title == team_name:
+                                await msg.delete()
+                                break
+                    await interaction.edit_original_message(content=f"{team_name} has been unregistered!")
+                else: # not admin
+                    await interaction.edit_original_message(content=f"You are not the captain of {team_name}!")
         else:
             await interaction.edit_original_message(content=f"Team {team_name} not found!")
 

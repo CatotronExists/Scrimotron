@@ -3,12 +3,15 @@ from nextcord import Interaction, SlashOption
 from nextcord.ext import commands
 from Keys import BOT_TOKEN
 import datetime
+from Config import db_team_data
 
 ### Vars
-guildID = 1165569173880049664
-channel_registration = 1165569219694448681
-extension_command_list = ["team_list", "register", "unregister", "start", "end"]
-full_command_list = ["team_list", "register", "unregister", "start", "end"]
+guildID = 1165569173880049664 #test server
+channel_registration = 1165569219694448681 #test server - #team-rego
+casterRoleID = 1104989597613695106 #caster role
+channel_checkin = 1166937482009530468 #test server #check-ins
+extension_command_list = ["team_list", "register", "unregister", "start", "end", "check_in"]
+full_command_list = ["team_list", "register", "unregister", "start", "end", "check_in"]
 # Colors
 import os
 os.system("")
@@ -49,5 +52,6 @@ formatOutput("Connecting to Discord...", status="Normal")
 @bot.event
 async def on_ready():
     formatOutput(bot.user.name + " has connected to Discord & Ready!", status="Good")
+    await bot.change_presence(activity=nextcord.Activity(type=nextcord.ActivityType.watching, name="UnitedOCE"))
     
 bot.run(BOT_TOKEN)

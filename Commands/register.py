@@ -32,6 +32,7 @@ class Command_register_Cog(commands.Cog):
 
             db_team_data.insert_one({
                 "team_name": team_name,
+                "team_number" : db_team_data.count_documents({}) + 1,
                 "captain": captain.id,
                 "player2": player2.id,
                 "player3": player3.id,

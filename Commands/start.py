@@ -1,7 +1,7 @@
 import nextcord
 import datetime
 from nextcord.ext import commands
-from Main import formatOutput, guildID
+from Main import formatOutput, guildID, casterRoleID
 from Config import db_team_data, db_bot_data
 
 class Command_start_Cog(commands.Cog):
@@ -171,10 +171,16 @@ class Command_start_Cog(commands.Cog):
                     vc = interaction.guild.get_channel(vc_id)
                     # get role and give to team members
                     role = interaction.guild.get_role(i["setup"]["roleID"])
+                    casterRole = interaction.guild.get_role(casterRoleID)
                     overwrite = nextcord.PermissionOverwrite()
                     overwrite.connect = True
                     overwrite.view_channel = True
                     await vc.set_permissions(role, overwrite=overwrite) # allow team to join
+
+                    overwrite = nextcord.PermissionOverwrite()
+                    overwrite.connect = True
+                    overwrite.view_channel = True
+                    await vc.set_permissions(casterRole, overwrite=overwrite) # allow casters to join
 
                     overwrite = nextcord.PermissionOverwrite()
                     overwrite.connect = False

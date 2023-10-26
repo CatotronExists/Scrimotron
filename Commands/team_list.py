@@ -30,8 +30,7 @@ class Command_team_list_Cog(commands.Cog):
             players += 3
             teams += 1
 
-        message.reverse()
-        embed = nextcord.Embed(title="Registered Teams", description='\n'.join(message), color=0x00ff00)
+        embed = nextcord.Embed(title="Registered Teams", description='\n'.join(message), color=0x000)
         embed.set_footer(text=f"Total Teams: {teams} | Total Players: {players} | Total Subs: {subs}")
         await interaction.edit_original_message(embed=embed)
 

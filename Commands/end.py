@@ -28,6 +28,8 @@ class Command_end_Cog(commands.Cog):
             await interaction.edit_original_message(content=f"UnitedOCE has ended!")
 
             db_bot_data.delete_one({"vc_catergory": catergory_vc})
+            db_bot_data.delete_one({"participant_role": {"$exists": True}})
+
         except Exception as e:
             await interaction.edit_original_message(content=f"Something went wrong while ending UnitedOCE. Error: {e}")
 
