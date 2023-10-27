@@ -10,8 +10,8 @@ guildID = 1165569173880049664 #test server
 channel_registration = 1165569219694448681 #test server - #team-rego
 casterRoleID = 1104989597613695106 #caster role
 channel_checkin = 1166937482009530468 #test server #check-ins
-extension_command_list = ["team_list", "register", "unregister", "start", "end", "check_in"]
-full_command_list = ["team_list", "register", "unregister", "start", "end", "check_in"]
+extension_command_list = ["team_list", "register", "unregister", "start", "end", "check_in", "schedule"]
+full_command_list = ["team_list", "register", "unregister", "start", "end", "check_in", "schedule"]
 # Colors
 import os
 os.system("")

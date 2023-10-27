@@ -10,3 +10,8 @@ UnitedOCE is an Apex Legends tournament that runs every Sunday at 7pm Sydney tim
 - `/start`: Starts the tournament. **Staff Only**
 - `/end`: Ends the tournament. **Staff Only**
 - `/check_in`: Opens check ins to players **Staff Only**
+- `/schedule`: Schedule a week for the tournament. **Staff Only**
+
+# STAY UNITED
+[Get in on the action](https://discord.gg/6r2snr9Yub)
+Created by @catotron

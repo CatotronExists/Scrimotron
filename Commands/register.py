@@ -47,6 +47,7 @@ class Command_register_Cog(commands.Cog):
 
             if logo != "None": embed.set_thumbnail(url=logo)
             await interaction.edit_original_message(content=f"{team_name} has been registered!")
+            embed.set_footer(text=f"Team {db_team_data.count_documents({})} | Registered at {datetime.datetime.utcnow().strftime('%d/%m/%Y %H:%M:%S')} UTC")
             await self.bot.get_channel(channel_registration).send(embed=embed)
             formatOutput(output=f"   {team_name} was registered!", status="Good")
         except Exception as e: await interaction.edit_original_message(content=f"Something went wrong while creating team.\nError: {e}")
