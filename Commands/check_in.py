@@ -1,7 +1,7 @@
 import nextcord
 import datetime
 from nextcord.ext import commands
-from Main import formatOutput, guildID, channel_checkin
+from Main import formatOutput, guildID, channel_checkin, errorResponse
 from Config import db_team_data
 
 class Command_check_in_Cog(commands.Cog):
@@ -23,8 +23,7 @@ class Command_check_in_Cog(commands.Cog):
             await interaction.edit_original_message(content="Check ins have opened!")
 
         except Exception as e:
-            await interaction.edit_original_message(content=f"Something went wrong while opening check ins. Error: {e}")
-            formatOutput(output=f"   Something went wrong while opening check ins. Error: {e}", status="Error")
+            errorResponse(error=e, command=command, interaction=interaction)
 
 def setup(bot):
     bot.add_cog(Command_check_in_Cog(bot))

@@ -1,7 +1,7 @@
 import nextcord
 import datetime
 from nextcord.ext import commands
-from Main import formatOutput, guildID, channel_registration
+from Main import formatOutput, guildID, channel_registration, errorResponse
 from Config import db_team_data
 
 class Command_register_Cog(commands.Cog):
@@ -50,7 +50,11 @@ class Command_register_Cog(commands.Cog):
             embed.set_footer(text=f"Team {db_team_data.count_documents({})} | Registered at {datetime.datetime.utcnow().strftime('%d/%m/%Y %H:%M:%S')} UTC")
             await self.bot.get_channel(channel_registration).send(embed=embed)
             formatOutput(output=f"   {team_name} was registered!", status="Good")
-        except Exception as e: await interaction.edit_original_message(content=f"Something went wrong while creating team.\nError: {e}")
+
+        except Exception as e:
+            try: db_team_data.find_one_and_delete({"team_name": team_name}) # delete team if it was created but an error occured
+            except: pass # if team wasnt created yet, ignore
+            await errorResponse(error=e, command=command, interaction=interaction)
 
 def setup(bot):
     bot.add_cog(Command_register_Cog(bot))

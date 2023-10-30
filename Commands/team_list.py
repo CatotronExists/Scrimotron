@@ -1,7 +1,7 @@
 import nextcord
 import datetime
 from nextcord.ext import commands
-from Main import formatOutput, guildID
+from Main import formatOutput, guildID, errorResponse
 from Config import db_team_data
 
 class Command_team_list_Cog(commands.Cog):
@@ -16,23 +16,27 @@ class Command_team_list_Cog(commands.Cog):
         await interaction.response.defer()
 
         message = []
-        data = list(db_team_data.find())
-        teams = players = subs = 0
-        for i in data:
-            if i["sub1"] == "N/A" and i["sub2"] == "N/A":
-                message.append(f"**{i['team_name']}** - **C:** {self.bot.get_user(int(i['captain'])).mention} - **P:** {self.bot.get_user(int(i['player2'])).mention} & {self.bot.get_user(int(i['player3'])).mention}")
-            elif i["sub2"] == "N/A":
-                subs += 1
-                message.append(f"**{i['team_name']}** - **C:** {self.bot.get_user(int(i['captain'])).mention} - **P:** {self.bot.get_user(int(i['player2'])).mention} & {self.bot.get_user(int(i['player3'])).mention} - **S:** {self.bot.get_user(int(i['sub1'])).mention}")
-            else:
-                subs += 2
-                message.append(f"**{i['team_name']}** - **C:** {self.bot.get_user(int(i['captain'])).mention} - **P:** {self.bot.get_user(int(i['player2'])).mention} & {self.bot.get_user(int(i['player3'])).mention} - **S:** {self.bot.get_user(int(i['sub1'])).mention} & {self.bot.get_user(int(i['sub2'])).mention}")
-            players += 3
-            teams += 1
+        try:
+            data = list(db_team_data.find())
+            teams = players = subs = 0
+            for i in data:
+                if i["sub1"] == "N/A" and i["sub2"] == "N/A":
+                    message.append(f"**{i['team_name']}** - **C:** {self.bot.get_user(int(i['captain'])).mention} - **P:** {self.bot.get_user(int(i['player2'])).mention} & {self.bot.get_user(int(i['player3'])).mention}")
+                elif i["sub2"] == "N/A":
+                    subs += 1
+                    message.append(f"**{i['team_name']}** - **C:** {self.bot.get_user(int(i['captain'])).mention} - **P:** {self.bot.get_user(int(i['player2'])).mention} & {self.bot.get_user(int(i['player3'])).mention} - **S:** {self.bot.get_user(int(i['sub1'])).mention}")
+                else:
+                    subs += 2
+                    message.append(f"**{i['team_name']}** - **C:** {self.bot.get_user(int(i['captain'])).mention} - **P:** {self.bot.get_user(int(i['player2'])).mention} & {self.bot.get_user(int(i['player3'])).mention} - **S:** {self.bot.get_user(int(i['sub1'])).mention} & {self.bot.get_user(int(i['sub2'])).mention}")
+                players += 3
+                teams += 1
 
-        embed = nextcord.Embed(title="Registered Teams", description='\n'.join(message), color=0x000)
-        embed.set_footer(text=f"Total Teams: {teams} | Total Players: {players} | Total Subs: {subs}")
-        await interaction.edit_original_message(embed=embed)
+            embed = nextcord.Embed(title="Registered Teams", description='\n'.join(message), color=0x000)
+            embed.set_footer(text=f"Total Teams: {teams} | Total Players: {players} | Total Subs: {subs}")
+            await interaction.edit_original_message(embed=embed)
+            
+        except Exception as e:
+            await errorResponse(error=e, command=command, interaction=interaction)
 
 def setup(bot):
     bot.add_cog(Command_team_list_Cog(bot))

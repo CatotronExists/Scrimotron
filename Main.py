@@ -8,7 +8,7 @@ from Config import db_team_data
 ### Vars
 guildID = 1165569173880049664 #test server
 channel_registration = 1165569219694448681 #test server - #team-rego
-casterRoleID = 1104989597613695106 #caster role
+casterRoleID = 1166928063708282881 #caster role
 channel_checkin = 1166937482009530468 #test server #check-ins
 extension_command_list = ["team_list", "register", "unregister", "start", "end", "check_in", "schedule"]
 full_command_list = ["team_list", "register", "unregister", "start", "end", "check_in", "schedule"]
@@ -30,6 +30,29 @@ def formatOutput(output, status):
     elif status == "Good": print(CGREEN +"| "+str(current_time)+" || "+output+ CLEAR)
     elif status == "Error": print(CRED +"| "+str(current_time)+" || "+output+ CLEAR)
     elif status == "Warning": print(CYELLOW +"| "+str(current_time)+" || "+output+ CLEAR)
+
+### Error Handler
+class error_view(nextcord.ui.View):
+    def __init__(self, error, command, interaction: Interaction):
+        super().__init__(timeout=None)
+        self.error = error
+        self.command = command
+
+    @nextcord.ui.button(label="Alert Catotron!", style=nextcord.ButtonStyle.blurple, custom_id="report_error", emoji="🚨")
+    async def alert_catotron(self, button: nextcord.ui.Button, interaction: Interaction):
+        user = interaction.user.name
+        await interaction.response.send_message(content="Alerting Catotron...", ephemeral=True)
+        try: await interaction.guild.get_member(515470819804184577).send(f"📢 Error Report from: {user}\nError: {self.error}\nError occured when running **/{self.command}**")
+        except Exception as e: await interaction.edit_original_message(content=f"Something went wrong while alerting Catotron. Please contact him directly, Error: {e}.", view=None)
+        await interaction.followup.send(content="Error has been sent to Catotron!", ephemeral=True)
+
+    @nextcord.ui.button(label="Close", style=nextcord.ButtonStyle.red, custom_id="close_error", emoji="🗑")
+    async def close(self, button: nextcord.ui.Button, interaction: Interaction):
+        await interaction.response.edit_message(view=None)
+
+async def errorResponse(error, command, interaction: Interaction):
+    await interaction.edit_original_message(content=f"Something went wrong while running /{command}. Did you mistype an entry or not follow the format?\nError: {error}", view=error_view(error, command, interaction=interaction))
+    formatOutput(output=f"   Something went wrong while running {command}. Error: {error}", status="Error")
 
 ### Discord Setup
 intents = nextcord.Intents.all()

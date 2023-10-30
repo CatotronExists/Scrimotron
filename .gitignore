@@ -12,3 +12,6 @@ Maker.py
 
 # Cache
 **/__pycache__
+
+# Unfinished
+**/Commands/admin_menu.py
