@@ -49,6 +49,7 @@ class Command_schedule_Cog(commands.Cog):
                     )
                 await interaction.edit_original_message(content=f"United has been scheduled for {day}/{month}/{year} @ {hour}:{minute} {am_pm} {timezone}")
                 formatOutput(output=f"   United has been scheduled for {day}/{month}/{year} @ {hour}:{minute} {am_pm} {timezone}", status="Good")
+                formatOutput(output=f"   /{command} was successful!", status="Good")
                 
         except Exception as e: 
             await errorResponse(error=e, command=command, interaction=interaction)

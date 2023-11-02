@@ -21,6 +21,7 @@ class Command_check_in_Cog(commands.Cog):
             for i in data:
                 await interaction.guild.get_channel(channel_checkin).send(content=f"**Team {i['team_number']}**\n{i['team_name']}\n*Captain:* <@{i['captain']}>")
             await interaction.edit_original_message(content="Check ins have opened!")
+            formatOutput(output=f"   /{command} was successful!", status="Good")
 
         except Exception as e:
             errorResponse(error=e, command=command, interaction=interaction)

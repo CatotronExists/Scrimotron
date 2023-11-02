@@ -34,6 +34,7 @@ class Command_team_list_Cog(commands.Cog):
             embed = nextcord.Embed(title="Registered Teams", description='\n'.join(message), color=0x000)
             embed.set_footer(text=f"Total Teams: {teams} | Total Players: {players} | Total Subs: {subs}")
             await interaction.edit_original_message(embed=embed)
+            formatOutput(output=f"   /{command} was successful!", status="Good")
             
         except Exception as e:
             await errorResponse(error=e, command=command, interaction=interaction)

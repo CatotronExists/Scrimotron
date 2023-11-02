@@ -9,9 +9,11 @@ from Config import db_team_data
 guildID = 1165569173880049664 #test server
 channel_registration = 1165569219694448681 #test server - #team-rego
 casterRoleID = 1166928063708282881 #caster role
-channel_checkin = 1166937482009530468 #test server #check-ins
-extension_command_list = ["team_list", "register", "unregister", "start", "end", "check_in", "schedule"]
-full_command_list = ["team_list", "register", "unregister", "start", "end", "check_in", "schedule"]
+channel_checkin = 1166937482009530468 #test server - #check-ins
+channel_poi = 1168355452707422289 #test server #poi
+partipantRoleID = 1168356974988111964 #participant role
+extension_command_list = ["team_list", "register", "unregister", "start", "end", "check_in", "schedule", "open_poi", "select_poi"]
+full_command_list = ["team_list", "register", "unregister", "start", "end", "check_in", "schedule", "open_poi", "select_poi"]
 # Colors
 import os
 os.system("")
@@ -52,7 +54,7 @@ class error_view(nextcord.ui.View):
 
 async def errorResponse(error, command, interaction: Interaction):
     await interaction.edit_original_message(content=f"Something went wrong while running /{command}. Did you mistype an entry or not follow the format?\nError: {error}", view=error_view(error, command, interaction=interaction))
-    formatOutput(output=f"   Something went wrong while running {command}. Error: {error}", status="Error")
+    formatOutput(output=f"   Something went wrong while running /{command}. Error: {error}", status="Error")
 
 ### Discord Setup
 intents = nextcord.Intents.all()

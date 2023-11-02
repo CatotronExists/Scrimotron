@@ -32,18 +32,15 @@ class Command_start_Cog(commands.Cog):
             await errorResponse(error=e, command=command, interaction=interaction)
             error = True
 
-        try: # Make Catergory & participant role
+        try: # Make Catergory
             catergory = await interaction.guild.create_category_channel(name="Team VCs", overwrites={interaction.guild.default_role: nextcord.PermissionOverwrite(view_channel=False), interaction.guild.me: nextcord.PermissionOverwrite(view_channel=True)})
             db_bot_data.insert_one({"vc_catergory": catergory.id})
-
-            role = await interaction.guild.create_role(name="UnitedOCE Participant", mentionable=True)
-            db_bot_data.insert_one({"participant_role": role.id})
 
             embed.set_field_at(0, name="Prepairing", value=f"**DONE**", inline=True)
             await interaction.edit_original_message(embed=embed)
         except Exception as e:
             embed.set_field_at(0, name="Prepairing", value=f"**FAILED**", inline=True)
-            errorResponse(error=e, command=command, interaction=interaction)
+            await errorResponse(error=e, command=command, interaction=interaction)
             error = True
 
         try: # Get teams
@@ -52,7 +49,7 @@ class Command_start_Cog(commands.Cog):
             await interaction.edit_original_message(embed=embed)
         except Exception as e:
             embed.set_field_at(1, name="Fetching Teams", value=f"**FAILED**", inline=True)
-            errorResponse(error=e, command=command, interaction=interaction)
+            await errorResponse(error=e, command=command, interaction=interaction)
             error = True
 
         try: # Make Roles
@@ -72,7 +69,7 @@ class Command_start_Cog(commands.Cog):
             await interaction.edit_original_message(embed=embed)
         except Exception as e:
             embed.set_field_at(2, name="Building Roles", value=f"**FAILED**", inline=True)
-            errorResponse(error=e, command=command, interaction=interaction)
+            await errorResponse(error=e, command=command, interaction=interaction)
             error = True
 
         try: # Assign Roles
@@ -85,12 +82,11 @@ class Command_start_Cog(commands.Cog):
                 sub1 = i["sub1"]
                 sub2 = i["sub2"] 
                 role1 = interaction.guild.get_role(db_team_data.find_one({"team_name": team_name})["setup"]["roleID"])
-                role2 = interaction.guild.get_role(db_bot_data.find_one({"participant_role": {"$exists": True}})["participant_role"])
-                await interaction.guild.get_member(captain).add_roles(role1, role2)
-                await interaction.guild.get_member(player2).add_roles(role1, role2)
-                await interaction.guild.get_member(player3).add_roles(role1, role2)
-                if sub1 != "N/A": await interaction.guild.get_member(sub1).add_roles(role1, role2)
-                if sub2 != "N/A": await interaction.guild.get_member(sub2).add_roles(role1, role2)
+                await interaction.guild.get_member(captain).add_roles(role1)
+                await interaction.guild.get_member(player2).add_roles(role1)
+                await interaction.guild.get_member(player3).add_roles(role1)
+                if sub1 != "N/A": await interaction.guild.get_member(sub1).add_roles(role1)
+                if sub2 != "N/A": await interaction.guild.get_member(sub2).add_roles(role1)
 
                 embed.set_field_at(3, name="Giving Roles", value=f"{teams_processed}/{len(data)}", inline=True)
                 await interaction.edit_original_message(embed=embed)
@@ -100,7 +96,7 @@ class Command_start_Cog(commands.Cog):
             await interaction.edit_original_message(embed=embed)
         except Exception as e: 
             embed.set_field_at(3, name="Giving Roles", value=f"**FAILED**", inline=True)
-            errorResponse(error=e, command=command, interaction=interaction)
+            await errorResponse(error=e, command=command, interaction=interaction)
             error = True
 
         try: # Make Voice Channels
@@ -121,7 +117,7 @@ class Command_start_Cog(commands.Cog):
             await interaction.edit_original_message(embed=embed)
         except Exception as e: 
             embed.set_field_at(4, name="Creating VCs", value=f"**FAILED**", inline=True)
-            errorResponse(error=e, command=command, interaction=interaction)
+            await errorResponse(error=e, command=command, interaction=interaction)
             error = True
 
         try: # Assign VCs
@@ -155,7 +151,7 @@ class Command_start_Cog(commands.Cog):
             await interaction.edit_original_message(embed=embed)
         except Exception as e:
             embed.set_field_at(5, name="Assigning VCs", value=f"**FAILED**", inline=True)
-            errorResponse(error=e, command=command, interaction=interaction)
+            await errorResponse(error=e, command=command, interaction=interaction)
             error = True
         
         if error == False:
@@ -164,6 +160,7 @@ class Command_start_Cog(commands.Cog):
                 embed.set_footer(text=f"Took {time_taken} to complete")
                 embed.title = "UnitedOCE has ended!"
                 await interaction.edit_original_message(embed=embed)
+                formatOutput(output=f"   /{command} was successful!", status="Good")
             except Exception as e:
                 await errorResponse(error=e, command=command, interaction=interaction)
 

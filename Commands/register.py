@@ -1,7 +1,7 @@
 import nextcord
 import datetime
 from nextcord.ext import commands
-from Main import formatOutput, guildID, channel_registration, errorResponse
+from Main import formatOutput, guildID, channel_registration, errorResponse, partipantRoleID
 from Config import db_team_data
 
 class Command_register_Cog(commands.Cog):
@@ -32,13 +32,16 @@ class Command_register_Cog(commands.Cog):
 
             db_team_data.insert_one({
                 "team_name": team_name,
-                "team_number" : db_team_data.count_documents({}) + 1,
                 "captain": captain.id,
                 "player2": player2.id,
                 "player3": player3.id,
                 "sub1": sub1,
                 "sub2": sub2,
                 "logo": logo,
+                "pois": {
+                    "map1": "None",
+                    "map2": "None"
+                },
                 "setup": {
                     "roleID": "None",
                     "channelID": "None"
@@ -46,15 +49,26 @@ class Command_register_Cog(commands.Cog):
             })
 
             if logo != "None": embed.set_thumbnail(url=logo)
+
+            role = interaction.guild.get_role(partipantRoleID)
+            await interaction.guild.get_member(captain.id).add_roles(role)
+            await interaction.guild.get_member(player2.id).add_roles(role)
+            await interaction.guild.get_member(player3.id).add_roles(role)
+            if sub1 != "N/A": await interaction.guild.get_member(sub1).add_roles(role)
+            if sub2 != "N/A": await interaction.guild.get_member(sub2).add_roles(role)
+
             await interaction.edit_original_message(content=f"{team_name} has been registered!")
-            embed.set_footer(text=f"Team {db_team_data.count_documents({})} | Registered at {datetime.datetime.utcnow().strftime('%d/%m/%Y %H:%M:%S')} UTC")
+            embed.set_footer(text=f"Registered at {datetime.datetime.utcnow().strftime('%d/%m/%Y %H:%M:%S')} UTC")
             await self.bot.get_channel(channel_registration).send(embed=embed)
             formatOutput(output=f"   {team_name} was registered!", status="Good")
+            formatOutput(output=f"   /{command} was successful!", status="Good")
 
         except Exception as e:
-            try: db_team_data.find_one_and_delete({"team_name": team_name}) # delete team if it was created but an error occured
-            except: pass # if team wasnt created yet, ignore
             await errorResponse(error=e, command=command, interaction=interaction)
+            try: 
+                db_team_data.find_one_and_delete({"team_name": team_name}) # delete team if it was created but an error occured
+                formatOutput(output=f"   /{command} | saved team was deleted, due to error", status="Error")
+            except: pass # if team wasnt created yet, ignore
 
 def setup(bot):
     bot.add_cog(Command_register_Cog(bot))

@@ -1,7 +1,7 @@
 import nextcord
 import datetime
 from nextcord.ext import commands
-from Main import formatOutput, guildID, errorResponse, channel_registration
+from Main import formatOutput, guildID, errorResponse, channel_registration, partipantRoleID, channel_poi, channel_checkin
 from Config import db_team_data, db_bot_data
 
 class Command_end_Cog(commands.Cog):
@@ -21,8 +21,8 @@ class Command_end_Cog(commands.Cog):
             embed.add_field(name="Deleting Roles", value=f"0/{len(data)}", inline=True)
             embed.add_field(name="Deleting VCs", value=f"0/{len(data)}", inline=True)
             embed.add_field(name="Deleting Team Data", value=f"0/{len(data)}", inline=True)
-            embed.add_field(name="Deleting Registrations", value=f"0/{len(data)}", inline=True)
-            embed.add_field(name="Deleting Participant Role", value=f"0/1", inline=True)
+            embed.add_field(name="Deleting Registrations, POIs & Checkins", value=f"0/{len(data)}", inline=True)
+            embed.add_field(name="Changing Permissions", value=f"0/1", inline=True)
             embed.add_field(name="Deleting VC Catergory", value=f"0/1", inline=True)
             await interaction.edit_original_message(embed=embed)
 
@@ -48,24 +48,43 @@ class Command_end_Cog(commands.Cog):
                 await errorResponse(error=e, command=command, interaction=interaction)
                 error = True
             
-            try: # delete registrations
-                channel = interaction.guild.get_channel(channel_registration)
-                messages = await channel.history(limit=100).flatten()
+            try: # delete registrations, POIs & Checkins
+                channel = interaction.guild.get_channel(channel_registration) # delete registrations
+                messages = await channel.history(limit=20).flatten()
                 for msg in messages:
                     if msg.author.bot:
                         await msg.delete()
-                embed.set_field_at(3, name="Deleting Registrations", value=f"**DONE**", inline=True)
+
+                channel = interaction.guild.get_channel(channel_poi) # delete POIs
+                messages = await channel.history(limit=20).flatten()
+                for msg in messages:
+                    if msg.author.bot:
+                        await msg.delete()
+                db_bot_data.delete_one({"maps": {"$exists": True}}) # remove from db
+                
+                channel = interaction.guild.get_channel(channel_checkin) # delete checkins
+                messages = await channel.history(limit=20).flatten()
+                for msg in messages:
+                    if msg.author.bot:
+                        await msg.delete()
+
+                embed.set_field_at(3, name="Deleting Registrations, POIs & Checkins", value=f"**DONE**", inline=True)
             except Exception as e:
-                embed.set_field_at(3, name="Deleting Registrations", value=f"**FAILED**", inline=True)
+                embed.set_field_at(3, name="Deleting Registrations, POIs & Checkins", value=f"**FAILED**", inline=True)
                 await errorResponse(error=e, command=command, interaction=interaction)
                 error = True
 
-            try: # delete participant role
-                await interaction.guild.get_role(db_bot_data.find_one({"participant_role": {"$exists": True}})["participant_role"]).delete()
-                db_bot_data.delete_one({"participant_role": {"$exists": True}})
-                embed.set_field_at(4, name="Deleting Participant Role", value=f"**DONE**", inline=True)
+            try: # Changing Permissions
+                role = interaction.guild.get_role(partipantRoleID)
+                members = interaction.guild.members
+                players_processed = 0
+                for member in members:
+                    await member.remove_roles(role)
+                    players_processed += 1
+                    embed.set_field_at(4, name="Changing Permissions", value=f"{players_processed}/{len(members)}", inline=True)
+                embed.set_field_at(4, name="Changing Permissions", value=f"**DONE**", inline=True)
             except Exception as e:
-                embed.set_field_at(4, name="Deleting Participant Role", value=f"**FAILED**", inline=True)
+                embed.set_field_at(4, name="Changing Permissions", value=f"**FAILED**", inline=True)
                 await errorResponse(error=e, command=command, interaction=interaction)
                 error = True
 
@@ -84,6 +103,7 @@ class Command_end_Cog(commands.Cog):
                 embed.set_footer(text=f"Took {time_taken} to complete")
                 embed.title = "UnitedOCE has ended!"
                 await interaction.edit_original_message(embed=embed)
+                formatOutput(output=f"   /{command} was successful!", status="Good")
 
         except Exception as e:
             await errorResponse(error=e, command=command, interaction=interaction)
