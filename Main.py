@@ -12,8 +12,10 @@ casterRoleID = 1166928063708282881 #caster role
 channel_checkin = 1166937482009530468 #test server - #check-ins
 channel_poi = 1168355452707422289 #test server #poi
 partipantRoleID = 1168356974988111964 #participant role
-extension_command_list = ["team_list", "register", "unregister", "start", "end", "check_in", "schedule", "open_poi", "select_poi"]
-full_command_list = ["team_list", "register", "unregister", "start", "end", "check_in", "schedule", "open_poi", "select_poi"]
+extension_command_list = ["team_list", "register", "unregister", "start", "end", "check_in", "schedule", "open_poi", "select_poi", "help", "unregister_all"]
+full_command_list = ["team_list", "register", "unregister", "start", "end", "check_in", "schedule", "open_poi", "select_poi", "help", "unregister_all"]
+public_command_list = ["team_list", "register", "unregister", "check_in", "select_poi", "help"]
+admin_command_list = ["team_list", "register", "unregister", "start", "end", "check_in", "schedule", "open_poi", "select_poi", "help", "unregister_all"]
 # Colors
 import os
 os.system("")
@@ -53,7 +55,8 @@ class error_view(nextcord.ui.View):
         await interaction.response.edit_message(view=None)
 
 async def errorResponse(error, command, interaction: Interaction):
-    await interaction.edit_original_message(content=f"Something went wrong while running /{command}. Did you mistype an entry or not follow the format?\nError: {error}", view=error_view(error, command, interaction=interaction))
+    try: await interaction.edit_original_message(content=f"Something went wrong while running /{command}. Did you mistype an entry or not follow the format?\nError: {error}", view=error_view(error, command, interaction=interaction))
+    except: await interaction.response.send_message(content=f"Something went wrong while running /{command}. Did you mistype an entry or not follow the format?\nError: {error}", ephemeral=True)
     formatOutput(output=f"   Something went wrong while running /{command}. Error: {error}", status="Error")
 
 ### Discord Setup

@@ -21,7 +21,7 @@ class Command_end_Cog(commands.Cog):
             embed.add_field(name="Deleting Roles", value=f"0/{len(data)}", inline=True)
             embed.add_field(name="Deleting VCs", value=f"0/{len(data)}", inline=True)
             embed.add_field(name="Deleting Team Data", value=f"0/{len(data)}", inline=True)
-            embed.add_field(name="Deleting Registrations, POIs & Checkins", value=f"0/{len(data)}", inline=True)
+            embed.add_field(name="Deleting POIs & Checkins", value=f"0/{len(data)}", inline=True)
             embed.add_field(name="Changing Permissions", value=f"0/1", inline=True)
             embed.add_field(name="Deleting VC Catergory", value=f"0/1", inline=True)
             await interaction.edit_original_message(embed=embed)
@@ -32,7 +32,12 @@ class Command_end_Cog(commands.Cog):
                 for i in data:
                     await interaction.guild.get_role(i["setup"]["roleID"]).delete()
                     await interaction.guild.get_channel(i["setup"]["channelID"]).delete()
-                    db_team_data.delete_one({"team_name": i["team_name"]})
+                    db_team_data.update_one({
+                        "pois.map1": "None",
+                        "pois.map2": "None",
+                        "setup.roleID": "None",
+                        "setup.channelID": "None"
+                    })
                     teams_processed += 1
                     embed.set_field_at(0, name="Deleting Roles", value=f"{teams_processed}/{len(data)}", inline=True)
                     embed.set_field_at(1, name="Deleting VCs", value=f"{teams_processed}/{len(data)}", inline=True)
@@ -48,13 +53,7 @@ class Command_end_Cog(commands.Cog):
                 await errorResponse(error=e, command=command, interaction=interaction)
                 error = True
             
-            try: # delete registrations, POIs & Checkins
-                channel = interaction.guild.get_channel(channel_registration) # delete registrations
-                messages = await channel.history(limit=20).flatten()
-                for msg in messages:
-                    if msg.author.bot:
-                        await msg.delete()
-
+            try: # delete POIs & Checkins
                 channel = interaction.guild.get_channel(channel_poi) # delete POIs
                 messages = await channel.history(limit=20).flatten()
                 for msg in messages:
@@ -68,9 +67,9 @@ class Command_end_Cog(commands.Cog):
                     if msg.author.bot:
                         await msg.delete()
 
-                embed.set_field_at(3, name="Deleting Registrations, POIs & Checkins", value=f"**DONE**", inline=True)
+                embed.set_field_at(3, name="Deleting POIs & Checkins", value=f"**DONE**", inline=True)
             except Exception as e:
-                embed.set_field_at(3, name="Deleting Registrations, POIs & Checkins", value=f"**FAILED**", inline=True)
+                embed.set_field_at(3, name="Deleting POIs & Checkins", value=f"**FAILED**", inline=True)
                 await errorResponse(error=e, command=command, interaction=interaction)
                 error = True
 

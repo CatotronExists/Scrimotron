@@ -19,9 +19,10 @@ class Command_open_poi_Cog(commands.Cog):
         await interaction.send("Opening POI selections", ephemeral=True)
 
         try:
-            try: db_bot_data.delete_one({"maps": {"map1": map1, "map2": map2}}) # remove old maps
+            try: db_bot_data.delete_one({"maps": {"$exists": True}}) # remove old maps
             except: pass
             embed = nextcord.Embed(title="POI Selections are Open!", description=f"Select a POI for {map1} & {map2} using /select_poi", color=0x000)
+            embed.set_thumbnail(url="https://cdn.discordapp.com/icons/988302458533085234/6e2c8b045e0150185d14ffcd8cf6a2e3.png")
             await self.bot.get_channel(channel_poi).send(embed=embed)
             try: db_bot_data.update_one({"maps": {"map1": map1, "map2": map2}})
             except: 
