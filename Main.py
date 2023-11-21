@@ -303,7 +303,7 @@ async def event_finder():
 
 async def startScheduler():
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(event_finder, 'cron', minute=53)
+    scheduler.add_job(event_finder, 'cron', minute=0)
     scheduler.start()
 
 @bot.event
