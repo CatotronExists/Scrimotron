@@ -367,7 +367,7 @@ class Command_select_poi_Cog(commands.Cog):
         except: pass
 
         try:             
-            if db_bot_data.find_one({"maps": {"$exists": True}}) == None: # checking if maps picked -> no
+            if db_bot_data.find_one({"poi": {"$exists": True}}) == None: # checking if poi selection is open
                 await interaction.edit_original_message(content="POI Selections are not open yet!")
                 formatOutput(output=f"   /{command} | POI Selections are not open yet!", status="Warning") 
             else: # -> yes          
