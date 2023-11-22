@@ -1,5 +1,5 @@
 import nextcord
-import datetime
+import traceback
 from nextcord.ext import commands
 from Main import formatOutput, guildID, errorResponse, channel_poi
 from Config import db_team_data, db_bot_data
@@ -174,7 +174,8 @@ class Command_select_poi_Cog(commands.Cog):
                         formatOutput(output=f"   /select_poi | {self.team_name} has selected {map1} - {data['pois']['map1']} & {map2} - {data['pois']['map2']}", status="Good")
                         formatOutput(output=f"   /select_poi was successful!", status="Good")
                 except Exception as e:
-                    await errorResponse(error=e, command="select_poi", interaction=interaction)
+                    error_traceback = traceback.format_exc()
+                    await errorResponse(error=f"{e}\n{error_traceback}", command="select_poi", interaction=interaction)
             return callback
 
     class select_poi_map2_view(nextcord.ui.View):
@@ -272,7 +273,8 @@ class Command_select_poi_Cog(commands.Cog):
                         formatOutput(output=f"   /select_poi | {self.team_name} has selected {map1} - {data['pois']['map1']} & {map2} - {data['pois']['map2']}", status="Good")
                         formatOutput(output=f"   /select_poi was successful!", status="Good")
                 except Exception as e:
-                    await errorResponse(error=e, command="select_poi", interaction=interaction)
+                    error_traceback = traceback.format_exc()
+                    await errorResponse(error=f"{e}\n{error_traceback}", command="select_poi", interaction=interaction)
             return callback
 
     class select_poi_map1_view(nextcord.ui.View):
@@ -355,14 +357,15 @@ class Command_select_poi_Cog(commands.Cog):
                         embed = nextcord.Embed(title="Select POI", description=f"Select a POI for {map2}\nGray Buttons indicate no team has chosen that POI yet,\nBlue Buttons indicate that a team has picked that POI", color=0x000)
                         await interaction.send(embed=embed, view=Command_select_poi_Cog.select_poi_map2_view(interaction, self.team_name), ephemeral=True)
                 except Exception as e:
-                    await errorResponse(error=e, command="select_poi", interaction=interaction)
+                    error_traceback = traceback.format_exc()
+                    await errorResponse(error=f"{e}\n{error_traceback}", command="select_poi", interaction=interaction)
             return callback
 
     @nextcord.slash_command(guild_ids=[guildID], name="select_poi", description="Select POIs")
     async def select_poi(self, interaction: nextcord.Interaction, team_name: str):
         command = 'select_poi'
         userID = interaction.user.id
-        formatOutput(output="/"+command+" Used by ("+str(userID)+")", status="Normal")
+        formatOutput(output=f"/{command} Used by {userID} | @{interaction.user.name}", status="Normal")
         try: await interaction.response.defer(ephemeral=True)
         except: pass
 
@@ -387,7 +390,8 @@ class Command_select_poi_Cog(commands.Cog):
                     await interaction.edit_original_message(content=f"Team {team_name} not found!")
                     formatOutput(output=f"   /{command} | {team_name} not found!", status="Warning")
         except Exception as e:
-            await errorResponse(error=e, command=command, interaction=interaction)
+            error_traceback = traceback.format_exc()
+            await errorResponse(error=f"{e}\n{error_traceback}", command=command, interaction=interaction)
 
 def setup(bot):
     bot.add_cog(Command_select_poi_Cog(bot))

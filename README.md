@@ -1,7 +1,9 @@
 # UnitedOCE Bot
 A discord bot designed to help run UnitedOCE smoothly.
 
-UnitedOCE is an Apex Legends tournament that runs every Sunday at 7pm Sydney time. Season 9 is expected to start in early 2024.
+Automating the process of check-ins, POI selections and creating team VCs for listen ins. Plus seasonal scoring and leaderboards.
+
+UnitedOCE is an Apex Legends tournament based in OCE/APAC-South, that runs every Sunday at 7pm Sydney time. Currently on a break until PLQ are done, Season 9 is expected to start in early 2024.
 
 ## Commands
 - `/register`: Allows players to register for the tournament.

@@ -15,6 +15,7 @@ Maker.py
 
 # Unfinished
 **/Commands/admin_menu.py
+**/Commands/status.py
 test_data.json
 test_json.py
 output.txt

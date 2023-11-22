@@ -2,8 +2,9 @@ import nextcord
 from nextcord import Interaction, SlashOption
 from nextcord.ext import commands
 from Keys import BOT_TOKEN
+import traceback
 import datetime
-from Config import db_team_data, checkin, poi_selection, setup, db_bot_data
+from Config import db_team_data, checkin, poi_selection, setup, db_bot_data, delay
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 ### Vars
@@ -14,10 +15,10 @@ channel_checkin = 1166937482009530468 #test server - #check-ins
 channel_poi = 1168355452707422289 #test server #poi
 channel_bot_event = 1175985885959962664 #test server #bot-event
 partipantRoleID = 1168356974988111964 #participant role
-extension_command_list = ["team_list", "register", "unregister", "end", "schedule", "select_poi", "help", "unregister_all"]
-full_command_list = ["team_list", "register", "unregister", "end", "schedule", "select_poi", "help", "unregister_all"]
+extension_command_list = ["team_list", "register", "unregister", "end", "schedule", "select_poi", "help", "unregister_all"]#, "status"]
+full_command_list = ["team_list", "register", "unregister", "end", "schedule", "select_poi", "help", "unregister_all"]#, "status"]
 public_command_list = ["team_list", "register", "unregister", "select_poi", "help"]
-admin_command_list = ["team_list", "register", "unregister", "end", "schedule", "select_poi", "help", "unregister_all"]
+admin_command_list = ["team_list", "register", "unregister", "end", "schedule", "select_poi", "help", "unregister_all"]#, "status"]
 # Colors
 import os
 os.system("")
@@ -32,10 +33,10 @@ CBOLD = '\033[1m'
 ### Format Terminal
 def formatOutput(output, status):
     current_time = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S.%f')[:-3]
-    if status == "Normal": print("| "+str(current_time)+" || "+output)
-    elif status == "Good": print(CGREEN +"| "+str(current_time)+" || "+output+ CLEAR)
-    elif status == "Error": print(CRED +"| "+str(current_time)+" || "+output+ CLEAR)
-    elif status == "Warning": print(CYELLOW +"| "+str(current_time)+" || "+output+ CLEAR)
+    if status == "Normal": print(f"| {current_time} || {output}")
+    elif status == "Good": print(f"{CGREEN}| {current_time} || {output} {CLEAR}")
+    elif status == "Error": print(f"{CRED}| {current_time} || {output} {CLEAR}")
+    elif status == "Warning": print(f"{CYELLOW}| {current_time} || {output} {CLEAR}")
 
 ### Error Handler
 class error_view(nextcord.ui.View):
@@ -48,9 +49,12 @@ class error_view(nextcord.ui.View):
     async def alert_catotron(self, button: nextcord.ui.Button, interaction: Interaction):
         user = interaction.user.name
         await interaction.response.send_message(content="Alerting Catotron...", ephemeral=True)
-        try: await interaction.guild.get_member(515470819804184577).send(f"📢 Error Report from: {user}\nError: {self.error}\nError occured when running **/{self.command}**")
-        except Exception as e: await interaction.edit_original_message(content=f"Something went wrong while alerting Catotron. Please contact him directly, Error: {e}.", view=None)
-        await interaction.followup.send(content="Error has been sent to Catotron!", ephemeral=True)
+        try: 
+            await interaction.guild.get_member(515470819804184577).send(f"📢 Error Report from: {user}\nError: {self.error}\nError occured when running **/{self.command}**")
+            await interaction.followup.send(content="Error has been sent to Catotron!", ephemeral=True)
+        except Exception as e: 
+            error_traceback = traceback.format_exc()
+            await interaction.edit_original_message(content=f"Something went wrong while alerting Catotron. Please contact him directly, Error: {e} {error_traceback}.", view=None)
 
     @nextcord.ui.button(label="Close", style=nextcord.ButtonStyle.red, custom_id="close_error", emoji="🗑")
     async def close(self, button: nextcord.ui.Button, interaction: Interaction):
@@ -58,22 +62,23 @@ class error_view(nextcord.ui.View):
 
 async def errorResponse(error, command, interaction: Interaction):
     try: await interaction.edit_original_message(content=f"Something went wrong while running /{command}. Did you mistype an entry or not follow the format?\nError: {error}", view=error_view(error, command, interaction=interaction))
-    except: await interaction.response.send_message(content=f"Something went wrong while running /{command}. Did you mistype an entry or not follow the format?\nError: {error}", ephemeral=True)
+    except: await interaction.response.send_message(content=f"Something went wrong while running /{command}. Did you mistype an entry or not follow the format?\nError: {error}", view=error_view(error, command, interaction=interaction), ephemeral=True)
     formatOutput(output=f"   Something went wrong while running /{command}. Error: {error}", status="Error")
 
 ### Discord Setup
 intents = nextcord.Intents.all()
 bot = commands.Bot(intents=intents)
 
+for i in extension_command_list:
+    try:
+        bot.load_extension("Commands."+i)
+        formatOutput(output="    /"+i+" Successfully Loaded", status="Good")
+    except Exception as e:
+        formatOutput(output="    /"+i+" Failed to Load // Error: "+str(e), status="Warning")
+
 formatOutput("UNITEDOCE BOT TERMINAL", status="Good")
 formatOutput("Starting up Bot", status="Normal")
 formatOutput("Loading Extensions...", status="Normal")
-for i in extension_command_list:
-    try: 
-        bot.load_extension("Commands."+i)
-        formatOutput(output="    /"+i+" Successfully Loaded", status="Good")
-    except Exception as e: 
-        formatOutput(output="    /"+i+" Failed to Load // Error: "+str(e), status="Warning")
 formatOutput("Loading Bot Settings...", status="Normal")
 formatOutput("Loading Database...", status="Normal")
 formatOutput("Loading Commands...", status="Normal")
@@ -85,7 +90,7 @@ async def event_finder():
     formatOutput("Running Event Check Scheduler...", status="Normal")
     events = bot.get_guild(guildID).scheduled_events
     if not events:
-        formatOutput("   No Scheduled Events Found", status="Normal")
+        formatOutput("   No Scheduled Events Found", status="Warning")
     else:
         for event in events:
             formatOutput(f"   Found Scheduled Event: {event.name}", status="Good")
@@ -96,24 +101,25 @@ async def event_finder():
                 if hours_until_start < checkin: # Checkins open 1 hour before event
                     try:
                         if data["checkin"] == 'no':
-                            formatOutput(f"   Opening Checkins, Less than 1 Hour until start", status="Good")
+                            formatOutput(f"   Opening Checkins, Less than 1 Hour until start", status="Normal")
                             team_data = list(db_team_data.find())
                             for i in team_data:
                                 await bot.get_channel(channel_checkin).send(content=f"**{i['team_name']}**\n*Captain:* <@{i['captain']}>")
-                            embed = nextcord.Embed(title="Checkins are Open!", color=0x000)
+                            embed = nextcord.Embed(title="Checkins are Open!", color=0x008000)
                             embed.set_footer(text=f"🛠 Automatically Opened {checkin} hour before start")
                             await bot.get_channel(channel_bot_event).send(embed=embed)
                             db_bot_data.update_one({"checkin": {"$exists": True}}, {"$set":{"checkin": 'yes'}})
                             formatOutput(f"      Automation | Checkins Opened", status="Good")
                     except Exception as e:
-                        formatOutput(output=f"   Automation | Something went wrong while opening checkins. Error: {e}", status="Error")
-                        embed = nextcord.Embed(title="Error Encountered", description=f"Error while opening checkins.\nError: {e}", color=0xFF0000)
+                        error_traceback = traceback.format_exc()
+                        formatOutput(output=f"   Automation | Something went wrong while opening checkins. Error: {e} {error_traceback}", status="Error")
+                        embed = nextcord.Embed(title="Error Encountered", description=f"Error while opening checkins.\nError: {e} {error_traceback}", color=0xFF0000)
                         await bot.get_channel(channel_bot_event).send(embed=embed)
                 if hours_until_start < setup: # Setup starts 1 hour before event
                     if data["setup"] == 'no':
-                        formatOutput(f"   Opening Setup, Less than 1 Hour until start", status="Good")
+                        formatOutput(f"   Opening Setup, Less than 1 Hour until start", status="Normal")
+                        error = False
                         try: # build embed
-                            error = False
                             started_at = datetime.datetime.utcnow()
                             teams_processed = 0
                             team_data = list(db_team_data.find())
@@ -129,8 +135,9 @@ async def event_finder():
                             messageID = message.id
                             message = await bot.get_channel(channel_bot_event).fetch_message(messageID)
                         except Exception as e:
-                            formatOutput(output=f"   Automation | Something went wrong while running setup. Error: {e}", status="Error")
-                            embed = nextcord.Embed(title="Error Encountered", description=f"Error while running setup.\nError: {e}", color=0xFF0000)
+                            error_traceback = traceback.format_exc()
+                            formatOutput(output=f"   Automation | Something went wrong while running setup. Error: {e} {error_traceback}", status="Error")
+                            embed = nextcord.Embed(title="Error Encountered", description=f"Error while running setup.\nError: {e} {error_traceback}", color=0xFF0000)
                             await bot.get_channel(channel_bot_event).send(embed=embed)
                             error = True
 
@@ -143,9 +150,10 @@ async def event_finder():
                             embed.set_field_at(0, name="Prepairing", value=f"**DONE**", inline=True)
                             await message.edit(embed=embed)
                         except Exception as e:
-                            formatOutput(output=f"   Automation | Something went wrong while running setup. Error: {e}", status="Error")
+                            error_traceback = traceback.format_exc()
+                            formatOutput(output=f"   Automation | Something went wrong while running setup. Error: {e} {error_traceback}", status="Error")
                             embed.set_field_at(0, name="Prepairing", value=f"**FAILED**", inline=True)
-                            embed = nextcord.Embed(title="Error Encountered", description=f"Error while running setup.\nError: {e}", color=0xFF0000)
+                            embed = nextcord.Embed(title="Error Encountered", description=f"Error while running setup.\nError: {e} {error_traceback}", color=0xFF0000)
                             await bot.get_channel(channel_bot_event).send(embed=embed)
                             error = True
 
@@ -154,9 +162,10 @@ async def event_finder():
                             embed.set_field_at(1, name="Fetching Teams", value=f"**DONE**", inline=True)
                             await message.edit(embed=embed)
                         except Exception as e:
-                            formatOutput(output=f"   Automation | Something went wrong while running setup. Error: {e}", status="Error")
+                            error_traceback = traceback.format_exc()
+                            formatOutput(output=f"   Automation | Something went wrong while running setup. Error: {e} {error_traceback}", status="Error")
                             embed.set_field_at(1, name="Fetching Teams", value=f"**FAILED**", inline=True)
-                            embed = nextcord.Embed(title="Error Encountered", description=f"Error while running setup.\nError: {e}", color=0xFF0000)
+                            embed = nextcord.Embed(title="Error Encountered", description=f"Error while running setup.\nError: {e} {error_traceback}", color=0xFF0000)
                             await bot.get_channel(channel_bot_event).send(embed=embed)
                             error = True
 
@@ -176,9 +185,10 @@ async def event_finder():
                             embed.set_field_at(2, name="Building Roles", value=f"**DONE**", inline=True)
                             await message.edit(embed=embed)
                         except Exception as e:
-                            formatOutput(output=f"   Automation | Something went wrong while running setup. Error: {e}", status="Error")
+                            error_traceback = traceback.format_exc()
+                            formatOutput(output=f"   Automation | Something went wrong while running setup. Error: {e} {error_traceback}", status="Error")
                             embed.set_field_at(2, name="Building Roles", value=f"**FAILED**", inline=True)
-                            embed = nextcord.Embed(title="Error Encountered", description=f"Error while running setup.\nError: {e}", color=0xFF0000)
+                            embed = nextcord.Embed(title="Error Encountered", description=f"Error while running setup.\nError: {e} {error_traceback}", color=0xFF0000)
                             await bot.get_channel(channel_bot_event).send(embed=embed)
                             error = True
 
@@ -204,10 +214,11 @@ async def event_finder():
 
                             embed.set_field_at(3, name="Giving Roles", value=f"**DONE**", inline=True)
                             await message.edit(embed=embed)
-                        except Exception as e: 
-                            formatOutput(output=f"   Automation | Something went wrong while running setup. Error: {e}", status="Error")
+                        except Exception as e:
+                            error_traceback = traceback.format_exc()
+                            formatOutput(output=f"   Automation | Something went wrong while running setup. Error: {e} {error_traceback}", status="Error")
                             embed.set_field_at(3, name="Giving Roles", value=f"**FAILED**", inline=True)
-                            embed = nextcord.Embed(title="Error Encountered", description=f"Error while running setup.\nError: {e}", color=0xFF0000)
+                            embed = nextcord.Embed(title="Error Encountered", description=f"Error while running setup.\nError: {e} {error_traceback}", color=0xFF0000)
                             await bot.get_channel(channel_bot_event).send(embed=embed)
                             error = True
 
@@ -227,10 +238,11 @@ async def event_finder():
 
                             embed.set_field_at(4, name="Creating VCs", value=f"**DONE**", inline=True)
                             await message.edit(embed=embed)
-                        except Exception as e: 
-                            formatOutput(output=f"   Automation | Something went wrong while running setup. Error: {e}", status="Error")
+                        except Exception as e:
+                            error_traceback = traceback.format_exc()
+                            formatOutput(output=f"   Automation | Something went wrong while running setup. Error: {e} {error_traceback}", status="Error")
                             embed.set_field_at(4, name="Creating VCs", value=f"**FAILED**", inline=True)
-                            embed = nextcord.Embed(title="Error Encountered", description=f"Error while running setup.\nError: {e}", color=0xFF0000)
+                            embed = nextcord.Embed(title="Error Encountered", description=f"Error while running setup.\nError: {e} {error_traceback}", color=0xFF0000)
                             await bot.get_channel(channel_bot_event).send(embed=embed)                            
                             error = True
 
@@ -264,46 +276,50 @@ async def event_finder():
                             embed.set_field_at(5, name="Assigning VCs", value=f"**DONE**", inline=True)
                             await message.edit(embed=embed)
                         except Exception as e:
-                            formatOutput(output=f"   Automation | Something went wrong while running setup. Error: {e}", status="Error")
+                            error_traceback = traceback.format_exc()
+                            formatOutput(output=f"   Automation | Something went wrong while running setup. Error: {e} {error_traceback}", status="Error")
                             embed.set_field_at(5, name="Assigning VCs", value=f"**FAILED**", inline=True)
-                            embed = nextcord.Embed(title="Error Encountered", description=f"Error while running setup.\nError: {e}", color=0xFF0000)
+                            embed = nextcord.Embed(title="Error Encountered", description=f"Error while running setup.\nError: {e} {error_traceback}", color=0xFF0000)
                             await bot.get_channel(channel_bot_event).send(embed=embed)
                             error = True
-        
-                    if error == False:
-                        try: # add time taken
-                            time_taken = datetime.datetime.strftime(datetime.datetime(1, 1, 1) + (datetime.datetime.utcnow() - started_at), "%M:%S")
-                            embed.set_footer(text=f"Took {time_taken} to complete")
-                            embed.title = "UnitedOCE has Started!"
-                            await message.edit(embed=embed)
-                            db_bot_data.update_one({"setup": {"$exists": True}}, {"$set":{"setup": 'yes'}})
-                            formatOutput(f"      Automation | Setup Completed", status="Good")
-                        except Exception as e:
-                            formatOutput(output=f"   Automation | Something went wrong while running setup. Error: {e}", status="Error")
-                            embed = nextcord.Embed(title="Error Encountered", description=f"Error while running setup.\nError: {e}", color=0xFF0000)
-                            await bot.get_channel(channel_bot_event).send(embed=embed)
+
+                        if error == False:
+                            try: # add time taken
+                                time_taken = datetime.datetime.strftime(datetime.datetime(1, 1, 1) + (datetime.datetime.utcnow() - started_at), "%M:%S")
+                                embed.set_footer(text=f"Took {time_taken} to complete")
+                                embed.title = "UnitedOCE has Started!"
+                                embed.color = 0x008000
+                                await message.edit(embed=embed)
+                                db_bot_data.update_one({"setup": {"$exists": True}}, {"$set":{"setup": 'yes'}})
+                                formatOutput(f"      Automation | Setup Completed", status="Good")
+                            except Exception as e:
+                                error_traceback = traceback.format_exc()
+                                formatOutput(output=f"   Automation | Something went wrong while running setup. Error: {e} {error_traceback}", status="Error")
+                                embed = nextcord.Embed(title="Error Encountered", description=f"Error while running setup.\nError: {e} {error_traceback}", color=0xFF0000)
+                                await bot.get_channel(channel_bot_event).send(embed=embed)
                 if hours_until_start < poi_selection: # POI Selections open 3 days before event
                     if data["poi"] == 'no':
                         try:
-                            formatOutput(f"   Opening POI Selections, Less than 3 Days until start", status="Good")
+                            formatOutput(f"   Opening POI Selections, Less than 3 Days until start", status="Normal")
                             maps = db_bot_data.find_one({"maps": {"$exists": True}})
                             map1 = maps["maps"]["map1"]
                             map2 = maps["maps"]["map2"]
                             embed = nextcord.Embed(title="POI Selections are Open!", description=f"Select a POI for {map1} & {map2} using /select_poi", color=0x000)
                             await bot.get_channel(channel_poi).send(embed=embed)
-                            embed = nextcord.Embed(title="POI Selections are Open!", color=0x000)
+                            embed = nextcord.Embed(title="POI Selections are Open!", color=0x008000)
                             embed.set_footer(text=f"🛠 Automatically Opened {poi_selection} hours before start")
                             await bot.get_channel(channel_bot_event).send(embed=embed)
                             db_bot_data.update_one({"poi": {"$exists": True}}, {"$set":{"poi": 'yes'}})
                             formatOutput(f"      Automation | POI Selections Opened", status="Good")
                         except Exception as e:
-                            formatOutput(output=f"   Automation | Something went wrong while opening POI selection. Error: {e}", status="Error")
-                            embed = nextcord.Embed(title="Error Encountered", description=f"Error while opening POI selection\nError: {e}", color=0xFF0000)
+                            error_traceback = traceback.format_exc()
+                            formatOutput(output=f"   Automation | Something went wrong while opening POI selection. Error: {e} {error_traceback}", status="Error")
+                            embed = nextcord.Embed(title="Error Encountered", description=f"Error while opening POI selection\nError: {e} {error_traceback}", color=0xFF0000)
                             await bot.get_channel(channel_bot_event).send(embed=embed)
 
 async def startScheduler():
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(event_finder, 'cron', minute=0)
+    scheduler.add_job(event_finder, 'cron', minute=delay)
     scheduler.start()
 
 @bot.event

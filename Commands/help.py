@@ -1,5 +1,5 @@
 import nextcord
-import datetime
+import traceback
 from nextcord.ext import commands
 from Main import formatOutput, guildID, errorResponse, public_command_list, admin_command_list
 
@@ -32,7 +32,8 @@ class dropdown_help_menu(nextcord.ui.Select):
             embed.set_footer(text="Help Menu")
             await interaction.response.send_message(embed=embed, ephemeral=True)
         except Exception as e:
-            await errorResponse(error=e, command="help", interaction=interaction)
+            error_traceback = traceback.format_exc()
+            await errorResponse(error=f"{e}\n{error_traceback}", command="help", interaction=interaction)
 
 class Command_help_Cog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -42,7 +43,7 @@ class Command_help_Cog(commands.Cog):
     async def help(self, interaction: nextcord.Interaction):
         command = 'help'
         userID = interaction.user.id
-        formatOutput(output="/"+command+" Used by ("+str(userID)+")", status="Normal")
+        formatOutput(output=f"/{command} Used by {userID} | @{interaction.user.name}", status="Normal")
         try: await interaction.response.defer(ephemeral=True)
         except: pass
         

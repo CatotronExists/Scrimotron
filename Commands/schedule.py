@@ -1,8 +1,9 @@
 import nextcord
 import datetime
-from nextcord.ext import commands
-from Main import formatOutput, guildID, errorResponse, channel_poi
+import traceback
 import re
+from nextcord.ext import commands
+from Main import formatOutput, guildID, errorResponse
 from Config import db_bot_data, checkin, poi_selection
 
 class Command_schedule_Cog(commands.Cog):
@@ -16,7 +17,7 @@ class Command_schedule_Cog(commands.Cog):
         ):
         command = 'schedule'
         userID = interaction.user.id
-        formatOutput(output="/"+command+" Used by ("+str(userID)+")", status="Normal")
+        formatOutput(output=f"/{command} Used by {userID} | @{interaction.user.name}", status="Normal")
         await interaction.response.defer(ephemeral=True)
         error = False
 
@@ -27,7 +28,8 @@ class Command_schedule_Cog(commands.Cog):
             except: db_bot_data.insert_one({"maps": {"map1": map1, "map2": map2}})
 
         except Exception as e:
-            await errorResponse(error=e, command=command, interaction=interaction)
+            error_traceback = traceback.format_exc()
+            await errorResponse(error=f"{e}\n{error_traceback}", command=command, interaction=interaction)
             error = True
 
         try: # Get time and date
@@ -43,7 +45,8 @@ class Command_schedule_Cog(commands.Cog):
             dateandtime = datetime.datetime.strptime(f"{day}/{month}/{year} {hour}:{minute} {am_pm}", "%d/%m/%Y %I:%M %p")
 
         except Exception as e:
-            await errorResponse(error=e, command=command, interaction=interaction)
+            error_traceback = traceback.format_exc()
+            await errorResponse(error=f"{e}\n{error_traceback}", command=command, interaction=interaction)
             error = True
 
         try: # Create Event
@@ -69,7 +72,8 @@ class Command_schedule_Cog(commands.Cog):
                 formatOutput(output=f"   /{command} was successful!", status="Good")
 
         except Exception as e:
-            await errorResponse(error=e, command=command, interaction=interaction)
+            error_traceback = traceback.format_exc()
+            await errorResponse(error=f"{e}\n{error_traceback}", command=command, interaction=interaction)
 
 def setup(bot):
     bot.add_cog(Command_schedule_Cog(bot))

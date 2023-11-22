@@ -1,5 +1,5 @@
 import nextcord
-import datetime
+import traceback
 from nextcord.ext import commands
 from Main import formatOutput, guildID, errorResponse
 from Config import db_team_data
@@ -12,7 +12,7 @@ class Command_team_list_Cog(commands.Cog):
     async def team_list(self, interaction: nextcord.Interaction):
         command = 'team_list'
         userID = interaction.user.id
-        formatOutput(output="/"+command+" Used by ("+str(userID)+")", status="Normal")
+        formatOutput(output=f"/{command} Used by {userID} | @{interaction.user.name}", status="Normal")
         await interaction.response.defer()
 
         message = []
@@ -35,9 +35,10 @@ class Command_team_list_Cog(commands.Cog):
             embed.set_footer(text=f"Total Teams: {teams} | Total Players: {players} | Total Subs: {subs}")
             await interaction.edit_original_message(embed=embed)
             formatOutput(output=f"   /{command} was successful!", status="Good")
-            
+
         except Exception as e:
-            await errorResponse(error=e, command=command, interaction=interaction)
+            error_traceback = traceback.format_exc()
+            await errorResponse(error=f"{e}\n{error_traceback}", command=command, interaction=interaction)
 
 def setup(bot):
     bot.add_cog(Command_team_list_Cog(bot))
