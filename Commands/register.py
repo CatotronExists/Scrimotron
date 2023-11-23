@@ -56,7 +56,8 @@ class Command_register_Cog(commands.Cog):
                     },
                     "setup": {
                         "roleID": "None",
-                        "channelID": "None"
+                        "channelID": "None",
+                        "check_in": "no"
                     }
                 })
 

@@ -11,7 +11,7 @@ class Command_schedule_Cog(commands.Cog):
         self.bot = bot
 
     @nextcord.slash_command(guild_ids=[guildID], name="schedule", description="Schedule United", default_member_permissions=(nextcord.Permissions(administrator=True)))
-    async def schedule(self, interaction: nextcord.Interaction, date: str, time: str, timezone: str,
+    async def schedule(self, interaction: nextcord.Interaction, name: str, date: str, time: str, timezone: str,
         map1 = nextcord.SlashOption(name="map_1", description="Choose map 1", required=True, choices={"World's Edge": "Worlds Edge", "Olympus": "Olympus", "King's Canyon": "Kings Canyon", "Storm Point": "Storm Point", "Broken Moon": "Broken Moon"}),
         map2 = nextcord.SlashOption(name="map_2", description="Choose map 2", required=True, choices={"World's Edge": "Worlds Edge", "Olympus": "Olympus", "King's Canyon": "Kings Canyon", "Storm Point": "Storm Point", "Broken Moon": "Broken Moon"})
         ):
@@ -52,11 +52,11 @@ class Command_schedule_Cog(commands.Cog):
         try: # Create Event
             if error == False:
                 await interaction.send(f"Scheduling United for {day}/{month}/{year} @ {hour}:{minute} {am_pm} {timezone}", ephemeral=True)
-                image = "https://cdn.discordapp.com/attachments/1166164223672471622/1167256572897009704/twitter_header.png"
+                #image = "https://cdn.discordapp.com/attachments/1166164223672471622/1167256572897009704/twitter_header.png"
                 dateandtime = dateandtime + datetime.timedelta(hours=13) # Temp utc offset fix
                 dateandtime = dateandtime - datetime.timedelta(days=1) # Temp one day off fix
                 await interaction.guild.create_scheduled_event(
-                    name="United OCE Test Round", 
+                    name=name, 
                     description=f"This is a test round of United OCE, [A description about united, maybe a link to recent announcement?. anyway, this is a test round]\nPOI Selections open {poi_selection} hours before start\nCheck ins open {checkin} hour before start\nMaps: {map1} & {map2}", 
                     entity_type=nextcord.ScheduledEventEntityType.external, 
                     metadata=nextcord.EntityMetadata(location="APAC-South"),

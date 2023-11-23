@@ -52,6 +52,7 @@ class Command_end_Cog(commands.Cog):
                 embed.set_field_at(0, name="Deleting Roles", value=f"**DONE**", inline=True)
                 embed.set_field_at(1, name="Deleting VCs", value=f"**DONE**", inline=True)
                 embed.set_field_at(2, name="Deleting Team Data", value=f"**DONE**", inline=True)
+                await interaction.edit_original_message(embed=embed)
             except Exception as e:
                 embed.set_field_at(0, name="Deleting Roles", value=f"**FAILED**", inline=True)
                 embed.set_field_at(1, name="Deleting VCs", value=f"**FAILED**", inline=True)
@@ -62,19 +63,24 @@ class Command_end_Cog(commands.Cog):
 
             try: # delete POIs & Checkins
                 channel = interaction.guild.get_channel(channel_poi) # delete POIs
-                messages = await channel.history(limit=20).flatten()
+                messages = await channel.history(limit=25).flatten()
                 for msg in messages:
                     if msg.author.bot:
                         await msg.delete()
                 db_bot_data.delete_one({"maps": {"$exists": True}}) # remove from db
 
                 channel = interaction.guild.get_channel(channel_checkin) # delete checkins
-                messages = await channel.history(limit=20).flatten()
+                messages = await channel.history(limit=25).flatten()
+                messages_deleted = 0
                 for msg in messages:
                     if msg.author.bot:
                         await msg.delete()
+                        messages_deleted += 1
+                        embed.set_field_at(3, name="Deleting POIs & Checkins", value=f"{messages_deleted}/{len(data)}", inline=True)
+                        await interaction.edit_original_message(embed=embed)
 
                 embed.set_field_at(3, name="Deleting POIs & Checkins", value=f"**DONE**", inline=True)
+                await interaction.edit_original_message(embed=embed)
             except Exception as e:
                 embed.set_field_at(3, name="Deleting POIs & Checkins", value=f"**FAILED**", inline=True)
                 error_traceback = traceback.format_exc()

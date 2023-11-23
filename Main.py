@@ -15,10 +15,10 @@ channel_checkin = 1166937482009530468 #test server - #check-ins
 channel_poi = 1168355452707422289 #test server #poi
 channel_bot_event = 1175985885959962664 #test server #bot-event
 partipantRoleID = 1168356974988111964 #participant role
-extension_command_list = ["team_list", "register", "unregister", "end", "schedule", "select_poi", "help", "unregister_all"]#, "status"]
-full_command_list = ["team_list", "register", "unregister", "end", "schedule", "select_poi", "help", "unregister_all"]#, "status"]
+extension_command_list = ["team_list", "register", "unregister", "end", "schedule", "select_poi", "help", "unregister_all", "status"]
+full_command_list = ["team_list", "register", "unregister", "end", "schedule", "select_poi", "help", "unregister_all", "status"]
 public_command_list = ["team_list", "register", "unregister", "select_poi", "help"]
-admin_command_list = ["team_list", "register", "unregister", "end", "schedule", "select_poi", "help", "unregister_all"]#, "status"]
+admin_command_list = ["team_list", "register", "unregister", "end", "schedule", "select_poi", "help", "unregister_all", "status"]
 # Colors
 import os
 os.system("")
@@ -103,7 +103,9 @@ async def event_finder():
                         if data["checkin"] == 'no':
                             formatOutput(f"   Opening Checkins, Less than 1 Hour until start", status="Normal")
                             team_data = list(db_team_data.find())
+                            embed = nextcord.Embed(title="Checkins are Open", description="Captains react to your team message to check in!", color=0x000)
                             for i in team_data:
+                                db_team_data.update_one({"team_name": i["team_name"]}, {"$set":{"checkin": 'no'}})
                                 await bot.get_channel(channel_checkin).send(content=f"**{i['team_name']}**\n*Captain:* <@{i['captain']}>")
                             embed = nextcord.Embed(title="Checkins are Open!", color=0x008000)
                             embed.set_footer(text=f"🛠 Automatically Opened {checkin} hour before start")
@@ -130,7 +132,7 @@ async def event_finder():
                             embed.add_field(name="Giving Roles", value=f"0/{len(team_data)}", inline=True)
                             embed.add_field(name="Creating VCs", value=f"0/{len(team_data)}", inline=True)
                             embed.add_field(name="Assigning VCs", value=f"0/{len(team_data)}", inline=True)
-                            embed.set_footer(text=f"🛠 Automatically Opened {setup} hours before start")
+                            embed.set_footer(text=f"🛠 Automatically Opened {setup} hour before start")
                             message = await bot.get_channel(channel_bot_event).send(embed=embed)
                             messageID = message.id
                             message = await bot.get_channel(channel_bot_event).fetch_message(messageID)
@@ -307,7 +309,7 @@ async def event_finder():
                             embed = nextcord.Embed(title="POI Selections are Open!", description=f"Select a POI for {map1} & {map2} using /select_poi", color=0x000)
                             await bot.get_channel(channel_poi).send(embed=embed)
                             embed = nextcord.Embed(title="POI Selections are Open!", color=0x008000)
-                            embed.set_footer(text=f"🛠 Automatically Opened {poi_selection} hours before start")
+                            embed.set_footer(text=f"🛠 Automatically Opened {poi_selection} hour before start")
                             await bot.get_channel(channel_bot_event).send(embed=embed)
                             db_bot_data.update_one({"poi": {"$exists": True}}, {"$set":{"poi": 'yes'}})
                             formatOutput(f"      Automation | POI Selections Opened", status="Good")
@@ -327,5 +329,37 @@ async def on_ready():
     formatOutput(f"{bot.user.name} has connected to Discord & Ready!", status="Good")
     await bot.change_presence(activity=nextcord.Activity(type=nextcord.ActivityType.watching, name="UnitedOCE"))
     await startScheduler()
+
+@bot.event
+async def on_reaction_add(reaction: nextcord.Reaction, user: nextcord.User):
+    if reaction.message.channel.id == channel_checkin:
+        if user.bot == False:
+            message = await reaction.message.channel.fetch_message(reaction.message.id)
+            message = message.content.split("\n")
+            team_data = list(db_team_data.find())
+            for i in team_data:
+                if message[0] == f"**{i['team_name']}**":
+                    if i["captain"] == user.id:
+                        if message[0]== f'**{i["team_name"]}**':
+                            if i["setup"]["check_in"] == "no":
+                                db_team_data.update_one({"captain": user.id}, {"$set":{"setup.check_in": 'yes'}})
+                                formatOutput(output=f"   {i['team_name']} has checked in!", status="Good")
+                    break
+
+@bot.event
+async def on_reaction_remove(reaction: nextcord.Reaction, user: nextcord.User):
+    if reaction.message.channel.id == channel_checkin:
+        if user.bot == False:
+            message = await reaction.message.channel.fetch_message(reaction.message.id)
+            message = message.content.split("\n")
+            team_data = list(db_team_data.find())
+            for i in team_data:
+                if message[0] == f"**{i['team_name']}**":
+                    if i["captain"] == user.id:
+                        if message[0]== f'**{i["team_name"]}**':
+                            if i["setup"]["check_in"] == "yes":
+                                db_team_data.update_one({"captain": user.id}, {"$set":{"setup.check_in": 'no'}})
+                                formatOutput(output=f"   {i['team_name']} has unchecked in!", status="Good")
+                    break
 
 bot.run(BOT_TOKEN)

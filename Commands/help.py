@@ -11,7 +11,8 @@ help_descriptions = {
 "schedule": "**Admin Only**\nSchedule UnitedOCE. Creates a Discord event for United. Starts Automated process leading up to United.\n**Usage:** *optional*\n/schedule date: (in dd/mm/yyyy) time: H*:MM*am/pm timezone: map1: map2:\n**Example:**\n/schedule 22/10/2023 7pm AEDT Worlds Edge Storm Point",
 "select_poi": "\nSelect a POI for your team.\n\n**Usage:** *optional*\n/select_poi\n**Example:**\n/select_poi",
 "help": "\nOpens a help menu, use the dropdown to get help on that command, Find Example usage and more.\n**Usage:** *optional*\n/help\n**Example:**\n/help",
-"unregister_all": "**Admin Only**\nUnregister all teams from UnitedOCE.\n**Usage:** *optional*\n/unregister_all\n**Example:**\n/unregister_all"
+"unregister_all": "**Admin Only**\nUnregister all teams from UnitedOCE.\n**Usage:** *optional*\n/unregister_all\n**Example:**\n/unregister_all",
+"status": "**Admin Only**\nShow the status of UnitedOCE. Current amount of teams checked in and POIs selected.\n**Usage:** *optional*\n/status\n**Example:**\n/status",
 }
 
 class dropdown_menu(nextcord.ui.View):
