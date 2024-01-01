@@ -14,6 +14,8 @@ UnitedOCE is an Apex Legends tournament based in OCE/APAC-South, that runs every
 - `/end`: Ends the tournament. **Staff Only**
 - `/schedule`: Schedule a time and date for the tournament. Automates Check-ins, POI selections and creates team VCs. **Staff Only**
 - `/unregiser_all`: Unregisters all players/teams from the tournament. **Staff Only**
+- `/status`: Shows the status of the tournament. **Staff Only**
+- `/configure`: Configure the bot. **Staff Only**
 
 # STAY UNITED
 [Get in on the action](https://discord.gg/6r2snr9Yub)\

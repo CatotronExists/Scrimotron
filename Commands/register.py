@@ -52,7 +52,14 @@ class Command_register_Cog(commands.Cog):
                     "logo": logo,
                     "pois": {
                         "map1": "None",
-                        "map2": "None"
+                        "map1_secondary": "None",
+                        "map1_split": "None",
+                        "map1_vechicle": "None",
+                        "map2": "None",
+                        "map2_secondary": "None",
+                        "map2_split": "None",
+                        "map2_vechicle": "None"
+                        
                     },
                     "setup": {
                         "roleID": "None",

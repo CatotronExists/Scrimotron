@@ -4,7 +4,7 @@ from nextcord.ext import commands
 from Keys import BOT_TOKEN
 import traceback
 import datetime
-from Config import db_team_data, checkin, poi_selection, setup, db_bot_data, delay
+from Config import db_team_data, db_bot_data
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 ### Vars
@@ -15,10 +15,10 @@ channel_checkin = 1166937482009530468 #test server - #check-ins
 channel_poi = 1168355452707422289 #test server #poi
 channel_bot_event = 1175985885959962664 #test server #bot-event
 partipantRoleID = 1168356974988111964 #participant role
-extension_command_list = ["team_list", "register", "unregister", "end", "schedule", "select_poi", "help", "unregister_all", "status"]
-full_command_list = ["team_list", "register", "unregister", "end", "schedule", "select_poi", "help", "unregister_all", "status"]
+extension_command_list = ["team_list", "register", "unregister", "end", "schedule", "select_poi", "help", "unregister_all", "status", "configure"]
+full_command_list = ["team_list", "register", "unregister", "end", "schedule", "select_poi", "help", "unregister_all", "status", "configure"]
 public_command_list = ["team_list", "register", "unregister", "select_poi", "help"]
-admin_command_list = ["team_list", "register", "unregister", "end", "schedule", "select_poi", "help", "unregister_all", "status"]
+admin_command_list = ["team_list", "register", "unregister", "end", "schedule", "select_poi", "help", "unregister_all", "status", "configure"]
 # Colors
 import os
 os.system("")
@@ -66,6 +66,19 @@ async def errorResponse(error, command, interaction: Interaction):
     formatOutput(output=f"   Something went wrong while running /{command}. Error: {error}", status="Error")
 
 ### Discord Setup
+formatOutput("Running Config Updater Scheduler...", status="Normal")
+config_data = db_bot_data.find_one({"AutoEvent": {"$exists": True}})
+global checkin, setup, poi_selection, delay
+checkin = config_data["AutoEvent"]["Checkin"]
+setup = config_data["AutoEvent"]["Setup"]
+poi_selection = config_data["AutoEvent"]["Poi"]
+delay = config_data["AutoEvent"]["Delay"]
+if config_data == None:
+    db_bot_data.insert_one({"AutoEvent": {"Setup": 1, "Checkin": 1, "Poi": 48, "Delay": 0}, "Tournament": {"Max Contests": 2}})
+    formatOutput("   No Config Found, Creating...", status="Warning")
+else:
+    formatOutput("   Config Found", status="Good")
+
 intents = nextcord.Intents.all()
 bot = commands.Bot(intents=intents)
 
@@ -101,6 +114,7 @@ async def event_finder():
                 if hours_until_start < checkin: # Checkins open 1 hour before event
                     try:
                         if data["checkin"] == 'no':
+                            db_bot_data.update_one({"checkin": {"$exists": True}}, {"$set":{"checkin": 'yes'}})
                             formatOutput(f"   Opening Checkins, Less than 1 Hour until start", status="Normal")
                             team_data = list(db_team_data.find())
                             embed = nextcord.Embed(title="Checkins are Open", description="Captains react to your team message to check in!", color=0x000)
@@ -110,9 +124,9 @@ async def event_finder():
                             embed = nextcord.Embed(title="Checkins are Open!", color=0x008000)
                             embed.set_footer(text=f"🛠 Automatically Opened {checkin} hour before start")
                             await bot.get_channel(channel_bot_event).send(embed=embed)
-                            db_bot_data.update_one({"checkin": {"$exists": True}}, {"$set":{"checkin": 'yes'}})
                             formatOutput(f"      Automation | Checkins Opened", status="Good")
                     except Exception as e:
+                        db_bot_data.update_one({"checkin": {"$exists": True}}, {"$set":{"checkin": 'no'}})
                         error_traceback = traceback.format_exc()
                         formatOutput(output=f"   Automation | Something went wrong while opening checkins. Error: {e} {error_traceback}", status="Error")
                         embed = nextcord.Embed(title="Error Encountered", description=f"Error while opening checkins.\nError: {e} {error_traceback}", color=0xFF0000)
@@ -299,10 +313,10 @@ async def event_finder():
                                 formatOutput(output=f"   Automation | Something went wrong while running setup. Error: {e} {error_traceback}", status="Error")
                                 embed = nextcord.Embed(title="Error Encountered", description=f"Error while running setup.\nError: {e} {error_traceback}", color=0xFF0000)
                                 await bot.get_channel(channel_bot_event).send(embed=embed)
-                if hours_until_start < poi_selection: # POI Selections open 3 days before event
+                if hours_until_start < 48: # POI Selections open 2 days before event
                     if data["poi"] == 'no':
                         try:
-                            formatOutput(f"   Opening POI Selections, Less than 3 Days until start", status="Normal")
+                            formatOutput(f"   Opening POI Selections, Less than 2 Days until start", status="Normal")
                             maps = db_bot_data.find_one({"maps": {"$exists": True}})
                             map1 = maps["maps"]["map1"]
                             map2 = maps["maps"]["map2"]
@@ -319,9 +333,24 @@ async def event_finder():
                             embed = nextcord.Embed(title="Error Encountered", description=f"Error while opening POI selection\nError: {e} {error_traceback}", color=0xFF0000)
                             await bot.get_channel(channel_bot_event).send(embed=embed)
 
+async def config_updater():
+    formatOutput("Running Config Updater Scheduler...", status="Normal")
+    config_data = db_bot_data.find_one({"AutoEvent": {"$exists": True}})
+    global checkin, setup, poi_selection, delay
+    checkin = config_data["AutoEvent"]["Checkin"]
+    setup = config_data["AutoEvent"]["Setup"]
+    poi_selection = config_data["AutoEvent"]["Poi"]
+    delay = config_data["AutoEvent"]["Delay"]
+    if config_data == None:
+        db_bot_data.insert_one({"AutoEvent": {"Setup": 1, "Checkin": 1, "Poi": 48, "Delay": 0}, "Tournament": {"Max Contests": 2}})
+        formatOutput("   No Config Found, Creating...", status="Warning")
+    else:
+        formatOutput("   Config Found", status="Good")
+
 async def startScheduler():
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(event_finder, 'cron', minute=delay)
+    scheduler.add_job(event_finder, 'cron', minute=0)
+    scheduler.add_job(config_updater, 'interval', minutes=5, start_date='2022-01-01 00:00:00')
     scheduler.start()
 
 @bot.event
