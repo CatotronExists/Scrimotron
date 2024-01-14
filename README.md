@@ -1,9 +1,10 @@
-# UnitedOCE Bot
-A discord bot designed to help run UnitedOCE smoothly.
+# Scrimotron (Scrim-o-tron)
+A discord bot designed to Run and Manage Apex Scrims
 
-Automating the process of check-ins, POI selections and creating team VCs for listen ins. Plus seasonal scoring and leaderboards.
+Automating the process of check-ins, POI selections and creating team VCs for listen ins. Plus scoring and leaderboards.
 
-UnitedOCE is an Apex Legends tournament based in OCE/APAC-South, that runs every Sunday at 7pm Sydney time. Currently on a break until PLQ are done, Season 9 is expected to start in early 2024.
+## Used In
+*0 Servers (for now)*
 
 ## Commands
 - `/register`: Allows players to register for the tournament.
@@ -17,6 +18,5 @@ UnitedOCE is an Apex Legends tournament based in OCE/APAC-South, that runs every
 - `/status`: Shows the status of the tournament. **Staff Only**
 - `/configure`: Configure the bot. **Staff Only**
 
-# STAY UNITED
-[Get in on the action](https://discord.gg/6r2snr9Yub)\
+# Credits
 Created by @catotron
