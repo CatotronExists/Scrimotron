@@ -1,7 +1,7 @@
 # Scrimotron (Scrim-o-tron)
 A discord bot designed to Run and Manage Apex Scrims
 
-Automating the process of check-ins, POI selections and creating team VCs for listen ins. Plus scoring and leaderboards.
+Automating the process of check-ins, POI selections and creating team VCs for listen ins. Plus scoring and leaderboards. (Soon)
 
 ## Used In
 *0 Servers (for now)*
