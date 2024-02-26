@@ -1,5 +1,5 @@
 # Scrimotron (Scrim-o-tron)
-### Full Release 25/02/2024
+### Full Release EARLY MARCH
 A discord bot designed to Run and Manage Apex Scrims
 
 Automating the process of check-ins, POI selections and creating team VCs for listen ins. Plus scoring and leaderboards. (Soon)
