@@ -1,11 +1,11 @@
 # Scrimotron (Scrim-o-tron)
-### Full Release EARLY MARCH
+### Full Release LATE APRIL, V1.0.0 Currently in testing
 A discord bot designed to Run and Manage Apex Scrims
 
 Automating the process of check-ins, POI selections and creating team VCs for listen ins. Plus scoring and leaderboards. (Soon)
 
 ## Used In
-*0 Servers (for now)*
+*1 Server(s)*
 
 ## Commands
 - `/register`: Allows players to register for the tournament.
