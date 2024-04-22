@@ -5,16 +5,21 @@ Notes.txt
 Keys.py
 
 # Tools
-Maker.py
+Database_Interactor.py
+maker.py
 
 # Template
 **/Commands/atemplate.py
+**/Spreadsheets/Spreadsheet Backup.xlsx
+**/Spreadsheets/Spreadsheet Template.xlsx
 
 # Cache
 **/__pycache__
 
 # Unfinished
-**/Commands/admin_menu.py
-test_data.json
-test_json.py
-output.txt
+**/Commands/better_scheduling.py
+**/Commands/better_select_poi.py
+
+# AI Testing
+**.png
+text test.py

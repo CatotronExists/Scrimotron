@@ -1,44 +1,48 @@
 import nextcord
 import traceback
 from nextcord.ext import commands
-from Main import formatOutput, guildID, errorResponse
-from Config import db_team_data
+from Main import formatOutput, errorResponse, getTeams
+from BotData.colors import *
 
 class Command_team_list_Cog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @nextcord.slash_command(guild_ids=[guildID], name="team_list", description="List all registered teams")
+    @nextcord.slash_command(name="team_list", description="Shows a list of all the teams that have been registered")
     async def team_list(self, interaction: nextcord.Interaction):
-        command = 'team_list'
+        global command
+        command = interaction.application_command.name
         userID = interaction.user.id
-        formatOutput(output=f"/{command} Used by {userID} | @{interaction.user.name}", status="Normal")
-        await interaction.response.defer()
+        guildID = int(interaction.guild.id)
+        formatOutput(output=f"/{command} Used by {userID} | @{interaction.user.name}", status="Normal", guildID=guildID)
+
+        try: await interaction.response.defer(ephemeral=True)
+        except: pass
 
         message = []
         try:
-            data = list(db_team_data.find())
+            data = getTeams(guildID)
             teams = players = subs = 0
             for i in data:
-                if i["sub1"] == "N/A" and i["sub2"] == "N/A":
-                    message.append(f"**{i['team_name']}** - **C:** {self.bot.get_user(int(i['captain'])).mention} - **P:** {self.bot.get_user(int(i['player2'])).mention} & {self.bot.get_user(int(i['player3'])).mention}")
-                elif i["sub2"] == "N/A":
+                if i["teamSub1"] == "N/A" and i["teamSub2"] == "N/A":
+                    message.append(f"**{i['teamName']}** - **C:** {self.bot.get_user(int(i['teamCaptain'])).mention} - **P:** {self.bot.get_user(int(i['teamPlayer2'])).mention} & {self.bot.get_user(int(i['teamPlayer3'])).mention}")
+                elif i["teamSub2"] == "N/A":
                     subs += 1
-                    message.append(f"**{i['team_name']}** - **C:** {self.bot.get_user(int(i['captain'])).mention} - **P:** {self.bot.get_user(int(i['player2'])).mention} & {self.bot.get_user(int(i['player3'])).mention} - **S:** {self.bot.get_user(int(i['sub1'])).mention}")
+                    message.append(f"**{i['teamName']}** - **C:** {self.bot.get_user(int(i['teamCaptain'])).mention} - **P:** {self.bot.get_user(int(i['teamPlayer2'])).mention} & {self.bot.get_user(int(i['teamPlayer3'])).mention} - **S:** {self.bot.get_user(int(i['teamSub1'])).mention}")
                 else:
                     subs += 2
-                    message.append(f"**{i['team_name']}** - **C:** {self.bot.get_user(int(i['captain'])).mention} - **P:** {self.bot.get_user(int(i['player2'])).mention} & {self.bot.get_user(int(i['player3'])).mention} - **S:** {self.bot.get_user(int(i['sub1'])).mention} & {self.bot.get_user(int(i['sub2'])).mention}")
+                    message.append(f"**{i['teamName']}** - **C:** {self.bot.get_user(int(i['teamCaptain'])).mention} - **P:** {self.bot.get_user(int(i['teamPlayer2'])).mention} & {self.bot.get_user(int(i['teamPlayer3'])).mention} - **S:** {self.bot.get_user(int(i['teamSub1'])).mention} & {self.bot.get_user(int(i['teamSub2'])).mention}")
                 players += 3
                 teams += 1
 
-            embed = nextcord.Embed(title="Registered Teams", description='\n'.join(message), color=0x000)
+            embed = nextcord.Embed(title="Registered Teams", description='\n'.join(message), color=White)
             embed.set_footer(text=f"Total Teams: {teams} | Total Players: {players} | Total Subs: {subs}")
             await interaction.edit_original_message(embed=embed)
-            formatOutput(output=f"   /{command} was successful!", status="Good")
+            formatOutput(output=f"   /{command} was successful!", status="Good", guildID=guildID)
 
         except Exception as e:
             error_traceback = traceback.format_exc()
-            await errorResponse(error=f"{e}\n{error_traceback}", command=command, interaction=interaction)
+            await errorResponse(e, command, interaction, error_traceback)
 
 def setup(bot):
     bot.add_cog(Command_team_list_Cog(bot))

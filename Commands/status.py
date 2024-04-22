@@ -2,51 +2,53 @@ import nextcord
 import traceback
 import datetime
 from nextcord.ext import commands
-from Main import formatOutput, guildID, errorResponse
-from Config import db_bot_data, db_team_data
+from Main import formatOutput, errorResponse, getTeams, getScrimSetup, getScrimInfo, getConfigData
+from BotData.colors import *
 
 class Command_status_Cog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @nextcord.slash_command(guild_ids=[guildID], name="status", description="Show Tournament Status", default_member_permissions=(nextcord.Permissions(administrator=True)))
+    @nextcord.slash_command(name="status", description="Shows the status of scrims. **Staff Only**", default_member_permissions=(nextcord.Permissions(administrator=True)))
     async def status(self, interaction: nextcord.Interaction):
-        command = 'status'
+        global command
+        command = interaction.application_command.name
         userID = interaction.user.id
-        formatOutput(output=f"/{command} Used by {userID} | @{interaction.user.name}", status="Normal")
-        await interaction.response.defer(ephemeral=True)
+        guildID = int(interaction.guild.id)
+        formatOutput(output=f"/{command} Used by {userID} | @{interaction.user.name}", status="Normal", guildID=guildID)
+
+        try: await interaction.response.defer(ephemeral=True)
+        except: pass        
+        
         try:
             pois_selected = teams_checked_in = 0
-            status_data = db_bot_data.find_one({"setup": {"$exists": True}})
-            team_data = list(db_team_data.find())
-
-            embed = nextcord.Embed(title="United Status", description="", color=0x000)
-
-            # setup status
-            if status_data != None:
-                if status_data["setup"] == "yes": embed.add_field(name="Setup", value="**Complete**", inline=True)
-                else: embed.add_field(name="Setup", value="**Awaiting Automation**", inline=True)
-            else: embed.add_field(name="Setup", value="*United has not been scheduled yet*", inline=True)
-
-            # poi status
-            if status_data != None:
-                if status_data["poi"] == "yes": 
-                    for i in team_data:
-                        if i["pois"]["map1"] != "None" and i["pois"]["map2"] != "None":
-                            pois_selected += 1
-                    embed.add_field(name="POI Selections", value=f"**{pois_selected}/{len(team_data)} Teams Selected**", inline=True)
-                else: embed.add_field(name="POI Selections", value="**Awaiting Automation**", inline=True)
-            else: embed.add_field(name="POI Selections", value="*United has not been scheduled yet*", inline=True)
+            setup_data = getScrimSetup(guildID)
+            team_data = getTeams(guildID)
+            scrim_info = getScrimInfo(guildID)
+            config_data = getConfigData(guildID)
+            embed = nextcord.Embed(title=scrim_info["ScrimName"], description="", color=White)
 
             # checkin status
-            if status_data != None:
-                if status_data["checkin"] == "yes":
-                    for i in team_data:
-                        if i["setup"]["check_in"] != "no":
+            if config_data["toggleCheckin"] == True:
+                for team in team_data:
+                        if team["teamStatus"]["checkin"] == True:
                             teams_checked_in += 1
-                    embed.add_field(name="Check ins", value=f"**{teams_checked_in}/{len(team_data)} Teams Checked In**", inline=True)
-                else: embed.add_field(name="Check ins", value="**Awaiting Automation**", inline=True)
-            else: embed.add_field(name="Check ins", value="*United has not been scheduled yet*", inline=True)
+                embed.add_field(name="Check ins", value=f"**{teams_checked_in}/{len(team_data)} Teams Checked In**", inline=True)
+            else: embed.add_field(name="Check ins", value="**Disabled**", inline=True)
+
+            # poi status
+            if config_data["togglePoi"] == True:
+                for team in team_data:
+                    if team["teamStatus"]["poiSelection"] == True:
+                        pois_selected += 1
+                embed.add_field(name="POI Selections", value=f"**{pois_selected}/{len(team_data)} Teams Selected**", inline=True)
+            else: embed.add_field(name="Poi Selections", value="**Disabled**", inline=True)
+
+            # setup status
+            if config_data["toggleSetup"] == True:
+                if setup_data["complete"]["setupComplete"] == True: embed.add_field(name="Setup", value="**Complete**", inline=True)
+                else: embed.add_field(name="Setup", value="**Awaiting Automation**", inline=True)
+            else: embed.add_field(name="Setup", value="**Disabled**", inline=True)
 
             # Time until event (hours)
             events = []
@@ -54,7 +56,7 @@ class Command_status_Cog(commands.Cog):
                 events.append(event)
 
             if not events:
-                embed.add_field(name="Time Until Event", value="**/schedule**", inline=True)
+                embed.add_field(name="Time Until Event", value="**No Scheduled Scrims**", inline=True)
             else:
                 for event in events:
                     time_until_start = event.start_time - datetime.datetime.now(datetime.timezone.utc)
@@ -69,7 +71,7 @@ class Command_status_Cog(commands.Cog):
     
         except Exception as e:
             error_traceback = traceback.format_exc()
-            await errorResponse(error=f"{e}\n{error_traceback}", command=command, interaction=interaction)
+            await errorResponse(e, command, interaction, error_traceback)
 
 def setup(bot):
     bot.add_cog(Command_status_Cog(bot))
