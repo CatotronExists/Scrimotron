@@ -36,10 +36,10 @@ Bugs are expected, if you find one please report it [here](https://github.com/Ca
 ## Roadmap
 **v1.0.0 is not the end**\
 Development will slow as other things will take priority\
-Keep up to date in the [Dev Branch](https://github.com/CatotronExists/Scrimotron/tree/dev)
+Keep up to date in the [Dev Branch](https://github.com/CatotronExists/Scrimotron/tree/dev)\
 **v1.0.0** - Scrimotron Unleased [23/04/2024]\
 ||\
-**v1.1.0** - Multi Scheduler (April 2024)\
+**v1.1.0** - Multi Scrim (Early May 2024)\
 ||\
 **v1.2.0** - Scrim Discovery (June 2024)\
 ||\
