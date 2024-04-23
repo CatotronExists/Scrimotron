@@ -4,6 +4,9 @@ A discord bot designed to Run and Manage Apex Scrims
 
 Automating the process of check-ins, POI selections and creating team VCs. Plus scoring!
 
+## Dev Branch
+Currently working on v1.1.0 - Multi Scrim
+
 ## SCRIMOTRON UNLEASHED
 **Major Update v1.0.0 Sees the full release of Scrimotron, Now fully customisable server by server!**
 
