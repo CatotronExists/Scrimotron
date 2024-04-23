@@ -1,4 +1,4 @@
-![Scrimotron Unleashed v1 0 0 Header](https://github.com/CatotronExists/Scrimotron/assets/101963814/1324ebb8-a4c7-4cef-89c9-69fbb2f5348d)
+![Scrimotron Unleashed v1 0 0 Header](https://github.com/CatotronExists/Scrimotron/assets/101963814/4d549e35-a664-4bb0-8dcb-1c7d9b0ced03)
 # Scrimotron (Scrim-o-tron)
 ### Full Release LATE APRIL, V1.0.0 Currently in testing
 A discord bot designed to Run and Manage Apex Scrims
