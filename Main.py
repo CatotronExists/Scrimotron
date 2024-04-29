@@ -12,7 +12,7 @@ import re
 
 # Command Lists
 command_list = admin_command_list = ["team_list", "register", "end", "schedule", "select_poi", "help", "unregister_all", "status", "configure", "score"]
-public_command_list = ["team_list", "register", "select_poi", "help"]
+public_command_list = ["team_list", "register_trio", "select_poi", "help"]
 
 # Discord Vars
 intents = nextcord.Intents.all()
@@ -169,7 +169,7 @@ async def on_ready():
     formatOutput(f"{bot.user.name} has connected to Discord (Took {startup_time}ms)", status="Good", guildID="STARTUP")
     formatOutput(f"Resuming Views...", status="Normal", guildID="STARTUP")
 
-    from Commands.register import RegisterView
+    from Commands.register_trio import RegisterView
     x = 0
     deleted_messages = 0
     messageData = DB.Scrimotron.GlobalData.find_one({"savedMessages": {"$exists": True}})["savedMessages"]
@@ -480,15 +480,23 @@ async def global_messager():
     formatOutput("Running Global Messager Scheduler...", status="Normal", guildID="BACKGROUND TASK")
     messages = DB["Scrimotron"]["ScheduledMessages"].find_one({"title": {"$exists": True}})
     if messages != None:
-        embed = nextcord.Embed(title=messages["title"], description=messages["message"], color=messages["type"])
-        embed.set_footer(messages["footer"])
+        description_parts = messages["message"].split('{}')
+        description = '\n'.join(description_parts) ### TEST
+
+        embed = nextcord.Embed(title=messages["title"], description=description, color=messages["type"])
+        embed.set_footer(text=messages["footer"])
 
         for guild in getAllGuilds():
-            bot_log_channel = DB[str(guild)]["Config"].find_one({"config": {"$exists": True}})["channels"]["scrimLogChannel"]
-            if bot_log_channel != None:
-                await bot.get_channel(bot_log_channel).send(embed=embed)
-                formatOutput(f"   Sent Global Message to {bot.get_guild(guild).name}", status="Good", guildID=guild)
-            else: formatOutput(f"   No Bot Log Channel Found for {bot.get_guild(guild).name}", status="Warning", guildID=guild)
+            try: 
+                bot_log_channel = DB[str(guild)]["Config"].find_one({"config": {"$exists": True}})["channels"]["scrimLogChannel"]
+                if bot_log_channel != None:
+                    await bot.get_channel(bot_log_channel).send(embed=embed)
+                    formatOutput(f"   Sent Global Message to {bot.get_guild(guild).name}", status="Good", guildID=guild)
+                else: formatOutput(f"   No Bot Log Channel Found for {bot.get_guild(guild).name}", status="Warning", guildID=guild)
+
+            except Exception as e: # In case of error, skip that guild
+                formatOutput(f"   Something went wrong while sending global message to {bot.get_guild(guild).name}. Error: {e}", status="Error", guildID=guild)
+                continue
 
         DB["Scrimotron"]["ScheduledMessages"].delete_one({"title": {"$exists": True}})
         formatOutput("   All Global Messages Sent", status="Good", guildID="BACKGROUND TASK")
