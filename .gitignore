@@ -16,7 +16,6 @@ maker.py
 **/__pycache__
 
 # Unfinished
-**/Commands/better_scheduling.py
 **/Commands/better_select_poi.py
 
 # AI Testing

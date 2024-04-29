@@ -5,23 +5,25 @@ A discord bot designed to Run and Manage Apex Scrims
 Automating the process of check-ins, POI selections and creating team VCs. Plus scoring!
 
 ## Dev Branch
-Currently working on v1.1.0 - Multi Scrim
+Currently working on v1.1.0 - Multi Scrim\
+Estimated Release: Early May 2024 
 
-## SCRIMOTRON UNLEASHED
-**Major Update v1.0.0 Sees the full release of Scrimotron, Now fully customisable server by server!**
+**Versioning**  
+Dev Versions (v1.x.x-dx) are likely to have breaking issues\
+Preview Versions (v1.x.x-px) are more polished and are for the later stages of update development\
+Final Versions (v1.x.x-FINALx) will be the version released, unless breaking bugs are discovered
 
-Fully Customisable - (If you want to change something, you most likely can!)\
-Fully Automated - (No more manual checkins*, no more manual scoring, no more manual anything!)\
-Fully Open Source - (Browse the spaghetti code for yourself!)
+## SCRIMOTRON MULTIPLEX (v1.1.0)
+**Major Update v1.1.0 Brings the option to host multiple scrims at once!**
+
+*More Information Soon!*
 
 Any Suggestions? Leave a sugestion [here](https://github.com/CatotronExists/Scrimotron/issues/new?assignees=&labels=&projects=&template=feature_request.md&title=%5BSuggestion%5D) or send me a message on discord (@Catotron)\
 Bugs are expected, if you find one please report it [here](https://github.com/CatotronExists/Scrimotron/issues/new?assignees=&labels=&projects=&template=bug_report.md&title=%5BBug%5D) or send me a message on discord (@Catotron)
 
 [**-->> Invite Scrimotron <<--**](https://discord.com/oauth2/authorize?client_id=1165565006763536445&permissions=8&scope=bot+applications.commands)
 
-**You still have to react to the checkin message, can't quite make it FULLY automatic :(*
-
-[Full Patch Notes](https://github.com/CatotronExists/Scrimotron/releases/tag/v1.0.0)
+[Full Patch Notes](https://github.com/CatotronExists/Scrimotron/releases/tag/v1.1.0)
 
 ## Command List
 - `/help`: Open a help menu for information on all commands. Plus examples of usage
@@ -30,7 +32,7 @@ Bugs are expected, if you find one please report it [here](https://github.com/Ca
 - `/select_poi`: Allows teams to select their POIs.
 
 - `/configure`: Configure Scrimotron. **Staff Only**
-- `/schedule`: Schedule scrims. Starts Automation Process for Check-ins, POI selections and team VCs. **Staff Only**
+- `/schedule`: Schedule Scrims using a series of menus (Max 5 Scrims at a time). **Staff Only**
 - `/unregiser_all`: Unregisters all players/teams. **Staff Only**
 - `/status`: Shows the status of scrims. **Staff Only**
 - `/end`: Ends scrims. **Staff Only**
@@ -39,9 +41,9 @@ Bugs are expected, if you find one please report it [here](https://github.com/Ca
 **v1.0.0 is not the end**\
 Development will slow as other things will take priority\
 Keep up to date in the [Dev Branch](https://github.com/CatotronExists/Scrimotron/tree/dev)\
-**v1.0.0** - Scrimotron Unleased [23/04/2024]\
+**v1.0.0** - Scrimotron UNLEASHED [23/04/2024]\
 ||\
-**v1.1.0** - Multi Scrim (Early May 2024)\
+**v1.1.0** - Scrimotron MULTIPLEX (Early May 2024)\
 ||\
 **v1.2.0** - Scrim Discovery (June 2024)\
 ||\
