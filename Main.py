@@ -42,11 +42,11 @@ async def errorResponse(error, command, interaction: Interaction, error_tracebac
 
 ### Message Splitter
 def splitMessage(base, guildID):
-    scrim_info = DB[str(guildID)]["ScrimData"].find_one({"scrimInfo": {"$exists": True}})["scrimInfo"]
+    #scrim_info = DB[str(guildID)]["ScrimData"].find_one({"scrimInfo": {"$exists": True}})["scrimInfo"]
     channels = getChannels(guildID)
 
-    scrim_name = scrim_info["scrimName"]
-    scrim_epoch = scrim_info["scrimEpoch"]
+    #scrim_name = scrim_info["scrimName"]
+    #scrim_epoch = scrim_info["scrimEpoch"]
     channel_register = channels["scrimRegistrationChannel"]
     channel_checkin = channels["scrimCheckinChannel"]
     channel_rules = channels["scrimRulesChannel"]
@@ -56,20 +56,20 @@ def splitMessage(base, guildID):
 
     parts = re.split(r'(\{.*?\})', base)
     placeholders = {
-        "{scrim_name}": scrim_name,
+        #"{scrim_name}": scrim_name,
         "{channel_register}": f"<#{channel_register}>",
         "{channel_checkin}": f"<#{channel_checkin}>",
         "{channel_rules}": f"<#{channel_rules}>",
         "{channel_format}": f"<#{channel_format}>",
         "{channel_poi}": f"<#{channel_poi}>",
         "{channel_bot_log}": f"<#{channel_bot_log}>",
-        "{timing_short_time}": f"<t:{scrim_epoch}:t>",
-        "{timing_long_time}": f"<t:{scrim_epoch}:T>",
-        "{timing_short_date}": f"<t:{scrim_epoch}:d>",
-        "{timing_long_date}": f"<t:{scrim_epoch}:D>",
-        "{timing_full}": f"<t:{scrim_epoch}:f>",
-        "{timing_day_full}": f"<t:{scrim_epoch}:F>",
-        "{timing_countdown}": f"<t:{scrim_epoch}:R>",
+        # "{timing_short_time}": f"<t:{scrim_epoch}:t>",
+        # "{timing_long_time}": f"<t:{scrim_epoch}:T>",
+        # "{timing_short_date}": f"<t:{scrim_epoch}:d>",
+        # "{timing_long_date}": f"<t:{scrim_epoch}:D>",
+        # "{timing_full}": f"<t:{scrim_epoch}:f>",
+        # "{timing_day_full}": f"<t:{scrim_epoch}:F>",
+        # "{timing_countdown}": f"<t:{scrim_epoch}:R>",
         "{}": "\n"
     }
 
@@ -77,7 +77,9 @@ def splitMessage(base, guildID):
         if part in placeholders:
             parts[parts.index(part)] = placeholders[part]
 
-        base = ''.join(parts[0:])
+    base = []
+    base.append(parts[0])
+    base.append(''.join(parts[1:]))
     return base
 
 def unformatMessage(base, guildID):
@@ -495,7 +497,7 @@ async def global_messager():
                 else: formatOutput(f"   No Bot Log Channel Found for {bot.get_guild(guild).name}", status="Warning", guildID=guild)
 
             except Exception as e: # In case of error, skip that guild
-                formatOutput(f"   Something went wrong while sending global message to {bot.get_guild(guild).name}. Error: {e}", status="Error", guildID=guild)
+                formatOutput(f"   Something went wrong while sending global message to {guild}. Error: {e}", status="Error", guildID=guild)
                 continue
 
         DB["Scrimotron"]["ScheduledMessages"].delete_one({"title": {"$exists": True}})
