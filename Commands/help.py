@@ -5,18 +5,67 @@ from Main import formatOutput, errorResponse, public_command_list, admin_command
 from BotData.colors import *
 
 help_descriptions = {
-"team_list": "\nShows a full list of teams, Captains, Players and Subs. Also a total team, player and sub count.\n\n**Usage:** *optional*\n/team_list\n**Example:**\n`/team_list`",
-"register": "\nRegister your team for Scrims.\n\n**Usage:** *optional*\n`/register team_name: captain: player2: player3: *sub1*: *sub2*: *logo*:`\n**Example:**\n`/register` `BestTeamEver` `@DrunkBoater` `@TTV-Wraith` `@Hotdropper` `@IamA_SUBmarine`",
-"end": "**Admin Only**\nEnd Scrims, Deletes Roles and VCs for teams.\nAlso starts tallying scores\n**Usage:** *optional*\n`/end`\n**Example:**\n`/end`",
-"schedule": "**Admin Only**\nSchedule Scrims. Creates a Discord event for Scrims. Starts Automated process leading up to the start of scrims.\n**Usage:** *optional*\n`/schedule name: time: (in epoch) map1: map2: selection_mode:`\n**Example:**\n`/schedule` `3133648800` `Worlds Edge` `Storm Point` `Simple`",
-"select_poi": "\nSelect a POI for your team.\n\n**Usage:** *optional*\n`/select_poi]`\n**Example:**\n`/select_poi`",
-"help": "\nOpens a help menu, use the dropdown to get help on that command, Find Example usage and more.\n**Usage:** *optional*\n`/help`\n**Example:**\n`/help`",
-"unregister_all": "**Admin Only**\nUnregister all teams from Scrims.\n**Usage:** *optional*\n`/unregister_all`\n**Example:**\n`/unregister_all`",
-"status": "**Admin Only**\nShow the status of Scrims. Current amount of teams checked in and POIs selected.\n**Usage:** *optional*\n`/status`\n**Example:**\n`/status`",
-"configure": "**Admin Only**\nConfigure the bot for your server. Opens a series of menus\n**Usage:** *optional*\n`/configure`\n**Example:**\n`/configure`",
-"score": "**Admin Only**\nCalculate Scores Automatically. Go to https://apexlegendsstatus.com/tournament/ and create a tournament to get scores\n**Usage:** *optional*\n`/score tournament_id`\n**Example:**\n`/score` `500`"
+"team_list": {
+    "warning": None,
+    "small_text": "Shows a full list of teams, players and subs",
+    "description": "Shows a full list of teams with players and subs.\nPlus a total team, player and sub count.\n\n**Usage:** \*optional\*\n/team_list",
+    "last_updated": "Last Updated: v1.0.0 | 23/04/2024",
+    },
+"register_trio": {
+    "warning": ":warning: *Renamed and Reworked in v1.1.0 (was `/register`)*",
+    "small_text": "Register a trio team for Scrims",
+    "description": "Register a trio team for Scrims.\nInclude 3 players, upto 2 subs and an optional team logo.\nA dropdown will appear with all scheduled scrims to join\n\n**Usage:** \*optional\*\n`/register_trio team_name: player1: player2: player3: *sub1*: *sub2*: *logo*:`",
+    "last_updated": "Last Updated: v1.1.0 | xx/05/2024",
+    },
+"end" : {
+    "warning": ":stop_sign: *Pending Removal*",
+    "small_text": "End Scrims, Deletes Roles and VCs for teams",
+    "description": "**Admin Only**\nEnd Scrims, Deletes Roles and VCs for teams.\n\n**Usage:** \*optional\*\n`/end`",
+    "last_updated": "Last Updated: v1.0.0 | 23/04/2024",
+    },
+"schedule": {
+    "warning": ":warning: *Majorly Updated in v1.1.0*",
+    "small_text": "Schedule Scrims",
+    "description": "**Admin Only**\nSchedule Scrims.\nOpens a series of menus to customise and schedule scrims\nPlus creating a Discord event for Scrims.\n\n**Usage:** \*optional\*\n`/schedule`",
+    "last_updated": "Last Updated: v1.1.0 | xx/05/2024",
+    },
+"select_poi": {
+    "warning": None,
+    "small_text": "Select a POI for your team",
+    "description": "Select a POI for your team.\nMutliple different modes for selection, chosen when scheduling scrims\n\n**Usage:** \*optional\*\n`/select_poi`",
+    "last_updated": "Last Updated: v1.0.0 | 23/04/2024",
+    },
+"help": {
+    "warning": ":warning: *Majorly Updated in v1.1.0*",
+    "small_text": "Opens a help",
+    "description": "Opens a help menu, use the dropdown to get help on that command.\nFind more information on each command and more.\n\n**Usage:** \*optional\*\n`/help`",
+    "last_updated": "Last Updated: v1.1.0 | xx/05/2024",
+    },
+"unregister_all": {
+    "warning": ":stop_sign: *Pending Removal*",
+    "small_text": "Unregister all teams from Scrims",
+    "description": "**Admin Only**\nUnregister all teams from Scrims.\n\n**Usage:** \*optional\*\n`/unregister_all`",
+    "last_updated": "Last Updated: v1.0.0 | 23/04/2024",
+    },
+"status": {
+    "warning": None,
+    "small_text": "Show the status of Scrims",
+    "description": "**Admin Only**\nShow the status of Scrims.\nCurrent amount of teams checked in and POIs selected.\n\n**Usage:** \*optional\*\n`/status`",
+    "last_updated": "Last Updated: v1.0.0 | 23/04/2024",
+    },
+"configure": {
+    "warning": ":warning: *Major Rework Upcoming*",
+    "small_text": "Configure the bot for your server",
+    "description": "**Admin Only**\nConfigure the bot for your server.\nOpens a series of menus.\nMost things in scrimotron can be altered to your server's needs\n\n**Usage:** \*optional\*\n`/configure`",
+    "last_updated": "Last Updated: v1.0.0 | 23/04/2024",
+    },
+"score": {
+    "warning": None,
+    "small_text": "Calculate Scores Automatically",
+    "description": "**Admin Only**\nCalculate Scores Automatically.\nGo to https://apexlegendsstatus.com/tournament/ and create a tournament to get scores.\nOutputs scores in a leaderboard and attaches spreadsheet!\n\n**Usage:** \*optional\*\n`/score tournament_id`",
+    "last_updated": "Last Updated: v1.0.0 | 23/04/2024",
+    }
 }
-#"command_name": "((**Admin Only**))\nBrief Discription.\nQuick Quide.\n**Usage:** *optional*\n`/command_name example_option:`\n**Example:**\n`/command_name` `example`"
 
 class dropdown_menu(nextcord.ui.View):
     def __init__(self, interaction: nextcord.Interaction):
@@ -32,30 +81,28 @@ class dropdown_help_menu(nextcord.ui.Select):
 
     async def callback(self, interaction: nextcord.Interaction):
         try:
-            embed = nextcord.Embed(title=f"Help Menu | /{interaction.data['values'][0]}", description=help_descriptions[interaction.data['values'][0]], color=0x000)
-            embed.set_footer(text="Help Menu")
-            await interaction.response.send_message(embed=embed, ephemeral=True, view=dropdown_menu(self.interaction))
-        except Exception as e:
-            error_traceback = traceback.format_exc()
-            await errorResponse(e, command, interaction, error_traceback)
+            if help_descriptions[interaction.data['values'][0]]["warning"] == None: embed = nextcord.Embed(title=f"Help Menu | /{interaction.data['values'][0]}", description=f"\n{help_descriptions[interaction.data['values'][0]]['description']}", color=White)
+            else: embed = nextcord.Embed(title=f"Help Menu | /{interaction.data['values'][0]}", description=f"\n{help_descriptions[interaction.data['values'][0]]['warning']}\n{help_descriptions[interaction.data['values'][0]]['description']}", color=White)
+
+            embed.set_footer(text=f"/{interaction.data['values'][0]} {help_descriptions[interaction.data['values'][0]]['last_updated']}")
+            await interaction.response.edit_message(embed=embed, view=dropdown_menu(self.interaction))
+
+        except Exception as e: await errorResponse(e, command, interaction, error_traceback=traceback.format_exc())
 
 class Command_help_Cog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @nextcord.slash_command(name="help", description="Open a help menu for information on all commands. Plus examples of usage")
+    @nextcord.slash_command(name="help", description="Open a help menu for information on all commands")
     async def help(self, interaction: nextcord.Interaction):
         global command
-        command = interaction.application_command.name
-        userID = interaction.user.id
-        guildID = int(interaction.guild.id)
-        formatOutput(output=f"/{command} Used by {userID} | @{interaction.user.name}", status="Normal", guildID=guildID)
+        command = {"name": interaction.application_command.name, "userID": interaction.user.id, "guildID": interaction.guild.id}
+        formatOutput(output=f"/{command['name']} Used by {command['userID']} | @{interaction.user.name}", status="Normal", guildID=command["guildID"])
 
         try: await interaction.response.defer(ephemeral=True)
-        except: pass
+        except: pass # Discord can sometimes error on defer()
         
         embed = nextcord.Embed(title="Help Menu", description="Find the command in the dropdown to get help on that command.", color=White)
-        embed.set_footer(text="Use the dropdown below")
         await interaction.edit_original_message(embed=embed, view=dropdown_menu(interaction))
 
 def setup(bot):

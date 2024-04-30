@@ -211,7 +211,6 @@ async def on_ready():
     formatOutput("Scheduler Started", status="Good", guildID="STARTUP")
     formatOutput("---------------------------------", status="Normal", guildID="STARTUP")
     await bot.change_presence(activity=nextcord.Activity(type=nextcord.ActivityType.watching, name="Scrims 24/7"))
-    getScrims(1165569173880049664)
 
 ##### Scheduler
 async def checkin_handler(config_data, guildID): # Runs checkin automation
