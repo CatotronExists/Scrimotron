@@ -11,7 +11,7 @@ from BotData.colors import *
 import re
 
 # Command Lists
-command_list = admin_command_list = ["team_list", "register", "end", "schedule", "select_poi", "help", "unregister_all", "status", "configure", "score"]
+command_list = admin_command_list = ["team_list", "register_trio", "end", "schedule", "select_poi", "help", "unregister_all", "status", "configure", "score"]
 public_command_list = ["team_list", "register_trio", "select_poi", "help"]
 
 # Discord Vars
@@ -113,6 +113,14 @@ def getTeams(guildID):
     team_data = list(DB[str(guildID)]["TeamData"].find({}))
     return team_data
 
+def getScrims(guildID):
+    scrims = list(DB[str(guildID)]["ScrimData"].find({}))
+    return scrims
+
+def getScrim(name, guildID):
+    scrim = DB[str(guildID)]["ScrimData"].find_one({"scrimName": name})
+    return scrim
+
 def getScrimSetup(guildID):
     scrim_setup = DB[str(guildID)]["ScrimData"].find_one({"scrimSetup": {"$exists": True}})
     return scrim_setup
@@ -203,6 +211,7 @@ async def on_ready():
     formatOutput("Scheduler Started", status="Good", guildID="STARTUP")
     formatOutput("---------------------------------", status="Normal", guildID="STARTUP")
     await bot.change_presence(activity=nextcord.Activity(type=nextcord.ActivityType.watching, name="Scrims 24/7"))
+    getScrims(1165569173880049664)
 
 ##### Scheduler
 async def checkin_handler(config_data, guildID): # Runs checkin automation

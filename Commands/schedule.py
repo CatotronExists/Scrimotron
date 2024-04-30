@@ -276,7 +276,7 @@ class ConfirmationView(nextcord.ui.View):
 
                             "scrimConfiguration": {
                                 "maxTeams": 20,
-                                "TeamType": "Trios",
+                                "teamType": "Trios",
                                 "poiSelectionMode": self.schedule_data['poi_selection_mode'],
                                 "totalGames": 6,
                                 "open": {
