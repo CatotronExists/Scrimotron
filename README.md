@@ -14,7 +14,7 @@ Preview Versions (v1.x.x-px) are more polished and are for the later stages of u
 Final Versions (v1.x.x-FINALx) will be the version released, unless breaking bugs are discovered
 
 ## SCRIMOTRON MULTIPLEX (v1.1.0)
-**Major Update v1.1.0 Brings the option to host multiple scrims at once!**
+**Major Update v1.1.0 Brings the option to host multiple scrims at once with more customisation!**
 
 *More Information Soon!*
 
@@ -45,7 +45,7 @@ Keep up to date in the [Dev Branch](https://github.com/CatotronExists/Scrimotron
 ||\
 **v1.1.0** - Scrimotron MULTIPLEX (Early May 2024)\
 ||\
-**v1.2.0** - Scrim Discovery (June 2024)\
+**v1.2.0** - Player Statistics (June 2024)\
 ||\
 **v1.3.0** - Alternate BR Modes [Hide and Seek, etc] (August 2024)\
 ||\

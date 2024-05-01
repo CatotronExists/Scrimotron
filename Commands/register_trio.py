@@ -101,7 +101,7 @@ class Command_register_Cog(commands.Cog):
         global command
         command = {"name": interaction.application_command.name, "userID": interaction.user.id, "guildID": interaction.guild.id}
         formatOutput(output=f"/{command['name']} Used by {command['userID']} | @{interaction.user.name}", status="Normal", guildID=command["guildID"])
- 
+
         try: await interaction.response.defer(ephemeral=True)
         except: pass # Discord can sometimes error on defer()
 
