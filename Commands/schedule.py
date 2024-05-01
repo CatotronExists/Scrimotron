@@ -347,7 +347,6 @@ class Command_schedule_Cog(commands.Cog):
 
     @nextcord.slash_command(name="schedule", description="Schedule Scrims using a series of menus (Max 5 Scrims at a time). **Staff Only**", default_member_permissions=(nextcord.Permissions(administrator=True)))
     async def schedule(self, interaction: nextcord.Interaction):
-
         global command
         command = {"name": interaction.application_command.name, "userID": interaction.user.id, "guildID": interaction.guild.id}
         formatOutput(output=f"/{command['name']} Used by {command['userID']} | @{interaction.user.name}", status="Normal", guildID=command["guildID"])

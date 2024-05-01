@@ -11,8 +11,8 @@ from BotData.colors import *
 import re
 
 # Command Lists
-command_list = admin_command_list = ["team_list", "register_trio", "end", "schedule", "select_poi", "help", "unregister_all", "status", "configure", "score"]
-public_command_list = ["team_list", "register_trio", "select_poi", "help"]
+command_list = admin_command_list = ["team_list", "register_trio", "end", "schedule", "select_poi", "help", "unregister_all", "status", "configure", "score", "feedback"]
+public_command_list = ["team_list", "register_trio", "select_poi", "help", "feedback"]
 
 # Discord Vars
 intents = nextcord.Intents.all()
@@ -30,8 +30,7 @@ def formatOutput(output, status, guildID):
 async def errorResponse(error, command, interaction: Interaction, error_traceback):
     embed = nextcord.Embed(title="**Error**", description=f"Something went wrong while running `/{command}`.\nDid you mistype an entry or not follow the format?\nError: {error}", color=Red)
     embed.set_footer(text="Error was automatically sent to Catotron for review.")
-    try: await interaction.edit_original_message(embed=embed)
-    except: await interaction.response.send_message(embed=embed)
+    await interaction.response.edit_message(embed=embed, view=None)
     formatOutput(output=f"   Something went wrong while running /{command}. Error: {error}", status="Error", guildID=interaction.guild.id)
 
     # SEND ERROR TO CHANNEL
@@ -146,7 +145,6 @@ def getConfigStatus(guildID):
     return config_status
 
 ##### Discord Setup
-
 # Startup Terminal
 start_time = datetime.datetime.now()
 formatOutput(f"{CBOLD} SCRIMOTRON TERMINAL {CLEAR}", status="Good", guildID="STARTUP")
