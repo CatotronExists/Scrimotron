@@ -61,11 +61,43 @@ class RegisterDropdown(nextcord.ui.Select):
         super().__init__(placeholder="Select a scrim to sign up for", min_values=1, max_values=1, options=[nextcord.SelectOption(label=scrim['scrimName'], value=scrim['scrimName'], description=f"{scrim['scrimConfiguration']['teamType']} Scrim") for scrim in getScrims(command['guildID'])])
 
     async def callback(self, interaction: nextcord.Interaction):
-        scrim = getScrim(self.values[0], command['guildID'])
+        scrim = getScrim(command['guildID'], self.values[0])
         if scrim['scrimConfiguration']['teamType'] == 'Trios': # Correct Team Type
             if self.team_data[0] not in scrim['scrimTeams'].keys(): # Check if team name is already in scrim
 
                 ### Check if team needs to be in reserve
+
+                DB[str(interaction.guild.id)]["ScrimData"].update_one(
+                    {"scrimName": scrim['scrimName']},
+                    {"$set": {f"scrimTeams.{self.team_data[0]}": {
+                        "teamType": "Trios",
+                        "teamLogo": self.team_data[1],
+                        "teamPlayer1": self.IDs[1],
+                        "teamPlayer2": self.IDs[2],
+                        "teamPlayer3": self.IDs[3],
+                        "teamSub1": self.IDs[4],
+                        "teamSub2": self.IDs[5],
+                        "teamPois": {
+                            "map1": {
+                                "map1POI": None,
+                                "map1Secondary": None,
+                                "map1Split": None,
+                                "map1Vechicle": None},
+                            "map2": {
+                                "map2POI": None,
+                                "map2Secondary": None,
+                                "map2Split": None,
+                                "map2Vechicle": None}},
+                        "teamSetup": {
+                            "checkinMessageID": None,
+                            "poiMessageID": None,
+                            "roleID": None,
+                            "channelID": None},
+                        "teamStatus": {
+                            "checkin": False,
+                            "poiSelction": False}
+                        },
+                    }})
 
                 embed = nextcord.Embed(title="Team Registered", description=f"**{self.team_data[0]}** has been registered for **{scrim['scrimName']}**", color=Green)
                 await interaction.response.edit_message(embed=embed, view=None)
@@ -139,7 +171,7 @@ class Command_register_Cog(commands.Cog):
             embed = nextcord.Embed(title=f"Registration Menu // {team_name}", description=f"**{team_name}**\nPlayer 1 - <@{player1}>\nPlayer 2 - <@{player2}>\nPlayer 3 - <@{player3}>\nSub 1 - {sub1_display}\nSub 2 - {sub2_display}", color=White)
             embed.set_thumbnail(url=team_logo)
 
-            for scrim in scrims(command['guildID']):
+            for scrim in getScrims(command['guildID']):
                 if scrim['scrimConfiguration']['teamType'] == 'Trios': team_type = '**Trios**'
                 else: team_type = scrim['scrimConfiguration']['teamType']
 
@@ -154,61 +186,12 @@ class Command_register_Cog(commands.Cog):
         
         await interaction.edit_original_message(embed=embed, view=RegisterMenu(interaction, IDs, team_data=[team_name, team_logo]))
 
-        #         DB[guildID]["TeamData"].insert_one({
-        #             "teamName": team_name, 
-        #             "teamCaptain": captain.id, 
-        #             "teamPlayer2": player2.id, 
-        #             "teamPlayer3": player3.id, 
-        #             "teamSub1": sub1, 
-        #             "teamSub2": sub2, 
-        #             "teamLogo": logo,
-        #             "teamPois": {
-        #                 "map1": {
-        #                     "map1POI": None,
-        #                     "map1Secondary": None,
-        #                     "map1Split": None,
-        #                     "map1Vechicle": None},
-        #                 "map2": {
-        #                     "map2POI": None,
-        #                     "map2Secondary": None,
-        #                     "map2Split": None,
-        #                     "map2Vechicle": None}},
-        #             "teamSetup": {
-        #                 "roleID": None,
-        #                 "channelID": None,
-        #                 "messageID": None},
-        #             "teamStatus": {
-        #                 "checkin": False,
-        #                 "poiSelction": False}
-        #             })
-
-        #         if logo != "None": embed.set_thumbnail(url=logo)
-
         #         # role = interaction.guild.get_role(partipantRoleID)
         #         # await interaction.guild.get_member(captain.id).add_roles(role)
         #         # await interaction.guild.get_member(player2.id).add_roles(role)
         #         # await interaction.guild.get_member(player3.id).add_roles(role)
         #         # if sub1 != "N/A": await interaction.guild.get_member(sub1).add_roles(role)
-        #         # if sub2 != "N/A": await interaction.guild.get_member(sub2).add_roles(role)
-
-        #         embed.set_footer(text=f"Registered at {datetime.datetime.utcnow().strftime('%d/%m/%Y %H:%M:%S')} UTC")
-                
-        #         channels = getChannels(interaction.guild.id)
-        #         message = await self.bot.get_channel(channels["scrimRegistrationChannel"]).send(embed=embed, view=RegisterView(interaction))
-
-        #         DB[str(interaction.guild.id)]["TeamData"].update_one({"teamName": team_name}, {"$set": {"teamSetup": {"roleID": None, "channelID": None, "messageID": message.id}}}, upsert=True)
-        #         DB.Scrimotron.GlobalData.find_one_and_update({"savedMessages": {"$exists": True}}, {"$push": {"savedMessages": {"guildID": interaction.guild.id, "channelID": channels["scrimRegistrationChannel"], "messageID": message.id, "interactionID": interaction.id, "viewType": "registration"}}}, upsert=True)
-
-        #         await interaction.edit_original_message(content=f"{team_name} has been registered!")
-        #         formatOutput(output=f"   {team_name} was registered!", status="Good", guildID=guildID)
-
-        #     except Exception as e:
-        #         error_traceback = traceback.format_exc()
-        #         await errorResponse(e, command, interaction, error_traceback)
-        #         try: 
-        #             DB[str(interaction.guild.id)]["TeamData"].delete_one({"teamName": team_name}) # delete team if it was created but an error occured
-        #             formatOutput(output=f"   /{command} | Team creation was cancelled, due to error", status="Error", guildID=guildID)
-        #         except: pass # if team wasnt created yet, ignore
+        #         # if sub2 != "N/A": await interaction.guild.get_member(sub2).add_roles(role)       
 
 def setup(bot):
     bot.add_cog(Command_register_Cog(bot))
