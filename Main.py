@@ -131,11 +131,7 @@ def getScrim(guildID, scrim_name):
     scrim = DB[str(guildID)]["ScrimData"].find_one({"scrimName": scrim_name})
     return scrim
 
-def getScrimSetup(guildID, scrim_name):
-    scrim_setup = DB[str(guildID)]["ScrimData"].find_one({"scrimName": scrim_name})['scrimConfiguration']
-    return scrim_setup
-
-def getScrimInfo(guildID, scrim_name):
+def getScrimInfo(guildID, scrim_name): # Remove (All scrim data to come from getScrim or getScrims)
     scrim_data = DB[str(guildID)]["ScrimData"].find_one({"scrimName": scrim_name})
     scrim_info = {"scrimName": scrim_data["scrimName"], "scrimEpoch": scrim_data["scrimEpoch"]}
     return scrim_info
@@ -188,10 +184,10 @@ async def on_ready():
     from Commands.register_trio import RegisterView
     view_count = 0
     deleted_messages = 0
-    messageData = DB.Scrimotron.GlobalData.find_one({"savedMessages": {"$exists": True}})["savedMessages"]
+    messageData = list(DB.Scrimotron.SavedMessages.find({}))
     for entry in messageData:
         try:
-            formatOutput(f"   Resuming Views: {viewType}/{len(messageData)}", status="Normal", guildID="RESUMER")
+            formatOutput(f"   Resuming Views: {view_count}/{len(messageData)}", status="Normal", guildID="RESUMER")
             # Find Message
             guild = bot.get_guild(entry["guildID"])
             channel = guild.get_channel(entry["channelID"])
@@ -251,7 +247,7 @@ async def checkin_handler(config_data, guildID): # Runs checkin automation
 async def setup_handler(config_data, guildID, scrim_name): # Runs setup automation
     formatOutput(f"   Starting Setup, Less than {config_data['toggleSetupTime']} hour(s) until start", status="Normal", guildID=guildID)
     channels = getChannels(guildID)
-    scrim_setup = getScrimSetup(guildID, scrim_name)
+    scrim = getScrim(guildID, scrim_name)
     scrim_info = getScrimInfo(guildID, scrim_name)
     team_data = getTeams(guildID, scrim_name)
 
@@ -365,7 +361,7 @@ async def setup_handler(config_data, guildID, scrim_name): # Runs setup automati
     try: # Make Voice Channels
         if error == False:
             teams_processed = 0
-            catergory_vc = scrim_setup["vcCatergory"]
+            catergory_vc = scrim["scrimConfiguration"]["IDs"]["vcCatergory"]
             for i in team_data:
                 team_name = i["teamNname"]
                 vc = await bot.get_guild(guildID).create_voice_channel(name=team_name, category=bot.get_guild(guildID).get_channel(catergory_vc))
@@ -398,7 +394,7 @@ async def setup_handler(config_data, guildID, scrim_name): # Runs setup automati
                 vc = bot.get_guild(guildID).get_channel(vc_id)
                 # get role and give to team members
                 role = bot.get_guild(guildID).get_role(i["teamSetup"]["roleID"])
-                casterRole = bot.get_guild(guildID).get_role(scrim_setup["casterRole"])
+                casterRole = bot.get_guild(guildID).get_role(scrim["scrimConfiguration"]["IDs"]["casterRole"])
 
                 overwrite = nextcord.PermissionOverwrite()
                 overwrite.connect = True
@@ -449,14 +445,14 @@ async def setup_handler(config_data, guildID, scrim_name): # Runs setup automati
         formatOutput(f"      Automation | Setup Failed", status="Error")
 
 async def poi_handler(config_data, guildID): # Runs poi automation
-    scrim_setup = getScrimSetup(guildID)
+    # scrim_setup = getScrim(guildID, scrim_name)
     channels = getChannels(guildID)
     try:
         formatOutput(f"   Opening POI Selections, Less than {config_data['togglePoiTime']} hour(s) until start", status="Normal", guildID=guildID)
-        maps = scrim_setup["maps"]
-        map1 = maps["maps"]["map1"]
-        map2 = maps["maps"]["map2"]
-        embed = nextcord.Embed(title="POI Selections are Open!", description=f"Select a POI for {map1} & {map2} using /select_poi", color=Black)
+        # maps = scrim_setup["maps"]
+        # map1 = maps["maps"]["map1"]
+        # map2 = maps["maps"]["map2"]
+        # embed = nextcord.Embed(title="POI Selections are Open!", description=f"Select a POI for {map1} & {map2} using /select_poi", color=Black)
         await bot.get_channel(channels["scrimPoiChannel"]).send(embed=embed)
         embed = nextcord.Embed(title="POI Selections are Open!", color=Green)
         embed.set_footer(text=f"🛠 Automatically Opened {config_data['togglePoiTime']} hour(s) before start")
