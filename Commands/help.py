@@ -101,7 +101,7 @@ class Command_help_Cog(commands.Cog):
 
         try: await interaction.response.defer(ephemeral=True)
         except: pass # Discord can sometimes error on defer()
-        
+
         embed = nextcord.Embed(title="Help Menu", description="Find the command in the dropdown to get help on that command.", color=White)
         await interaction.edit_original_message(embed=embed, view=dropdown_menu(interaction))
 

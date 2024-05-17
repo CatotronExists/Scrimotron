@@ -42,10 +42,10 @@ class FeedbackModal(nextcord.ui.Modal):
         self.input = nextcord.ui.TextInput(
             label=feedback_type,
             style=nextcord.TextInputStyle.paragraph,
-            placeholder=f"Input {feedback_type} Here", 
-            min_length=1, 
+            placeholder=f"Input {feedback_type} Here",
+            min_length=1,
             max_length=1000)
-        
+
         self.input.callback = self.callback
         self.add_item(self.input)
 
@@ -86,7 +86,7 @@ class ConfirmationView(nextcord.ui.View):
 
                     embed = nextcord.Embed(title=f"{self.feedback_type} Submitted", description="Thank you for your feedback.", color=Green)
                     await interaction.response.edit_message(embed=embed, view=None)
-                
+
                 elif action == "Edit":
                     await interaction.response.send_modal(modal=FeedbackModal(interaction, self.feedback_type))
 

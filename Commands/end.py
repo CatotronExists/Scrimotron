@@ -16,7 +16,7 @@ class Command_end_Cog(commands.Cog):
         userID = interaction.user.id
         guildID = int(interaction.guild.id)
         formatOutput(output=f"/{command} Used by {userID} | @{interaction.user.name}", status="Normal", guildID=guildID)
-        
+
         try: await interaction.response.defer(ephemeral=True)
         except: pass
 
@@ -49,7 +49,7 @@ class Command_end_Cog(commands.Cog):
                     teams_processed += 1
                     embed.set_field_at(current_pos, name="Deleting Roles", value=f"{teams_processed}/{len(team_data)}", inline=True)
                     await interaction.edit_original_message(embed=embed)
-    
+
                 embed.set_field_at(current_pos, name="Deleting Roles", value=f"**DONE**", inline=True)
                 await interaction.edit_original_message(embed=embed)
                 current_pos += 1
@@ -59,12 +59,12 @@ class Command_end_Cog(commands.Cog):
                 error_traceback = traceback.format_exc()
                 await errorResponse(e, command, interaction, error_traceback)
                 error = True
-            
+
             if config_data["toggleCheckin"] == True:
                 try:
                     channel_checkin = channels["scrimCheckinChannel"]
                     for team in team_data:
-                        try: 
+                        try:
                             message = await interaction.guild.get_channel(channel_checkin).fetch_message(team["teamSetup"]["checkinMessageID"])
                             await message.delete()
                             DB[str(guildID)]["TeamData"].update_one({"teamName": team["teamName"]}, {"$set": {"teamSetup.checkinMessageID": None}})
@@ -80,14 +80,14 @@ class Command_end_Cog(commands.Cog):
                 except Exception as e:
                     embed.set_field_at(current_pos, name="Deleting Checkins", value=f"**FAILED**", inline=True)
                     error_traceback = traceback.format_exc()
-                    await errorResponse(e, command, interaction, error_traceback)                    
+                    await errorResponse(e, command, interaction, error_traceback)
                     error = True
-            
+
             if config_data["togglePoi"] == True:
                 try:
                     channel_poi = channels["scrimPoiChannel"]
                     for team in team_data:
-                        try: 
+                        try:
                             message = await interaction.guild.get_channel(channel_poi).fetch_message(team["teamSetup"]["poiMessageID"])
                             await message.delete()
                             DB[str(guildID)]["TeamData"].update_one({"teamName": team["teamName"]}, {"$set": {"teamSetup.poiMessageID": None}})
@@ -109,7 +109,7 @@ class Command_end_Cog(commands.Cog):
             if config_data["toggleSetup"] == True:
                 try:
                     for team in team_data:
-                        try: 
+                        try:
                             vc = interaction.guild.get_channel(team["teamSetup"]["channelID"])
                             await vc.delete()
                             DB[str(guildID)]["TeamData"].update_one({"teamName": team["teamName"]}, {"$set": {"teamSetup.channelID": None}})
@@ -139,7 +139,7 @@ class Command_end_Cog(commands.Cog):
             except Exception as e:
                 embed.set_field_at(current_pos, name="Deleting Team Data", value=f"**FAILED**", inline=True)
                 error_traceback = traceback.format_exc()
-                await errorResponse(e, command, interaction, error_traceback) 
+                await errorResponse(e, command, interaction, error_traceback)
                 error = True
 
             if error == False:

@@ -26,7 +26,7 @@ class RegisterView(nextcord.ui.View):
                     if interaction.user.id == team["teamCaptain"]:
                         embed = nextcord.Embed(title="Run `/register` to edit your signup!", color=White)
                         await interaction.response.send_message(embed=embed, ephemeral=True)
-                    else: 
+                    else:
                         embed = nextcord.Embed(title="Only the Team Captain can edit signups!", color=Red)
                         await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -36,7 +36,7 @@ class RegisterView(nextcord.ui.View):
                         await message.delete()
                         DB[str(interaction.guild.id)]["TeamData"].delete_one({"teamName": interaction.message.embeds[0].title})
                         formatOutput(output=f"   {interaction.message.embeds[0].title} was unregistered!", status="Good", guildID=interaction.guild.id)
-                    else: 
+                    else:
                         embed = nextcord.Embed(title="Only the Team Captain and Staff can unregister teams!", color=Red)
                         await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -44,6 +44,9 @@ class RegisterView(nextcord.ui.View):
                 error_traceback = traceback.format_exc()
             await errorResponse(e, command, interaction, error_traceback)
         return callback
+
+class CheckinView(nextcord.ui.View):
+    pass
 
 class RegisterMenu(nextcord.ui.View):
     def __init__(self, interaction: nextcord.Interaction, IDs, team_data):
@@ -104,15 +107,15 @@ class RegisterDropdown(nextcord.ui.Select):
 
                 embed = nextcord.Embed(title=self.team_data[0], description=f"Player 1 - <@{self.IDs[1]}>\nPlayer 2 - <@{self.IDs[2]}>\nPlayer 3 - <@{self.IDs[3]}>\nSub 1 - {self.IDs[6]}\nSub 2 - {self.IDs[7]}")
                 embed.set_thumbnail(url=self.team_data[1])
-                
+
                 channels = getChannels(command['guildID'])
                 await self.interaction.guild.get_channel(channels["scrimRegistrationChannel"]).send(embed=embed, view=RegisterView(self.interaction))
 
             else: # Team Name Already Exists
                 embed = nextcord.Embed(title="Team Name Already Exists", description=f"Team name '{self.team_data[0]}' is already registered!", color=Red)
                 await interaction.response.edit_message(embed=embed, view=None)
- 
-        else: 
+
+        else:
             embed = nextcord.Embed(title="Invalid Team Type", description=f"This scrim is a {scrim['scrimConfiguration']['teamType']} sign up not Trios!", color=Red)
             await interaction.response.edit_message(embed=embed, view=None)
 
@@ -121,7 +124,7 @@ class Command_register_Cog(commands.Cog):
         self.bot = bot
 
     @nextcord.slash_command(name="register_trio", description="Register a trio team (Optional: Upto Two Subs + Team Logo)")
-    async def register(self, interaction: nextcord.Interaction, 
+    async def register(self, interaction: nextcord.Interaction,
         team_name = nextcord.SlashOption(name="team_name", description="Enter a team name", required=True),
         player1: nextcord.User = nextcord.SlashOption(name="player_1", description="Enter player 1 (This will be the team captain)", required=True),
         player2: nextcord.User = nextcord.SlashOption(name="player_2", description="Enter player 2", required=True),
@@ -144,12 +147,12 @@ class Command_register_Cog(commands.Cog):
                 embed = nextcord.Embed(title="No Scrims Found", description="When your ready, Schedule scrims with `/schedule`!", color=Red)
                 await interaction.edit_original_message(embed=embed)
                 return
-            
+
             else:
                 embed = nextcord.Embed(title="No Scrims Found", description="No scrims have been scheduled yet...\nWait for an admin to schedule a scrim!", color=Red)
                 await interaction.edit_original_message(embed=embed)
                 return
-            
+
         else: # More than 1 Scrim found
 
             # Convert users to IDs
@@ -157,11 +160,11 @@ class Command_register_Cog(commands.Cog):
             player2 = player2.id
             player3 = player3.id
 
-            if sub1 != None: 
+            if sub1 != None:
                 sub1 = sub1.id
                 sub1_display = f"<@{sub1}>"
             else: sub1_display = "**None**"
-            if sub2 != None: 
+            if sub2 != None:
                 sub2 = sub2.id
                 sub2_display = f"<@{sub2}>"
             else: sub2_display = "**None**"
@@ -183,15 +186,8 @@ class Command_register_Cog(commands.Cog):
                     value=f"Team Type: {team_type}\nPOI Selection Mode: {scrim['scrimConfiguration']['poiSelectionMode']}\n{maps}",
                     inline=False
                 )
-        
-        await interaction.edit_original_message(embed=embed, view=RegisterMenu(interaction, IDs, team_data=[team_name, team_logo]))
 
-        #         # role = interaction.guild.get_role(partipantRoleID)
-        #         # await interaction.guild.get_member(captain.id).add_roles(role)
-        #         # await interaction.guild.get_member(player2.id).add_roles(role)
-        #         # await interaction.guild.get_member(player3.id).add_roles(role)
-        #         # if sub1 != "N/A": await interaction.guild.get_member(sub1).add_roles(role)
-        #         # if sub2 != "N/A": await interaction.guild.get_member(sub2).add_roles(role)       
+        await interaction.edit_original_message(embed=embed, view=RegisterMenu(interaction, IDs, team_data=[team_name, team_logo]))
 
 def setup(bot):
     bot.add_cog(Command_register_Cog(bot))

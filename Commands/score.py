@@ -55,7 +55,7 @@ class Command_score_Cog(commands.Cog):
 
                         if player["kills"] > highest_kills[1]:
                             highest_kills = [player["playerName"], player["kills"], team["teamName"]]
-            
+
                 leaderboard_data.append("**Other Data**")
                 leaderboard_data.append(f"Highest Damage: {highest_damage[1]} - {highest_damage[0]} ({highest_damage[2]})")
                 leaderboard_data.append(f"Highest Kills: {highest_kills[1]} - {highest_kills[0]} ({highest_kills[2]})")
@@ -80,7 +80,7 @@ class Command_score_Cog(commands.Cog):
                     sheet[f"E{row}"] = team["kills"]
 
                     try: # Covers for any out of index errors (if 6 games weren't played)
-                        if rankings[0] <= 0: sheet[f"G{row}"] = 0 
+                        if rankings[0] <= 0: sheet[f"G{row}"] = 0
                         else: sheet[f"G{row}"] = rankings[0]
 
                         if rankings[1] <= 0: sheet[f"J{row}"] = 0
@@ -126,14 +126,14 @@ class Command_score_Cog(commands.Cog):
 
                 with open(f'scrimotron/Spreadsheets/{spreadsheet_name}', 'rb') as fp:
                     await interaction.edit_original_message(embed=embed, file=nextcord.File(fp, spreadsheet_name))
-                
+
                 fp.close() # not actually closing the file, restart to be able to delete it
-            
+
             except Exception as e:
                 error_traceback = traceback.format_exc()
                 await errorResponse(e, command, interaction, error_traceback)
 
-        else: 
+        else:
             embed = nextcord.Embed(title="Error", description="Tournament IDs must be numeric (e.g 500)", color=Red)
             await interaction.edit_original_message(embed=embed)
 

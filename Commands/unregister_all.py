@@ -20,7 +20,7 @@ class Command_unregister_all_Cog(commands.Cog):
 
         try:
             channel = getChannels(guildID)["scrimRegistrationChannel"]
-            for team in getTeams(guildID): 
+            for team in getTeams(guildID):
                 message = await interaction.guild.get_channel(channel).fetch_message(team["teamSetup"]["messageID"])
                 await message.delete()
 

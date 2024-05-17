@@ -11,7 +11,7 @@ class TeamPicker(nextcord.ui.View):
         super().__init__(timeout=None)
         self.interaction = interaction
         self.add_item(TeamDropdown(self, interaction))
-    
+
 class TeamDropdown(nextcord.ui.Select):
     def __init__(self, interaction: nextcord.Interaction):
         self.interaction = interaction
@@ -22,7 +22,7 @@ class TeamDropdown(nextcord.ui.Select):
             options=[nextcord.SelectOption(label=i, value=i) for i in getTeams(int(interaction.guild.id))],
             custom_id="team_select"
         )
-        
+
     async def callback(self, interaction: nextcord.Interaction):
         userID = interaction.user.id
         guildID = int(interaction.guild.id)
@@ -71,17 +71,17 @@ class select_poi_map2_view(nextcord.ui.View):
                     if contests > config_data["maxContests"]: button = nextcord.ui.Button(label=poi, style=nextcord.ButtonStyle.red, disabled=True)
                 else: button = nextcord.ui.Button(label=poi, style=nextcord.ButtonStyle.red)
 
-            button.callback = self.create_callback(poi, scrim_setup)    
+            button.callback = self.create_callback(poi, scrim_setup)
             self.add_item(button)
 
     def create_callback(self, label, scrim_setup):
         async def callback(interaction: nextcord.Interaction):
             poi = label
             channels = getChannels(int(interaction.guild.id))
-            try: 
+            try:
                 if scrim_setup["poiSelectionMode"] == "Simple": # Simple Selection
                     DB[int(interaction.guild.id)]["TeamData"].update_one({"teamName": self.team_name}, {"$set": {"teamPois.map2.map2POI": poi}})
-                    
+
                     message = DB[int(interaction.guild.id)]["TeamData"].find_one({"teamName": self.team_name})["teamSetup"]["poiMessageID"]
                     channel = interaction.guild.get_channel(channels["scrimPoiChannel"])
 
@@ -103,9 +103,9 @@ class select_poi_map2_view(nextcord.ui.View):
 
             except Exception as e:
                 error_traceback = traceback.format_exc()
-                await errorResponse(e, command, interaction, error_traceback)        
+                await errorResponse(e, command, interaction, error_traceback)
             return callback
-    
+
 class select_poi_map1_view(nextcord.ui.View):
     def __init__(self, interaction: nextcord.Interaction, team_name):
         super().__init__(timeout=None)
@@ -132,13 +132,13 @@ class select_poi_map1_view(nextcord.ui.View):
                     if contests > config_data["maxContests"]: button = nextcord.ui.Button(label=poi, style=nextcord.ButtonStyle.red, disabled=True)
                 else: button = nextcord.ui.Button(label=poi, style=nextcord.ButtonStyle.red)
 
-            button.callback = self.create_callback(poi, scrim_setup)    
+            button.callback = self.create_callback(poi, scrim_setup)
             self.add_item(button)
 
     def create_callback(self, label, scrim_setup):
         async def callback(interaction: nextcord.Interaction):
             poi = label
-            try: 
+            try:
                 if scrim_setup["poiSelectionMode"] == "Simple": # Simple Selection
                     DB[int(interaction.guild.id)]["TeamData"].update_one({"teamName": self.team_name}, {"$set": {"teamPois.map1.map1POI": poi}})
                     embed = nextcord.Embed(title="Select POI", description=f"Select a POI for {map2}\nGray Buttons indicate no team has chosen that POI yet,\nRed Buttons indicate that a team has picked that POI", color=White)
@@ -186,7 +186,7 @@ class Command_select_poi_Cog(commands.Cog):
                     embed = nextcord.Embed(title="POI Selection", description="POI Selections have not opened yet!", color=Red)
                     await interaction.edit_original_message(embed=embed)
                     formatOutput(output=f"   /{command} | POI Selections have not opened yet!", status="Warning", guildID=guildID)
-    
+
             else: # poi selection is disabled
                 embed = nextcord.Embed(title="POI Selection", description="POI Selections are disabled for this scrim!", color=Red)
                 await interaction.edit_original_message(embed=embed)

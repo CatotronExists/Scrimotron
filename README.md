@@ -6,9 +6,9 @@ Automating the process of check-ins, POI selections and creating team VCs. Plus 
 
 ## Dev Branch
 Currently working on v1.1.0 - Multi Scrim\
-Estimated Release: Early May 2024 
+Estimated Release: Early May 2024
 
-**Versioning**  
+**Versioning**
 Dev Versions (v1.x.x-dx) are likely to have breaking issues\
 Preview Versions (v1.x.x-px) are more polished and are for the later stages of update development\
 Final Versions (v1.x.x-FINALx) will be the version released, unless breaking bugs are discovered

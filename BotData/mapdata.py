@@ -10,7 +10,7 @@ MapData = {
             "Split": {
                 "CanSplit": False,
                 "SplitType": "n/a" },
-            "Vechical": False }, 
+            "Vechical": False },
 
         "Climatizer":
             {"ID": "Climatizer",
@@ -198,7 +198,7 @@ MapData = {
                 "CanSplit": False,
                 "SplitType": "n/a"},
             "Vechical": False },
-            
+
         "The Geyser":
             {"ID": "The Geyser",
             "Type": "Main",
@@ -305,7 +305,7 @@ MapData = {
             "Neighbours": {
                 "Main": [],
                 "Secondary": ["Wildflower Meadow", "Phase Gateway West"] },
-            "Split": {  
+            "Split": {
                 "CanSplit": True,
                 "SplitType": "North/South"},
             "Vechical": False },
@@ -320,7 +320,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "East/West"},
             "Vechical": False },
-        
+
         "Gardens":
             {"ID": "Gardens",
             "Type": "Main",
@@ -331,7 +331,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "East/West"},
             "Vechical": False },
-        
+
         "Grow Towers":
             {"ID": "Grow Towers",
             "Type": "Main",
@@ -342,7 +342,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "East/West"},
             "Vechical": False },
-        
+
         "Hammond Labs":
             {"ID": "Hammond Labs",
             "Type": "Main",
@@ -353,7 +353,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "East/West"},
             "Vechical": False },
-        
+
         "Hydroponics":
             {"ID": "Hydroponics",
             "Type": "Main",
@@ -364,7 +364,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "East/West"},
             "Vechical": True },
-        
+
         "Icarus":
             {"ID": "Icarus",
             "Type": "Main",
@@ -375,7 +375,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "North/South"},
             "Vechical": True },
-        
+
         "Oasis":
             {"ID": "Oasis",
             "Type": "Main",
@@ -386,7 +386,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "North/South"},
             "Vechical": True },
-        
+
         "Orbital Cannon":
             {"ID": "Orbital Cannon",
             "Type": "Main",
@@ -397,7 +397,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "North/South"},
             "Vechical": True },
-        
+
         "Phase Driver":
             {"ID": "Phase Driver",
             "Type": "Main",
@@ -408,7 +408,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "North/South"},
             "Vechical": True },
-        
+
         "Power Grid":
             {"ID": "Power Grid",
             "Type": "Main",
@@ -419,7 +419,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "North/South"},
             "Vechical": True },
-        
+
         "Rift":
             {"ID": "Rift",
             "Type": "Main",
@@ -441,7 +441,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "East/West"},
             "Vechical": False },
-        
+
         "Supercarrier":
             {"ID": "Supercarrier",
             "Type": "Main",
@@ -452,7 +452,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "North/South"},
             "Vechical": False },
-        
+
         "Terminal":
             {"ID": "Terminal",
             "Type": "Main",
@@ -463,7 +463,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "East/West"},
             "Vechical": False },
-        
+
         "Turbine":
             {"ID": "Turbine",
             "Type": "Main",
@@ -474,7 +474,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "North/South"},
             "Vechical": False },
-        
+
     }, "Kings Canyon":
         {"Airbase":
             {"ID": "Airbase",
@@ -486,7 +486,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "North/South"},
             "Vechical": False },
-        
+
         "Artillery":
             {"ID": "Artillery",
             "Type": "Main",
@@ -497,7 +497,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "East/West"},
             "Vechical": False },
-        
+
         "Basin":
             {"ID": "Basin",
             "Type": "Main",
@@ -508,7 +508,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "North/South"},
             "Vechical": False },
-        
+
         "Bunker":
             {"ID": "Bunker",
             "Type": "Main",
@@ -519,7 +519,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "East/West"},
             "Vechical": False },
-        
+
         "Containment":
             {"ID": "Containment",
             "Type": "Main",
@@ -530,7 +530,7 @@ MapData = {
                 "CanSplit": False,
                 "SplitType": "n/a"},
             "Vechical": False },
-        
+
         "Gauntlet":
             {"ID": "Gauntlet",
             "Type": "Main",
@@ -539,9 +539,9 @@ MapData = {
                 "Secondary": ["Broken Coast Overlook"] },
             "Split": {
                 "CanSplit": True,
-                "SplitType": "North/South"}, 
+                "SplitType": "North/South"},
             "Vechical": False },
-        
+
         "Hydro Dam":
             {"ID": "Hydro Dam",
             "Type": "Main",
@@ -550,9 +550,9 @@ MapData = {
                 "Secondary": [] },
             "Split": {
                 "CanSplit": True,
-                "SplitType": "East/West"}, 
+                "SplitType": "East/West"},
             "Vechical": False },
-        
+
         "Map Room":
             {"ID": "Map Room",
             "Type": "Main",
@@ -563,7 +563,7 @@ MapData = {
                 "CanSplit": False,
                 "SplitType": "n/a"},
             "Vechical": False },
-        
+
         "Market":
             {"ID": "Market",
             "Type": "Main",
@@ -585,7 +585,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "East/West"},
             "Vechical": False },
-        
+
         "Repulsor":
             {"ID": "Repulsor",
             "Type": "Main",
@@ -607,7 +607,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "East/West"},
             "Vechical": False },
-        
+
         "Runoff":
             {"ID": "Runoff",
             "Type": "Main",
@@ -618,7 +618,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "North/South"},
             "Vechical": False },
-        
+
         "Singh Labs":
             {"ID": "Singh Labs",
             "Type": "Main",
@@ -629,7 +629,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "Top/Bottom"},
             "Vechical": False },
-        
+
         "Spotted Lakes":
             {"ID": "Spotted Lakes",
             "Type": "Main",
@@ -640,7 +640,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "East/West"},
             "Vechical": False },
-        
+
         "Swamps":
             {"ID": "Swamps",
             "Type": "Main",
@@ -674,7 +674,7 @@ MapData = {
                 "SplitType": "n/a"},
             "Vechical": False },
 
-    }, "Broken Moon": 
+    }, "Broken Moon":
         {"Alpha Base":
             {"ID": "Alpha Base",
             "Type": "Main",
@@ -685,7 +685,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "North/South"},
             "Vechical": True },
-        
+
         "Backup Atmo":
             {"ID": "Backup Atmo",
             "Type": "Main",
@@ -707,7 +707,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "East/West"},
             "Vechical": True },
-        
+
         "Dry Gulch":
             {"ID": "Dry Gulch",
             "Type": "Main",
@@ -718,8 +718,8 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "East/West"},
             "Vechical": True },
-        
-        "Eternal Gardens": 
+
+        "Eternal Gardens":
             {"ID": "Eternal Gardens",
             "Type": "Main",
             "Neighbours": {
@@ -729,7 +729,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "East/West"},
             "Vechical": True },
-        
+
         "Stasis Array":
             {"ID": "Stasis Array",
             "Type": "Main",
@@ -740,7 +740,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "East/West"},
             "Vechical": True },
-        
+
         "The Core":
             {"ID": "The Core",
             "Type": "Main",
@@ -751,7 +751,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "North/South"},
             "Vechical": True },
-        
+
         "Production Yard":
             {"ID": "Production Yard",
             "Type": "Main",
@@ -762,7 +762,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "North/South"},
             "Vechical": True },
-        
+
         "North Promenade":
             {"ID": "North Promenade",
             "Type": "Main",
@@ -773,7 +773,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "East/West"},
             "Vechical": True },
-        
+
         "The Foundry":
             {"ID": "The Foundry",
             "Type": "Main",
@@ -784,8 +784,8 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "North/South"},
             "Vechical": True },
-        
-        "Cultivation": 
+
+        "Cultivation":
             {"ID": "Cultivation",
             "Type": "Main",
             "Neighbours": {
@@ -795,7 +795,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "East/West"},
             "Vechical": True },
-        
+
         "Atmostation":
             {"ID": "Atmostation",
             "Type": "Main",
@@ -806,7 +806,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "East/West"},
             "Vechical": True },
-        
+
         "Terraformer":
             {"ID": "Terraformer",
             "Type": "Main",
@@ -817,7 +817,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "North/South"},
             "Vechical": True },
-        
+
         "The Divide":
             {"ID": "The Divide",
             "Type": "Main",
@@ -851,7 +851,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "North/South"},
             "Vechical": True },
-        
+
         "Cascade Falls":
             {"ID": "Cascade Falls",
             "Type": "Main",
@@ -862,7 +862,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "North/South"},
             "Vechical": False },
-        
+
         "Cenote Cave":
             {"ID": "Cenote Cave",
             "Type": "Main",
@@ -873,7 +873,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "East/West"},
             "Vechical": True },
-        
+
         "Ceto Station":
             {"ID": "Ceto Station",
             "Type": "Main",
@@ -917,7 +917,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "East/West"},
             "Vechical": False },
-            
+
         "Downed Beast":
             {"ID": "Downed Beast",
             "Type": "Main",
@@ -939,7 +939,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "East/West"},
             "Vechical": True },
-        
+
         "Jurassic":
             {"ID": "Jurassic",
             "Type": "Main",
@@ -972,7 +972,7 @@ MapData = {
                 "CanSplit": True,
                 "SplitType": "North/South"},
             "Vechical": True },
-        
+
         "North Pad":
             {"ID": "North Pad",
             "Type": "Main",

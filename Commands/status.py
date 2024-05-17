@@ -18,8 +18,8 @@ class Command_status_Cog(commands.Cog):
         formatOutput(output=f"/{command} Used by {userID} | @{interaction.user.name}", status="Normal", guildID=guildID)
 
         try: await interaction.response.defer(ephemeral=True)
-        except: pass        
-        
+        except: pass
+
         try:
             pois_selected = teams_checked_in = 0
             setup_data = getScrimSetup(guildID)
@@ -68,7 +68,7 @@ class Command_status_Cog(commands.Cog):
                     embed.add_field(name="Time Until Event", value=f"**{round(time_until_start.total_seconds() / 3600)} Hours**", inline=True)
 
             await interaction.edit_original_message(embed=embed)
-    
+
         except Exception as e:
             error_traceback = traceback.format_exc()
             await errorResponse(e, command, interaction, error_traceback)
