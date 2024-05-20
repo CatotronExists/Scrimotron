@@ -79,6 +79,10 @@ ConfigData = {
         "Registration" : { # <-- sub_option
             "ValueID": 3,
             "Buttons": ["Change Message"]
+        },
+        "Reserve" : { # <-- sub_option
+            "ValueID": 3,
+            "Buttons": ["Change Message"]
         }
     },
     "Scrims": { # <-- option

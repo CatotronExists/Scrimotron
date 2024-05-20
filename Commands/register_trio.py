@@ -2,7 +2,7 @@ import nextcord
 import datetime
 import traceback
 from nextcord.ext import commands
-from Main import formatOutput, errorResponse, DB, getTeams, getChannels, getScrims, getScrim
+from Main import formatOutput, errorResponse, DB, getTeams, getChannels, getScrims, getScrim, getTeam, getMessages, splitMessage
 from BotData.colors import *
 
 class RegisterView(nextcord.ui.View):
@@ -20,10 +20,11 @@ class RegisterView(nextcord.ui.View):
 
     def create_callback(self, custom_id):
         async def callback(interaction: nextcord.Interaction):
-            team = DB[str(interaction.guild.id)]["TeamData"].find_one({"teamName": interaction.message.embeds[0].title})
+            team = DB[str(interaction.guild.id)]["ScrimData"].find_one({"teamName": interaction.message.embeds[0].title})
+            print(team)
             try:
                 if custom_id == "edit":
-                    if interaction.user.id == team["teamCaptain"]:
+                    if interaction.user.id == team["teamPlayer1"]:
                         embed = nextcord.Embed(title="Run `/register` to edit your signup!", color=White)
                         await interaction.response.send_message(embed=embed, ephemeral=True)
                     else:
@@ -31,7 +32,7 @@ class RegisterView(nextcord.ui.View):
                         await interaction.response.send_message(embed=embed, ephemeral=True)
 
                 elif custom_id == "unregister":
-                    if interaction.user.id == team["teamCaptain"] or interaction.user.guild_permissions.administrator == True:
+                    if interaction.user.id == team["teamPlayer1"] or interaction.user.guild_permissions.administrator == True:
                         message = await interaction.channel.fetch_message(team["teamSetup"]["messageID"])
                         await message.delete()
                         DB[str(interaction.guild.id)]["TeamData"].delete_one({"teamName": interaction.message.embeds[0].title})
@@ -40,9 +41,7 @@ class RegisterView(nextcord.ui.View):
                         embed = nextcord.Embed(title="Only the Team Captain and Staff can unregister teams!", color=Red)
                         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-            except Exception as e:
-                error_traceback = traceback.format_exc()
-            await errorResponse(e, command, interaction, error_traceback)
+            except Exception as e: await errorResponse(e, command, interaction, error_traceback=traceback.format_exc())
         return callback
 
 class CheckinView(nextcord.ui.View):
@@ -67,53 +66,72 @@ class RegisterDropdown(nextcord.ui.Select):
         scrim = getScrim(command['guildID'], self.values[0])
         if scrim['scrimConfiguration']['teamType'] == 'Trios': # Correct Team Type
             if self.team_data[0] not in scrim['scrimTeams'].keys(): # Check if team name is already in scrim
+                if len(scrim["scrimTeams"]) + 1 <= scrim["scrimConfiguration"]["maxTeams"]: # Check if team needs to be in reserve
+                    embed = nextcord.Embed(title="Team Registered", description=f"**{self.team_data[0]}** has been registered for **{scrim['scrimName']}**", color=Green)
+                    await interaction.response.edit_message(embed=embed, view=None)
 
-                ### Check if team needs to be in reserve
+                    embed = nextcord.Embed(title=self.team_data[0], description=f"Player 1 - <@{self.IDs[1]}>\nPlayer 2 - <@{self.IDs[2]}>\nPlayer 3 - <@{self.IDs[3]}>\nSub 1 - {self.IDs[6]}\nSub 2 - {self.IDs[7]}")
+                    embed.set_thumbnail(url=self.team_data[1])
 
-                DB[str(interaction.guild.id)]["ScrimData"].update_one(
-                    {"scrimName": scrim['scrimName']},
-                    {"$set": {f"scrimTeams.{self.team_data[0]}": {
-                        "teamType": "Trios",
-                        "teamLogo": self.team_data[1],
-                        "teamPlayer1": self.IDs[1],
-                        "teamPlayer2": self.IDs[2],
-                        "teamPlayer3": self.IDs[3],
-                        "teamSub1": self.IDs[4],
-                        "teamSub2": self.IDs[5],
-                        "teamPois": {
-                            "map1": {
-                                "map1POI": None,
-                                "map1Secondary": None,
-                                "map1Split": None,
-                                "map1Vechicle": None},
-                            "map2": {
-                                "map2POI": None,
-                                "map2Secondary": None,
-                                "map2Split": None,
-                                "map2Vechicle": None}},
-                        "teamSetup": {
-                            "checkinMessageID": None,
-                            "poiMessageID": None,
-                            "roleID": None,
-                            "channelID": None},
-                        "teamStatus": {
-                            "checkin": False,
-                            "poiSelction": False}
-                        },
-                    }})
+                    message = await self.interaction.guild.get_channel(scrim["scrimConfiguration"]["registrationChannel"]).send(embed=embed, view=RegisterView(self.interaction))
+                    DB.Scrimotron.SavedMessages.insert_one({"guildID": command['guildID'], "channelID": scrim["scrimConfiguration"]["registrationChannel"], "messageID": message.id, "interactionID": interaction.id, "viewType": "registration"})
 
-                embed = nextcord.Embed(title="Team Registered", description=f"**{self.team_data[0]}** has been registered for **{scrim['scrimName']}**", color=Green)
-                await interaction.response.edit_message(embed=embed, view=None)
+                    DB[str(interaction.guild.id)]["ScrimData"].update_one(
+                        {"scrimName": scrim['scrimName']},
+                        {"$set": {f"scrimTeams.{self.team_data[0]}": {
+                            "teamType": "Trios",
+                            "teamLogo": self.team_data[1],
+                            "teamPlayer1": self.IDs[1],
+                            "teamPlayer2": self.IDs[2],
+                            "teamPlayer3": self.IDs[3],
+                            "teamSub1": self.IDs[4],
+                            "teamSub2": self.IDs[5],
+                            "teamPois": {
+                                "map1": {
+                                    "map1POI": None,
+                                    "map1Secondary": None,
+                                    "map1Split": None,
+                                    "map1Vechicle": None},
+                                "map2": {
+                                    "map2POI": None,
+                                    "map2Secondary": None,
+                                    "map2Split": None,
+                                    "map2Vechicle": None}},
+                            "teamSetup": {
+                                "checkinMessageID": None,
+                                "poiMessageID": None,
+                                "roleID": None,
+                                "channelID": None},
+                            "teamStatus": {
+                                "checkin": False,
+                                "poiSelction": False},
+                            "messageID": message.id
+                            },
+                        }})
+                    
+                    if len(scrim["scrimTeams"]) + 1 == scrim["scrimConfiguration"]["maxTeams"]: # Final Team, send reserve message
+                        message = splitMessage(getMessages(command['guildID'])['scrimReserve'], interaction.guild.id)
+                        message_split = message.split("\n")
+                        title = message_split[0]
+                        description = '\n'.join(message_split[1:])
 
-                embed = nextcord.Embed(title=self.team_data[0], description=f"Player 1 - <@{self.IDs[1]}>\nPlayer 2 - <@{self.IDs[2]}>\nPlayer 3 - <@{self.IDs[3]}>\nSub 1 - {self.IDs[6]}\nSub 2 - {self.IDs[7]}")
-                embed.set_thumbnail(url=self.team_data[1])
-
-                channels = getChannels(command['guildID'])
-                await self.interaction.guild.get_channel(channels["scrimRegistrationChannel"]).send(embed=embed, view=RegisterView(self.interaction))
+                        embed = nextcord.Embed(title=title, description=description, color=White)
+                        message = await interaction.guild.get_channel(scrim["scrimConfiguration"]["registrationChannel"]).send(embed=embed)
+                        DB[command['guildID']]['ScrimData'].update_one({"scrimName": scrim['scrimName']}, {"$set": {"scrimConfiguration.IDs.reserveMessage": message.id}})
 
             else: # Team Name Already Exists
-                embed = nextcord.Embed(title="Team Name Already Exists", description=f"Team name '{self.team_data[0]}' is already registered!", color=Red)
-                await interaction.response.edit_message(embed=embed, view=None)
+                team = getTeam(command['guildID'], self.values[0], self.team_data[0])
+                if team['teamPlayer1'] == self.IDs[1]: # Check if team captain is the same, if so, edit registration
+                    message = await self.interaction.guild.get_channel(scrim["scrimConfiguration"]["registrationChannel"]).fetch_message(team['messageID'])
+
+                    embed = nextcord.Embed(title=self.team_data[0], description=f"Player 1 - <@{self.IDs[1]}>\nPlayer 2 - <@{self.IDs[2]}>\nPlayer 3 - <@{self.IDs[3]}>\nSub 1 - {self.IDs[6]}\nSub 2 - {self.IDs[7]}")
+                    embed.set_thumbnail(url=self.team_data[1])
+
+                    await message.edit(embed=embed, view=RegisterView(self.interaction))
+
+                else: 
+                    embed = nextcord.Embed(title="Team Name Already Exists", description=f"Team name '{self.team_data[0]}' is already registered!", color=Red)
+                    await interaction.response.edit_message(embed=embed, view=None)
 
         else:
             embed = nextcord.Embed(title="Invalid Team Type", description=f"This scrim is a {scrim['scrimConfiguration']['teamType']} sign up not Trios!", color=Red)
@@ -140,54 +158,57 @@ class Command_register_Cog(commands.Cog):
         try: await interaction.response.defer(ephemeral=True)
         except: pass # Discord can sometimes error on defer()
 
-        scrims = getScrims(command['guildID'])
+        try: 
+            scrims = getScrims(command['guildID'])
 
-        if len(scrims) == 0: # No scrims found
-            if interaction.user.guild_permissions.administrator == True:
-                embed = nextcord.Embed(title="No Scrims Found", description="When your ready, Schedule scrims with `/schedule`!", color=Red)
-                await interaction.edit_original_message(embed=embed)
-                return
+            if len(scrims) == 0: # No scrims found
+                if interaction.user.guild_permissions.administrator == True:
+                    embed = nextcord.Embed(title="No Scrims Found", description="When your ready, Schedule scrims with `/schedule`!", color=Red)
+                    await interaction.edit_original_message(embed=embed)
+                    return
 
-            else:
-                embed = nextcord.Embed(title="No Scrims Found", description="No scrims have been scheduled yet...\nWait for an admin to schedule a scrim!", color=Red)
-                await interaction.edit_original_message(embed=embed)
-                return
+                else:
+                    embed = nextcord.Embed(title="No Scrims Found", description="No scrims have been scheduled yet...\nWait for an admin to schedule a scrim!", color=Red)
+                    await interaction.edit_original_message(embed=embed)
+                    return
 
-        else: # More than 1 Scrim found
+            else: # More than 1 Scrim found
 
-            # Convert users to IDs
-            player1 = player1.id
-            player2 = player2.id
-            player3 = player3.id
+                # Convert users to IDs
+                player1 = player1.id
+                player2 = player2.id
+                player3 = player3.id
 
-            if sub1 != None:
-                sub1 = sub1.id
-                sub1_display = f"<@{sub1}>"
-            else: sub1_display = "**None**"
-            if sub2 != None:
-                sub2 = sub2.id
-                sub2_display = f"<@{sub2}>"
-            else: sub2_display = "**None**"
+                if sub1 != None:
+                    sub1 = sub1.id
+                    sub1_display = f"<@{sub1}>"
+                else: sub1_display = "**None**"
+                if sub2 != None:
+                    sub2 = sub2.id
+                    sub2_display = f"<@{sub2}>"
+                else: sub2_display = "**None**"
 
-            IDs = [None, player1, player2, player3, sub1, sub2, sub1_display, sub2_display]
+                IDs = [None, player1, player2, player3, sub1, sub2, sub1_display, sub2_display]
 
-            embed = nextcord.Embed(title=f"Registration Menu // {team_name}", description=f"**{team_name}**\nPlayer 1 - <@{player1}>\nPlayer 2 - <@{player2}>\nPlayer 3 - <@{player3}>\nSub 1 - {sub1_display}\nSub 2 - {sub2_display}", color=White)
-            embed.set_thumbnail(url=team_logo)
+                embed = nextcord.Embed(title=f"Registration Menu // {team_name}", description=f"**{team_name}**\nPlayer 1 - <@{player1}>\nPlayer 2 - <@{player2}>\nPlayer 3 - <@{player3}>\nSub 1 - {sub1_display}\nSub 2 - {sub2_display}", color=White)
+                embed.set_thumbnail(url=team_logo)
 
-            for scrim in getScrims(command['guildID']):
-                if scrim['scrimConfiguration']['teamType'] == 'Trios': team_type = '**Trios**'
-                else: team_type = scrim['scrimConfiguration']['teamType']
+                for scrim in getScrims(command['guildID']):
+                    if scrim['scrimConfiguration']['teamType'] == 'Trios': team_type = '**Trios**'
+                    else: team_type = scrim['scrimConfiguration']['teamType']
 
-                if scrim['scrimConfiguration']['maps']['map2'] != None: maps = f"Maps: {scrim['scrimConfiguration']['maps']['map1']} & {scrim['scrimConfiguration']['maps']['map2']}"
-                else: maps = f"Map: {scrim['scrimConfiguration']['maps']['map1']}"
+                    if scrim['scrimConfiguration']['maps']['map2'] != None: maps = f"Maps: {scrim['scrimConfiguration']['maps']['map1']} & {scrim['scrimConfiguration']['maps']['map2']}"
+                    else: maps = f"Map: {scrim['scrimConfiguration']['maps']['map1']}"
 
-                embed.add_field(
-                    name=f"{scrim['scrimName']} - <t:{scrim['scrimEpoch']}:f> (<t:{scrim['scrimEpoch']}:R>)",
-                    value=f"Team Type: {team_type}\nPOI Selection Mode: {scrim['scrimConfiguration']['poiSelectionMode']}\n{maps}",
-                    inline=False
-                )
+                    embed.add_field(
+                        name=f"{scrim['scrimName']} - <t:{scrim['scrimEpoch']}:f> (<t:{scrim['scrimEpoch']}:R>)",
+                        value=f"Team Type: {team_type}\nPOI Selection Mode: {scrim['scrimConfiguration']['poiSelectionMode']}\n{maps}",
+                        inline=False
+                    )
 
-        await interaction.edit_original_message(embed=embed, view=RegisterMenu(interaction, IDs, team_data=[team_name, team_logo]))
+            await interaction.edit_original_message(embed=embed, view=RegisterMenu(interaction, IDs, team_data=[team_name, team_logo]))
+
+        except Exception as e: await errorResponse(e, command, interaction, error_traceback=traceback.format_exc())
 
 def setup(bot):
     bot.add_cog(Command_register_Cog(bot))

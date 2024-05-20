@@ -586,7 +586,8 @@ class ConfirmationView(nextcord.ui.View):
                                 },
                                 "IDs": {
                                     "vcCategory": None,
-                                    "discordEvent": None
+                                    "discordEvent": None,
+                                    "reserveMessage": None
                                 }},
                             "scrimTeams": {}
                             })
