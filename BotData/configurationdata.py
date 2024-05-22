@@ -30,10 +30,6 @@ ConfigData = {
             "ValueID": 4,
             "Buttons": ["Change Channel"]
         },
-        "Checkin" : { # <-- sub_option
-            "ValueID": 4,
-            "Buttons": ["Change Channel"]
-        },
         "Rules" : { # <-- sub_option
             "ValueID": 4,
             "Buttons": ["Change Channel"]
@@ -43,10 +39,6 @@ ConfigData = {
             "Buttons": ["Change Channel"]
         },
         "Poi" : { # <-- sub_option
-            "ValueID": 4,
-            "Buttons": ["Change Channel"]
-        },
-        "Registration" : { # <-- sub_option
             "ValueID": 4,
             "Buttons": ["Change Channel"]
         },

@@ -42,10 +42,6 @@ class set_log_modal(nextcord.ui.Modal):
         self.add_item(self.input)
 
     async def callback(self, interaction: nextcord.Interaction):
-        config_data = getConfigData(interaction.guild.id)
-        messages = getMessages(interaction.guild.id)
-        channels = getChannels(interaction.guild.id)
-
         response = self.input.value
         try:
             if response.isnumeric() == True:
@@ -182,8 +178,6 @@ class sub_sub_view(nextcord.ui.View):
         self.sub_option = sub_option
 
         config_data = getConfigData(interaction.guild.id)
-        messages = getMessages(interaction.guild.id)
-        channels = getChannels(interaction.guild.id)
 
         for button_label in ConfigData[option][sub_option]["Buttons"]:
             if button_label == "Enable":
@@ -404,44 +398,6 @@ class change_channel_view(nextcord.ui.Modal):
                                 embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nAnnouncement Channel Updated To <#response>, Announcement Message Not Sent (Scrim in progress/not scheduled)", color=White)
                                 await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
 
-                        elif self.sub_option == "Checkin": # If checkin channel is changed
-                            if config_data['toggleCheckin'] == True: # Checkins are enabled
-                                if scrim_info["scrimEpoch"].isnumeric() == True:
-                                    scrim_epoch = int(scrim_info["scrimEpoch"])
-                                    if scrim_epoch > time.time():
-                                        scrim_datetime = datetime.datetime.fromtimestamp(scrim_epoch)
-                                        current_datetime = datetime.datetime.now()
-                                        time_until_start = scrim_datetime - current_datetime
-                                        hours_until_start = time_until_start.total_seconds() / 3600
-
-                                        if hours_until_start < config_data['toggleCheckinTime']: # If it is time to open checkins
-                                            message = splitMessage(messages[f'scrim{self.sub_option}'], interaction.guild.id)
-                                            message_split = message.split("\n")
-                                            title = message_split[0]
-                                            description = '\n'.join(message_split[1:])
-
-                                            embed = nextcord.Embed(title=title, description=description, color=White)
-                                            await channel.send(embed=embed)
-
-                                            embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nCheckin Channel Updated To <#response>, Checkin Message Moved", color=White)
-                                            await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                                        else: # Not time to open checkins
-                                            embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nCheckin Channel Updated To <#response>, Checkin Message Not Sent (Checkins Not Open)", color=White)
-                                            await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                                    else: # Scrims have already started/ended
-                                        embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nCheckin Channel Updated To <#response>, Checkin Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                                        await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                                else: # No scrims have ever been scheduled
-                                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nCheckin Channel Updated To <#response>, Checkin Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                                    await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                            else: # Checkins are disabled
-                                embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nCheckin Channel Updated To <#response>, Checkin Message Not Sent (Checkins Disabled)", color=White)
-                                await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
                         elif self.sub_option == "Rules": # If rules channel is changed
                             message = splitMessage(messages[f'scrim{self.sub_option}'], interaction.guild.id)
                             message_split = message.split("\n")
@@ -504,30 +460,6 @@ class change_channel_view(nextcord.ui.Modal):
                                 embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nPoi Channel Updated To <#response>, Poi Message Not Sent (Poi Selection Disabled)", color=White)
                                 await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
 
-                        elif self.sub_option == "Registration": # If registration channel is changed
-                            if scrim_info["scrimEpoch"].isnumeric() == True: # A scrim has been scheduled before
-                                scrim_epoch = int(scrim_info["scrimEpoch"])
-
-                                if scrim_epoch > time.time(): # Scrim has already started/ended
-                                    message = splitMessage(messages[f'scrim{self.sub_option}'], interaction.guild.id)
-                                    message_split = message.split("\n")
-                                    title = message_split[0]
-                                    description = '\n'.join(message_split[1:])
-
-                                    embed = nextcord.Embed(title=title, description=description, color=White)
-                                    await channel.send(embed=embed)
-
-                                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nRegistration Channel Updated To <#response>, Registration Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                                    await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                                else:
-                                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nRegistration Channel Updated To <#response>, Registration Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                                    await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                            else: # No scrims have ever been scheduled
-                                embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nRegistration Channel Updated To <#response>, Registration Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                                await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
                     embed = nextcord.Embed(title="Scrimotron Configuration", description=f"**{self.option} -> {self.sub_option} -> {self.action}** Set To <#{response}>", color=Green)
                     await interaction.send(embed=embed, ephemeral=True)
                     formatOutput(output=f"{self.option} {self.sub_option} Updated by {interaction.user.id} | @{interaction.user.name}", status="Normal", guildID=interaction.guild.id)
@@ -565,7 +497,6 @@ class change_message_view(nextcord.ui.View):
 
     def create_callback(self, option, sub_option, action, pressed):
         async def callback(interaction: nextcord.Interaction):
-            config_data = getConfigData(interaction.guild.id)
             messages = getMessages(interaction.guild.id)
             channels = getChannels(interaction.guild.id)
             try:
@@ -619,9 +550,6 @@ class edit_message_view(nextcord.ui.View):
 
     def create_callback(self, option, sub_option, action, pressed):
         async def callback(interaction: nextcord.Interaction):
-            config_data = getConfigData(interaction.guild.id)
-            messages = getMessages(interaction.guild.id)
-            channels = getChannels(interaction.guild.id)
             try:
                 if pressed == "Back":
                     embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started", color=White)
@@ -701,48 +629,8 @@ class edit_message_modal(nextcord.ui.Modal):
                         await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
 
                 elif self.sub_option == "Checkin": # If checkin message is changed
-                    if config_data['toggleCheckin'] == True: # Checkins are enabled
-                        if scrim_info["scrimEpoch"].isnumeric() == True:
-                            scrim_epoch = int(scrim_info["scrimEpoch"])
-                            if scrim_epoch > time.time():
-                                scrim_datetime = datetime.datetime.fromtimestamp(scrim_epoch)
-                                current_datetime = datetime.datetime.now()
-                                time_until_start = scrim_datetime - current_datetime
-                                hours_until_start = time_until_start.total_seconds() / 3600
-
-                                if hours_until_start < config_data['toggleCheckinTime']: # If it is time to open checkins
-                                    if channels[f'scrim{self.sub_option}Channel'] != None:
-                                        messages = getMessages(interaction.guild.id)
-                                        message = splitMessage(messages[f'scrim{self.sub_option}'], interaction.guild.id)
-                                        message_split = message.split("\n")
-                                        title = message_split[0]
-                                        description = '\n'.join(message_split[1:])
-
-                                        embed = nextcord.Embed(title=title, description=description, color=White)
-                                        await channel.send(embed=embed)
-
-                                        embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nCheckin Message Updated To <#response>, Checkin Message Moved", color=White)
-                                        await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                                    else: # No Channel Set
-                                        embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nCheckin Message Updated, Checkin Channel Not Set!", color=White)
-                                        await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                                else: # Not time to open checkins
-                                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nCheckin Message Updated To <#response>, Checkin Message Not Sent (Checkins Not Open)", color=White)
-                                    await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                            else: # Scrims have already started/ended
-                                embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nCheckin Message Updated To <#response>, Checkin Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                                await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                        else: # No scrims have ever been scheduled
-                            embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nCheckin Message Updated To <#response>, Checkin Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                            await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                    else: # Checkins are disabled
-                        embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nCheckin Message Updated To <#response>, Checkin Message Not Sent (Checkins Disabled)", color=White)
-                        await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
+                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nCheckin Message Updated To <#response>\nUpdated Checkin message will be used in future scrims", color=White)
+                    await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
 
                 elif self.sub_option == "Rules": # If rules message is changed
                     if channels[f'scrim{self.sub_option}Channel'] != None:
@@ -825,34 +713,12 @@ class edit_message_modal(nextcord.ui.Modal):
                         await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
 
                 elif self.sub_option == "Registration": # If registration message is changed
-                    if scrim_info["scrimEpoch"].isnumeric() == True: # A scrim has been scheduled before
-                        scrim_epoch = int(scrim_info["scrimEpoch"])
-
-                        if scrim_epoch > time.time(): # Scrim has already started/ended
-                            if channels[f'scrim{self.sub_option}Channel'] != None:
-                                messages = getMessages(interaction.guild.id)
-                                message = splitMessage(messages[f'scrim{self.sub_option}'], interaction.guild.id)
-                                message_split = message.split("\n")
-                                title = message_split[0]
-                                description = '\n'.join(message_split[1:])
-
-                                embed = nextcord.Embed(title=title, description=description, color=White)
-                                await channel.send(embed=embed)
-
-                                embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nRegistration Message Updated To <#response>, Registration Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                                await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                            else: # No Channel Set
-                                embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nRegistration Message Updated, Registration Channel Not Set!", color=White)
-                                await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                        else:
-                            embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nRegistration Message Updated To <#response>, Registration Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                            await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                    else: # No scrims have ever been scheduled
-                        embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nRegistration Message Updated To <#response>, Registration Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                        await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
+                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nRegistration Message Updated To <#response>\nUpdated Registration message will be used in future scrims", color=White)
+                    await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
+                
+                elif self.sub_option == "Reserve": # If reserve message is changed
+                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nReserve Message Updated To <#response>\nUpdated Reserve message will be used in future scrims", color=White)
+                    await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
 
                 embed = nextcord.Embed(title="Scrimotron Configuration", description=f"**{self.option} -> {self.sub_option} -> {self.action} -> Edit** Message Updated", color=Green)
                 await interaction.send(embed=embed, ephemeral=True)
