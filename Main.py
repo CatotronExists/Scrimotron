@@ -181,7 +181,7 @@ async def on_ready():
     formatOutput(f"{bot.user.name} has connected to Discord (Took {startup_time}ms)", status="Good", guildID="STARTUP")
     formatOutput(f"Resuming Views...", status="Normal", guildID="STARTUP")
 
-    from Commands.register_trio import RegisterView
+    from Commands.register_trio import RegisterView, CheckinView
     view_count = 0
     deleted_messages = 0
     messageData = list(DB.Scrimotron.SavedMessages.find({}))
@@ -197,6 +197,7 @@ async def on_ready():
             viewType = entry["viewType"]
             # Resume View
             if viewType == "registration": view = RegisterView(interaction)
+            if viewType == "checkin": view = CheckinView(interaction)
             await message.edit(view=view)
             view_count = view_count + 1
 
@@ -205,6 +206,7 @@ async def on_ready():
                 DB.Scrimotron.GlobalData.update_one({"savedMessages": {"$exists": True}}, {"$pull": {"savedMessages": {"messageID": entry["messageID"]}}})
                 formatOutput(f"   Resuming Views: {view_count}/{len(messageData)} | Message Deleted", status="Warning", guildID="RESUMER")
                 deleted_messages = deleted_messages + 1
+                view_count = view_count + 1
 
             else: formatOutput(output=f"   Something went wrong while resuming views. Error: {e} | {traceback.format_exc()}", status="Error", guildID="RESUMER")
 
@@ -218,30 +220,38 @@ async def on_ready():
     formatOutput("---------------------------------", status="Normal", guildID="STARTUP")
 
 ##### Scheduler
-async def checkin_handler(config_data, guildID): # Runs checkin automation
+async def checkin_handler(config_data, guildID, scrim_name): # Runs checkin automation
     formatOutput(f"   Opening Checkins, Less than {config_data['toggleCheckinTime']} Hour(s) until start", status="Normal", guildID=guildID)
     channels = getChannels(guildID)
     try:
-        team_data = getTeams(guildID)
-        message = splitMessage(DB[str(guildID)]["Config"].find_one({"config": {"$exists": True}})["messages"]["scrimCheckin"], guildID)
+        scrim = getScrim(guildID, scrim_name)
+        teams = getTeams(guildID, scrim_name)
+
+        from Commands.register_trio import CheckinView
+        for team, team_data in teams.items():
+            messageID = team_data["messageID"]
+            data = DB.Scrimotron.SavedMessages.find_one_and_update({"messageID": messageID}, {"$set": {"viewType": "checkin"}})
+
+            interaction = data["interactionID"]
+            message = await bot.get_channel(data['channelID']).fetch_message(messageID)
+            await message.edit(view=CheckinView(interaction))
+
+        message = splitMessage(getMessages(guildID)["scrimCheckin"], guildID, scrim_name)
+        channel = bot.get_channel(scrim["scrimConfiguration"]["registrationChannel"])
 
         embed = nextcord.Embed(title=message[0], description=message[1], color=White)
-        await bot.get_channel(channels["scrimCheckinChannel"]).send(embed=embed)
-
-        for team in team_data:
-            await bot.get_channel(channels["scrimCheckinChannel"]).send(content=f"**{team['teamName']}**\n*Captain:* <@{team['teamPlayer1']}>")
-            DB[str(guildID)]["ScrimData"].update_one({"teamName": team["teamName"]}, {"$set":{"teamStatus.check_in": False}})
+        await channel.send(embed=embed)
 
         embed = nextcord.Embed(title="Checkins are Open!", color=Green)
         embed.set_footer(text=f"🛠 Automatically Opened {config_data['toggleCheckinTime']} hour(s) before start")
+
         await bot.get_channel(channels["scrimLogChannel"]).send(embed=embed)
         formatOutput(f"      Automation | Checkins Opened", status="Good", guildID=guildID)
-        DB[str(guildID)]["ScrimData"].find_one({"scrimSetup": {"$exists": True}})["scrimSetup"]["complete"]["checkinComplete"] = True
+        DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.complete.checkin": True}})
 
     except Exception as e:
-        error_traceback = traceback.format_exc()
-        formatOutput(output=f"   Automation | Something went wrong while opening checkins. Error: {e} {error_traceback}", status="Error", guildID=guildID)
-        embed = nextcord.Embed(title="Error Encountered", description=f"Error while opening checkins.\nError: {e} {error_traceback}", color=Red)
+        formatOutput(output=f"   Automation | Something went wrong while opening checkins. Error: {e} {traceback.format_exc()}", status="Error", guildID=guildID)
+        embed = nextcord.Embed(title="Error Encountered", description=f"Error while opening checkins.\nError: {e} {traceback.format_exc()}", color=Red)
         await bot.get_channel(channels["scrimLogChannel"]).send(embed=embed)
 
 async def setup_handler(config_data, guildID, scrim_name): # Runs setup automation
@@ -477,8 +487,11 @@ async def event_checker(): # Gets events from discord and runs automation
                 scrim_name = scrim["scrimName"]
                 scrim_epoch = scrim["scrimEpoch"]
                 time_until_start = scrim_epoch - datetime.datetime.now().timestamp()
+                print(type(time_until_start)) # Debug
                 hours_until_start = time_until_start.total_seconds() / 3600
-                config_data = DB[str(guildID)]["Config"].find_one({"config": {"$exists": True}}) # Get server config & check conditions
+                config_data = getConfigData(guildID) # Get server config & check conditions
+
+                ### ADD CHECK FOR IF AUTOMATED ACTION HAS ALREADY BEEN COMPLETED
                 if hours_until_start < config_data["toggleCheckinTime"] and config_data["toggleCheckin"] == True: checkin_handler(config_data, guildID, scrim_name)
                 if hours_until_start < config_data["toggleSetupTime"] and config_data["toggleSetup"] == True: setup_handler(config_data, guildID, scrim_name)
                 if hours_until_start < config_data["togglePoiTime"] and config_data["togglePoi"] == True: poi_handler(config_data, guildID, scrim_name)
@@ -529,55 +542,13 @@ async def startScheduler():
         formatOutput("Starting Scheduler...", status="Normal", guildID="STARTUP")
         scheduler = AsyncIOScheduler()
         scheduler.add_job(event_checker, 'cron', minute=0) # At xx:00
-        scheduler.add_job(presence_updater, 'cron', minute='*/4') # Every 5 minutes
+        scheduler.add_job(presence_updater, 'cron', minute='*/4') # Every 4 minutes
         scheduler.add_job(global_messager, 'cron', minute='*/1') # Every minute
         scheduler.start()
         formatOutput("Scheduler Started", status="Good", guildID="STARTUP")
 
     except Exception as e:
         formatOutput(f"Something went wrong while starting scheduler. Error: {e} | {traceback.format_exc()}", status="Error", guildID="STARTUP")
-
-# @bot.event
-# async def on_raw_reaction_add(reaction: nextcord.Reaction, user: nextcord.User): # For Checkins
-#     # Find server and Channel
-#     guildID = reaction.message.guild.id
-#     channels = getChannels(guildID)
-#     channel_checkin = channels["scrimCheckinChannel"]
-
-#     if reaction.message.channel.id == channel_checkin:
-#         if user.bot == False:
-#             message = await reaction.message.channel.fetch_message(reaction.message.id)
-#             message = message.content.split("\n")
-#             team_data = getTeams(guildID)
-#             for i in team_data:
-#                 if message[0] == f"**{i['teamName']}**":
-#                     if i["teamCaptain"] == user.id:
-#                         if message[0]== f'**{i["teamName"]}**':
-#                             if i["teamStatus"]["checkin"] == False:
-#                                 DB[str(guildID)]["ScrimData"].update_one({"teamCaptain": user.id}, {"$set":{"teamStatus.checkin": True}})
-#                                 formatOutput(output=f"   {i['teamName']} has checked in!", status="Good", guildID=guildID)
-#                     break
-
-# @bot.event
-# async def on_raw_reaction_remove(reaction: nextcord.Reaction, user: nextcord.User): # For Checkins
-#     # Find server and Channel
-#     guildID = reaction.message.guild.id
-#     channels = getChannels(guildID)
-#     channel_checkin = channels["scrimCheckinChannel"]
-
-#     if reaction.message.channel.id == channel_checkin:
-#         if user.bot == False:
-#             message = await reaction.message.channel.fetch_message(reaction.message.id)
-#             message = message.content.split("\n")
-#             team_data = getTeams(guildID)
-#             for i in team_data:
-#                 if message[0] == f"**{i['teamName']}**":
-#                     if i["teamCaptain"] == user.id:
-#                         if message[0]== f'**{i["teamName"]}**':
-#                             if i["teamStatus"]["checkin"] == True:
-#                                 DB[str(guildID)]["ScrimData"].update_one({"teamCaptain": user.id}, {"$set":{"teamStatus.checkin": False}})
-#                                 formatOutput(output=f"   {i['teamName']} has unchecked in!", status="Good", guildID=guildID)
-#                     break
 
 @bot.event
 async def on_guild_join(guild):
