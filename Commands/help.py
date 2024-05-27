@@ -76,6 +76,12 @@ help_descriptions = {
     "small_text": "Calculate Scores Automatically",
     "description": "**Admin Only**\nCalculate Scores Automatically.\nGo to https://apexlegendsstatus.com/tournament/ and create a tournament to get scores.\nOutputs scores in a leaderboard and attaches spreadsheet!\n\n**Usage:** \*optional\*\n`/score tournament_id`",
     "last_updated": "Last Updated: v1.0.0 | 23/04/2024",
+    },
+"feedback": {
+    "warning": ":bulb: *New in v1.1.0*",
+    "small_text": "Submit Feedback/Suggestions/Bug Reports to Catotron",
+    "description": "Submit Feedback/Suggestions/Bug Reports to Catotron.\nOpens a form to enter feedback which is directly sent to Catotron.\n\n**Usage:** \*optional\*\n`/feedback`",
+    "last_updated": "Last Updated: v1.1.0 | xx/05/2024",
     }
 }
 

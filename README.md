@@ -6,7 +6,7 @@ Automating the process of check-ins, POI selections and creating team VCs. Plus 
 
 ## Dev Branch
 Currently working on v1.1.0 - Multi Scrim\
-Estimated Release: Early May 2024
+Estimated Release: May 29th 2024
 
 **Versioning**
 Dev Versions (v1.x.x-dx) are likely to have breaking issues\
@@ -18,8 +18,8 @@ Final Versions (v1.x.x-FINALx) will be the version released, unless breaking bug
 
 *More Information Soon!*
 
-Any Suggestions? Leave a sugestion [here](https://github.com/CatotronExists/Scrimotron/issues/new?assignees=&labels=&projects=&template=feature_request.md&title=%5BSuggestion%5D) or send me a message on discord (@Catotron)\
-Bugs are expected, if you find one please report it [here](https://github.com/CatotronExists/Scrimotron/issues/new?assignees=&labels=&projects=&template=bug_report.md&title=%5BBug%5D) or send me a message on discord (@Catotron)
+Any Suggestions? Leave a sugestion [here](https://github.com/CatotronExists/Scrimotron/issues/new?assignees=&labels=&projects=&template=feature_request.md&title=%5BSuggestion%5D) or via Scrimotron using `/feedback` or even just by sending me a message on discord (@Catotron)\
+Bugs are expected, if you find one please report it [here](https://github.com/CatotronExists/Scrimotron/issues/new?assignees=&labels=&projects=&template=bug_report.md&title=%5BBug%5D) or via Scrimotron using `/feedback` or even just by sending me a message on discord (@Catotron)
 
 [**-->> Invite Scrimotron <<--**](https://discord.com/oauth2/authorize?client_id=1165565006763536445&permissions=8&scope=bot+applications.commands)
 
@@ -32,6 +32,7 @@ Bugs are expected, if you find one please report it [here](https://github.com/Ca
 - `/register_trio` - Register for a trio scrim (3 Players + team logo & 2 subs).
 - `/team_list`: Shows a list of all the teams that have been registered.
 - `/select_poi`: Allows teams to select their POIs.
+- `/feedback`: Submit Feedback/Suggestions/Bug Reports to Catotron
 
 - `/configure`: Configure Scrimotron. **Staff Only**
 - `/schedule`: Schedule Scrims using a series of menus (Max 5 Scrims at a time). **Staff Only**
@@ -45,7 +46,7 @@ Development will slow as other things will take priority\
 Keep up to date in the [Dev Branch](https://github.com/CatotronExists/Scrimotron/tree/dev)\
 **v1.0.0** - Scrimotron UNLEASHED [23/04/2024]\
 ||\
-**v1.1.0** - Scrimotron MULTIPLEX (Early May 2024)\
+**v1.1.0** - Scrimotron MULTIPLEX (May 2024)\
 ||\
 **v1.2.0** - Player Statistics (June 2024)\
 ||\

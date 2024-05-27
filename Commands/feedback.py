@@ -12,22 +12,17 @@ class FeedbackView(nextcord.ui.View):
         feedback_button = nextcord.ui.Button(style=nextcord.ButtonStyle.primary, label="Feedback", emoji="🗨️")
         feedback_button.callback = self.create_callback("Feedback")
         self.add_item(feedback_button)
-        print("Feedback Button Added")
 
         suggestion_button = nextcord.ui.Button(style=nextcord.ButtonStyle.primary, label="Suggestion", emoji="📝")
         suggestion_button.callback = self.create_callback("Suggestion")
         self.add_item(suggestion_button)
-        print("Suggestion Button Added")
 
         bug_button = nextcord.ui.Button(style=nextcord.ButtonStyle.primary, label="Bug Report", emoji="🐛")
         bug_button.callback = self.create_callback("Bug Report")
         self.add_item(bug_button)
-        print("Bug Button Added")
 
     def create_callback(self, feedback_type):
-        print("create callback")
         async def callback(interaction: nextcord.Interaction):
-            print("callback")
             try: await interaction.response.send_modal(modal=FeedbackModal(interaction, feedback_type))
             except Exception as e: await errorResponse(e, command, interaction, error_traceback=traceback.format_exc())
 
@@ -111,14 +106,12 @@ class Command_feedback_Cog(commands.Cog):
         try: await interaction.response.defer(ephemeral=True)
         except: pass # Discord can sometimes error on defer()
 
-        embed = nextcord.Embed(title="Feedback Form", description="Select the type of feedback you would like to submit.", color=White)
-        embed.set_footer(text="Clicking on any button will immediately open a text input to submit your feedback.")
-        await interaction.edit_original_message(embed=embed, view=FeedbackView(interaction))
-
         try:
-            pass
-
-        except Exception as e: errorResponse(e, command, interaction, error_traceback=traceback.format_exc())
+            embed = nextcord.Embed(title="Feedback Form", description="Select the type of feedback you would like to submit.", color=White)
+            embed.set_footer(text="Clicking on any button will immediately open a text input to submit your feedback.")
+            await interaction.edit_original_message(embed=embed, view=FeedbackView(interaction))
+        
+        except Exception as e: await errorResponse(e, command, interaction, error_traceback=traceback.format_exc())
 
 def setup(bot):
     bot.add_cog(Command_feedback_Cog(bot))
