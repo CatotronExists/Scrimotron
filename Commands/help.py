@@ -17,6 +17,18 @@ help_descriptions = {
     "description": "Register a trio team for Scrims.\nInclude 3 players, upto 2 subs and an optional team logo.\nA dropdown will appear with all scheduled scrims to join\n\n**Usage:** \*optional\*\n`/register_trio team_name: player1: player2: player3: *sub1*: *sub2*: *logo*:`",
     "last_updated": "Last Updated: v1.1.0 | xx/05/2024",
     },
+"register_duo": {
+    "warning": ":bulb: *New in v1.1.0*",
+    "small_text": "Register a duo team for Scrims",
+    "description": "Register a duo team for Scrims.\nInclude 2 players, upto 2 subs and an optional team logo.\nA dropdown will appear with all scheduled scrims to join\n\n**Usage:** \*optional\*\n`/register_duo team_name: player1: player2: *sub1*: *sub2*: *logo*:`",
+    "last_updated": "Last Updated: v1.1.0 | xx/05/2024",
+    },
+"register_solo": {
+    "warning": ":bulb: *New in v1.1.0*",
+    "small_text": "Register a solo team for Scrims",
+    "description": "Register a solo team for Scrims.\nInclude 1 player and an optional team logo.\nA dropdown will appear with all scheduled scrims to join\n\n**Usage:** \*optional\*\n`/register_solo player_name: *logo*:`",
+    "last_updated": "Last Updated: v1.1.0 | xx/05/2024",
+    },
 "end" : {
     "warning": ":stop_sign: *Pending Removal*",
     "small_text": "End Scrims, Deletes Roles and VCs for teams",

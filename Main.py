@@ -11,8 +11,8 @@ from BotData.colors import *
 import re
 
 # Command Lists
-command_list = admin_command_list = ["team_list", "register_trio", "end", "schedule", "select_poi", "help", "unregister_all", "status", "configure", "score", "feedback"]
-public_command_list = ["team_list", "register_trio", "select_poi", "help", "feedback"]
+command_list = admin_command_list = ["team_list", "register_trio", "register_duo", "register_solo", "end", "schedule", "select_poi", "help", "unregister_all", "status", "configure", "score", "feedback", "scrims"]
+public_command_list = ["team_list", "register_trio", "register_duo", "register_solo", "select_poi", "help", "feedback"]
 
 # Discord Vars
 intents = nextcord.Intents.all()
@@ -48,8 +48,8 @@ def splitMessage(base, guildID, scrim_name):
 
     scrim_name = scrim["scrimName"]
     scrim_epoch = scrim["scrimEpoch"]
-    channel_register = channels["scrimRegistrationChannel"]
-    channel_checkin = channels["scrimCheckinChannel"]
+    channel_register = scrim['scrimConfiguration']["registrationChannel"]
+    channel_checkin = scrim['scrimConfiguration']["registrationChannel"]
     channel_rules = channels["scrimRulesChannel"]
     channel_format = channels["scrimFormatChannel"]
     channel_poi = channels["scrimPoiChannel"]
@@ -182,12 +182,11 @@ async def on_ready():
     formatOutput(f"Resuming Views...", status="Normal", guildID="STARTUP")
 
     from Commands.register_trio import RegisterView, CheckinView
-    view_count = 0
-    deleted_messages = 0
+    view_count = 1
+    success_count = deleted_messages = 0
     messageData = list(DB.Scrimotron.SavedMessages.find({}))
     for entry in messageData:
         try:
-            formatOutput(f"   Resuming Views: {view_count}/{len(messageData)}", status="Normal", guildID="RESUMER")
             # Find Message
             guild = bot.get_guild(entry["guildID"])
             channel = guild.get_channel(entry["channelID"])
@@ -199,18 +198,20 @@ async def on_ready():
             if viewType == "registration": view = RegisterView(interaction)
             if viewType == "checkin": view = CheckinView(interaction)
             await message.edit(view=view)
+            formatOutput(f"   Resuming Views: {view_count}/{len(messageData)}", status="Good", guildID="RESUMER")
             view_count = view_count + 1
+            success_count = success_count + 1
 
         except Exception as e:
             if "Unknown Message" in str(e): # i.e. Message Deleted
-                DB.Scrimotron.GlobalData.update_one({"savedMessages": {"$exists": True}}, {"$pull": {"savedMessages": {"messageID": entry["messageID"]}}})
+                DB.Scrimotron.SavedMessages.delete_one({"messageID": entry["messageID"]})
                 formatOutput(f"   Resuming Views: {view_count}/{len(messageData)} | Message Deleted", status="Warning", guildID="RESUMER")
                 deleted_messages = deleted_messages + 1
                 view_count = view_count + 1
 
             else: formatOutput(output=f"   Something went wrong while resuming views. Error: {e} | {traceback.format_exc()}", status="Error", guildID="RESUMER")
 
-    formatOutput(f"Resumed {view_count}/{len(messageData)} Views", status="Good", guildID="RESUMER")
+    formatOutput(f"Resumed {success_count}/{len(messageData)} Views", status="Good", guildID="RESUMER")
     formatOutput(f"Deleted {deleted_messages} Messages", status="Warning", guildID="RESUMER")
 
     await startScheduler() # Starts Automation

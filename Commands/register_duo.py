@@ -214,9 +214,9 @@ class RegisterDropdown(nextcord.ui.Select):
 
     async def callback(self, interaction: nextcord.Interaction):
         scrim = getScrim(command['guildID'], self.values[0])
-        if scrim['scrimConfiguration']['teamType'] == 'Trios': # Correct Team Type
+        if scrim['scrimConfiguration']['teamType'] == 'Duos': # Correct Team Type
             if self.team_data[0] not in scrim['scrimTeams'].keys(): # Check if team name is already in scrim
-                embed = nextcord.Embed(title=self.team_data[0], description=f"Player 1 - <@{self.IDs[1]}>\nPlayer 2 - <@{self.IDs[2]}>\nPlayer 3 - <@{self.IDs[3]}>\nSub 1 - {self.IDs[6]}\nSub 2 - {self.IDs[7]}")
+                embed = nextcord.Embed(title=self.team_data[0], description=f"Player 1 - <@{self.IDs[1]}>\nPlayer 2 - <@{self.IDs[2]}>\nSub 1 - {self.IDs[6]}")
                 embed.set_thumbnail(url=self.team_data[1])
 
                 message = await self.interaction.guild.get_channel(scrim["scrimConfiguration"]["registrationChannel"]).send(embed=embed, view=RegisterView(self.interaction))
@@ -226,7 +226,7 @@ class RegisterDropdown(nextcord.ui.Select):
                 DB[str(interaction.guild.id)]["ScrimData"].update_one(
                     {"scrimName": scrim['scrimName']},
                     {"$set": {f"scrimTeams.{self.team_data[0]}": {
-                        "teamType": "Trios",
+                        "teamType": "Duos",
                         "teamLogo": self.team_data[1],
                         "teamPlayer1": self.IDs[1],
                         "teamPlayer2": self.IDs[2],
@@ -272,7 +272,7 @@ class RegisterDropdown(nextcord.ui.Select):
                 if team['teamPlayer1'] == self.IDs[1]: # Check if team captain is the same, if so, edit registration
                     message = await self.interaction.guild.get_channel(scrim["scrimConfiguration"]["registrationChannel"]).fetch_message(team['messageID'])
 
-                    embed = nextcord.Embed(title=self.team_data[0], description=f"Player 1 - <@{self.IDs[1]}>\nPlayer 2 - <@{self.IDs[2]}>\nPlayer 3 - <@{self.IDs[3]}>\nSub 1 - {self.IDs[6]}\nSub 2 - {self.IDs[7]}")
+                    embed = nextcord.Embed(title=self.team_data[0], description=f"Player 1 - <@{self.IDs[1]}>\nPlayer 2 - <@{self.IDs[2]}>\nSub 1 - {self.IDs[6]}")
                     embed.set_thumbnail(url=self.team_data[1])
 
                     await message.edit(embed=embed, view=RegisterView(self.interaction))
@@ -287,21 +287,19 @@ class RegisterDropdown(nextcord.ui.Select):
                     await interaction.response.edit_message(embed=embed, view=None)
 
         else:
-            embed = nextcord.Embed(title="Invalid Team Type", description=f"This scrim is a {scrim['scrimConfiguration']['teamType']} sign up not Trios!", color=Red)
+            embed = nextcord.Embed(title="Invalid Team Type", description=f"This scrim is a {scrim['scrimConfiguration']['teamType']} sign up not Duos!", color=Red)
             await interaction.response.edit_message(embed=embed, view=None)
 
-class Command_register_trio_Cog(commands.Cog):
+class Command_register_duo_Cog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @nextcord.slash_command(name="register_trio", description="Register a trio team (Optional: Two Subs + Team Logo)")
-    async def register_trio(self, interaction: nextcord.Interaction,
+    @nextcord.slash_command(name="register_duo", description="Register a duo team (Optional: One Sub + Team Logo)")
+    async def register_duo(self, interaction: nextcord.Interaction,
         team_name = nextcord.SlashOption(name="team_name", description="Enter a team name", required=True),
         player1: nextcord.User = nextcord.SlashOption(name="player_1", description="Enter player 1 (This will be the team captain)", required=True),
         player2: nextcord.User = nextcord.SlashOption(name="player_2", description="Enter player 2", required=True),
-        player3: nextcord.User = nextcord.SlashOption(name="player_3", description="Enter player 3", required=True),
         sub1: nextcord.User = nextcord.SlashOption(name="sub_1", description="(Optional) Enter sub 1", required=False),
-        sub2: nextcord.User = nextcord.SlashOption(name="sub_2", description="(Optional) Enter sub 2", required=False),
         team_logo = nextcord.SlashOption(name="team_logo", description="(Optional) Enter a team logo, (Submit a discord URL)", required=False)):
 
         global command
@@ -330,24 +328,19 @@ class Command_register_trio_Cog(commands.Cog):
                 # Convert users to IDs
                 player1 = player1.id
                 player2 = player2.id
-                player3 = player3.id
 
                 if sub1 != None:
                     sub1 = sub1.id
                     sub1_display = f"<@{sub1}>"
                 else: sub1_display = "**None**"
-                if sub2 != None:
-                    sub2 = sub2.id
-                    sub2_display = f"<@{sub2}>"
-                else: sub2_display = "**None**"
 
-                IDs = [None, player1, player2, player3, sub1, sub2, sub1_display, sub2_display]
+                IDs = [None, player1, player2, None, sub1, sub1_display, None, None]
 
-                embed = nextcord.Embed(title=f"Registration Menu // {team_name}", description=f"**{team_name}**\nPlayer 1 - <@{player1}>\nPlayer 2 - <@{player2}>\nPlayer 3 - <@{player3}>\nSub 1 - {sub1_display}\nSub 2 - {sub2_display}", color=White)
+                embed = nextcord.Embed(title=f"Registration Menu // {team_name}", description=f"**{team_name}**\nPlayer 1 - <@{player1}>\nPlayer 2 - <@{player2}>\nSub 1 - {sub1_display}", color=White)
                 embed.set_thumbnail(url=team_logo)
 
                 for scrim in getScrims(command['guildID']):
-                    if scrim['scrimConfiguration']['teamType'] == 'Trios': team_type = '**Trios**'
+                    if scrim['scrimConfiguration']['teamType'] == 'Duos': team_type = '**Duos**'
                     else: team_type = scrim['scrimConfiguration']['teamType']
 
                     if scrim['scrimConfiguration']['maps']['map2'] != None: maps = f"Maps: {scrim['scrimConfiguration']['maps']['map1']} & {scrim['scrimConfiguration']['maps']['map2']}"
@@ -364,4 +357,4 @@ class Command_register_trio_Cog(commands.Cog):
         except Exception as e: await errorResponse(e, command, interaction, error_traceback=traceback.format_exc())
 
 def setup(bot):
-    bot.add_cog(Command_register_trio_Cog(bot))
+    bot.add_cog(Command_register_duo_Cog(bot))
