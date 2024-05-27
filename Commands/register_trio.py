@@ -28,7 +28,7 @@ class RegisterView(nextcord.ui.View):
 
             team = getTeam(interaction.guild.id, scrim_name, interaction.message.embeds[0].title)
             scrim = getScrim(interaction.guild.id, scrim_name)
-            
+
             try:
                 if custom_id == "edit":
                     if interaction.user.id == team["teamPlayer1"]:
@@ -50,7 +50,7 @@ class RegisterView(nextcord.ui.View):
 
                                 DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim_name}, {"scrimConfiguration.reserveMessage": None})
                                 DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim_name}, {"$pull": {"scrimConfiguration.registrationMessages": reserve_message.id}})
-                        
+
                         elif len(msgindex) >= scrim['scrimConfiguration']['maxTeams'] - 1: # If there are max_teams or more (-1 to remove unregistered team)
                             # Then swap first reserve index[max_teams + 1] with index[max_teams] (then delete unregistered team index)
                             # first_reserve refers to the team that was the first reserve | reserve_message refers to the message that was the reserve message
@@ -80,7 +80,7 @@ class RegisterView(nextcord.ui.View):
 
                         DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim_name}, {"$unset": {f"scrimTeams.{interaction.message.embeds[0].title}": ""}})
                         DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim_name}, {"$pull": {"scrimConfiguration.registrationMessages": team["messageID"]}})
-                       
+
                         message = await interaction.channel.fetch_message(team["messageID"])
                         await message.delete()
                         formatOutput(output=f"   {interaction.message.embeds[0].title} was unregistered!", status="Good", guildID=interaction.guild.id)
@@ -116,9 +116,9 @@ class CheckinView(nextcord.ui.View):
                 if scrim['scrimConfiguration']['registrationChannel'] == interaction.channel.id:
                     scrim_name = scrim['scrimName']
                     break
-            
+
             team = getTeam(interaction.guild.id, scrim_name, interaction.message.embeds[0].title)
-            
+
             try:
                 if custom_id == "edit":
                     if interaction.user.id == team["teamPlayer1"]:
@@ -140,7 +140,7 @@ class CheckinView(nextcord.ui.View):
 
                                 DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim_name}, {"scrimConfiguration.reserveMessage": None})
                                 DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim_name}, {"$pull": {"scrimConfiguration.registrationMessages": reserve_message.id}})
-                        
+
                         elif len(msgindex) >= scrim['scrimConfiguration']['maxTeams'] - 1: # If there are max_teams or more (-1 to remove unregistered team)
                             # Then swap first reserve index[max_teams + 1] with index[max_teams] (then delete unregistered team index)
                             # first_reserve refers to the team that was the first reserve | reserve_message refers to the message that was the reserve message
@@ -170,14 +170,14 @@ class CheckinView(nextcord.ui.View):
 
                         DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim_name}, {"$unset": {f"scrimTeams.{interaction.message.embeds[0].title}": ""}})
                         DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim_name}, {"$pull": {"scrimConfiguration.registrationMessages": team["messageID"]}})
-                    
+
                         message = await interaction.channel.fetch_message(team["messageID"])
                         await message.delete()
                         formatOutput(output=f"   {interaction.message.embeds[0].title} was unregistered!", status="Good", guildID=interaction.guild.id)
                     else:
                         embed = nextcord.Embed(title="Only the Team Captain and Admins can unregister teams!", color=Red)
                         await interaction.response.send_message(embed=embed, ephemeral=True)
-                
+
                 elif custom_id == "checkin":
                     if interaction.user.id == team["teamPlayer1"]:
                         if team["teamStatus"]["checkin"] == False:
@@ -255,7 +255,7 @@ class RegisterDropdown(nextcord.ui.Select):
                         "messageID": message.id
                         },
                     }})
-                                
+
                 if len(scrim["scrimTeams"]) + 1 == scrim["scrimConfiguration"]["maxTeams"]: # Final Team, send reserve message (+1 to include the new team)
                     message = splitMessage(getMessages(command['guildID'])['scrimReserve'], command["guildID"], self.values[0])
 
@@ -277,12 +277,12 @@ class RegisterDropdown(nextcord.ui.Select):
 
                     await message.edit(embed=embed, view=RegisterView(self.interaction))
 
-                    ### EDIT TEAM IN DB
+                    DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim['scrimName']}, {"$set": {f"scrimTeams.{self.team_data[0]}.teamPlayer1": self.IDs[1], f"scrimTeams.{self.team_data[0]}.teamPlayer2": self.IDs[2], f"scrimTeams.{self.team_data[0]}.teamPlayer3": self.IDs[3], f"scrimTeams.{self.team_data[0]}.teamSub1": self.IDs[4], f"scrimTeams.{self.team_data[0]}.teamSub2": self.IDs[5], f"scrimTeams.{self.team_data[0]}.teamLogo": self.team_data[1]}})
 
                     embed = nextcord.Embed(title="Team Updated", description=f"**{self.team_data[0]}** has been updated for **{scrim['scrimName']}**", color=Green)
                     await interaction.response.edit_message(embed=embed, view=None)
 
-                else: 
+                else:
                     embed = nextcord.Embed(title="Team Name Already Exists", description=f"Team name '{self.team_data[0]}' is already registered!", color=Red)
                     await interaction.response.edit_message(embed=embed, view=None)
 
@@ -311,7 +311,7 @@ class Command_register_Cog(commands.Cog):
         try: await interaction.response.defer(ephemeral=True)
         except: pass # Discord can sometimes error on defer()
 
-        try: 
+        try:
             scrims = getScrims(command['guildID'])
 
             if len(scrims) == 0: # No scrims found
