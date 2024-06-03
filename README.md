@@ -5,8 +5,8 @@ A discord bot designed to Run and Manage Apex Scrims
 Automating the process of check-ins, POI selections and creating team VCs. Plus scoring!
 
 ## Dev Branch
-Currently working on v1.1.0 - Multi Scrim\
-Estimated Release: May 29th 2024
+Currently working on v1.1.0 - MULTIPLEX\
+Estimated Release: Any Day Now
 
 **Versioning**
 Dev Versions (v1.x.x-dx) are likely to have breaking issues\
@@ -16,7 +16,11 @@ Final Versions (v1.x.x-FINALx) will be the version released, unless breaking bug
 ## SCRIMOTRON MULTIPLEX (v1.1.0)
 **Major Update v1.1.0 Brings the option to host multiple scrims at once with more customisation!**
 
-*More Information Soon!*
+Schedule More - (Host up to 7 scrims at once)\
+Manage More - (New command to view/edit/manage scrims)\
+Register More - (Register as different team sizes: solo, duo or trio)
+
+*Do More with Scrimotron MULTIPLEX*
 
 Any Suggestions? Leave a sugestion [here](https://github.com/CatotronExists/Scrimotron/issues/new?assignees=&labels=&projects=&template=feature_request.md&title=%5BSuggestion%5D) or via Scrimotron using `/feedback` or even just by sending me a message on discord (@Catotron)\
 Bugs are expected, if you find one please report it [here](https://github.com/CatotronExists/Scrimotron/issues/new?assignees=&labels=&projects=&template=bug_report.md&title=%5BBug%5D) or via Scrimotron using `/feedback` or even just by sending me a message on discord (@Catotron)
@@ -26,19 +30,20 @@ Bugs are expected, if you find one please report it [here](https://github.com/Ca
 [Full Patch Notes](https://github.com/CatotronExists/Scrimotron/releases/tag/v1.1.0)
 
 ## Command List
-- `/help`: Open a help menu for information on all commands. Plus examples of usage.
-- `/register_solo` - Register for a solo scrim (1 Player + team logo & no subs).
-- `/register_duo` - Register for a duo scrim (2 Players + team logo & 1 sub).
-- `/register_trio` - Register for a trio scrim (3 Players + team logo & 2 subs).
-- `/team_list`: Shows a list of all the teams that have been registered.
-- `/select_poi`: Allows teams to select their POIs.
+- `/help`: Open a help menu for information on all commands. Plus examples of usage
+- `/register_solo`: Register for a solo scrim (1 Player + team logo & no subs)
+- `/register_duo`: Register for a duo scrim (2 Players + team logo & 1 sub)
+- `/register_trio`: Register for a trio scrim (3 Players + team logo & 2 subs)
+- `/team_list`: Shows a list of all the teams that have been registered
+- `/select_poi`: Allows teams to select their POIs
 - `/feedback`: Submit Feedback/Suggestions/Bug Reports to Catotron
 
-- `/configure`: Configure Scrimotron. **Staff Only**
-- `/schedule`: Schedule Scrims using a series of menus (Max 5 Scrims at a time). **Staff Only**
-- `/unregiser_all`: Unregisters all players/teams. **Staff Only**
-- `/status`: Shows the status of scrims. **Staff Only**
-- `/end`: Ends scrims. **Staff Only**
+- `/configure`: Configure Scrimotron **Admin Only**
+- `/schedule`: Schedule Scrims using a series of menus (Max 5 Scrims at a time) **Admin Only**
+- `/unregiser_all`: Unregisters all players/teams **Admin Only**
+- `/status`: Shows the status of scrims **Admin Only**
+- `/end`: Ends scrims **Admin Only**
+- `/scrims`: View and edit all currently scheduled scrims **Admin Only**
 
 ## Roadmap
 **v1.0.0 is not the end**\
