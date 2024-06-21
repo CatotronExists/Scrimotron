@@ -53,12 +53,6 @@ help_descriptions = {
     "description": "Opens a help menu, use the dropdown to get help on that command.\nFind more information on each command and more.\n\n**Usage:** \*optional\*\n`/help`",
     "last_updated": "Last Updated: v1.1.0 | xx/05/2024",
     },
-"unregister_all": {
-    "warning": ":stop_sign: *Pending Removal*",
-    "small_text": "Unregister all teams from Scrims",
-    "description": "**Admin Only**\nUnregister all teams from Scrims.\n\n**Usage:** \*optional\*\n`/unregister_all`",
-    "last_updated": "Last Updated: v1.0.0 | 23/04/2024",
-    },
 "configure": {
     "warning": ":warning: *Reworked in v1.1.0*",
     "small_text": "Configure Scrimotron for your server",

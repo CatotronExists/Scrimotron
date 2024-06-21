@@ -40,8 +40,6 @@ Bugs are expected, if you find one please report it [here](https://github.com/Ca
 
 - `/configure`: Configure Scrimotron **Admin Only**
 - `/schedule`: Schedule Scrims using a series of menus (Max 5 Scrims at a time) **Admin Only**
-- `/unregiser_all`: Unregisters all players/teams **Admin Only**
-- `/status`: Shows the status of scrims **Admin Only**
 - `/end`: Ends scrims **Admin Only**
 - `/scrims`: View and edit all currently scheduled scrims **Admin Only**
 
