@@ -43,13 +43,18 @@ async def errorResponse(error, command, interaction: Interaction, error_tracebac
 
 ### Message Splitter
 def splitMessage(base, guildID, scrim_name):
-    scrim = DB[str(guildID)]["ScrimData"].find_one({"scrimName": scrim_name})
+    if scrim_name != None: scrim = DB[str(guildID)]["ScrimData"].find_one({"scrimName": scrim_name})
+    else: scrim = None
     channels = getChannels(guildID)
 
-    scrim_name = scrim["scrimName"]
-    scrim_epoch = scrim["scrimEpoch"]
-    channel_register = scrim['scrimConfiguration']["registrationChannel"]
-    channel_checkin = scrim['scrimConfiguration']["registrationChannel"]
+    if scrim != None: scrim_name == scrim["scrimName"]
+    else: scrim_name = None
+    if scrim != None: scrim_epoch = scrim["scrimEpoch"]
+    else: scrim_epoch = None
+    if scrim != None: channel_register = scrim['scrimConfiguration']["registrationChannel"]
+    else: channel_register = None
+    if scrim != None: channel_checkin = scrim['scrimConfiguration']["registrationChannel"]
+    else: channel_checkin = None
     channel_rules = channels["scrimRulesChannel"]
     channel_format = channels["scrimFormatChannel"]
     channel_poi = channels["scrimPoiChannel"]
@@ -73,7 +78,7 @@ def splitMessage(base, guildID, scrim_name):
         "{timing_countdown}": f"<t:{scrim_epoch}:R>",
         "{}": "\n"
     }
-
+    
     for part in parts:
         if part in placeholders:
             parts[parts.index(part)] = placeholders[part]
@@ -99,6 +104,14 @@ def unformatMessage(base):
     return base
 
 ### Handy Functions
+async def logAction(guildID, user, action, type):
+    log_channel = getChannels(guildID)["scrimLogChannel"]
+    if log_channel == None: return
+
+    embed = nextcord.Embed(title=type, description=action, color=White)
+    embed.set_footer(text=f"Changes made by @{user}")
+    await bot.get_guild(guildID).get_channel(log_channel).send(embed=embed)
+
 def getAllGuilds():
     guilds = []
     for i in DB.list_database_names():
