@@ -1,86 +1,79 @@
-# ValueIDs
-# 1 // T/F | Hour(s) before start
-# 2 // T/F | @RoleID
-# 3 // Click to View/Edit
-# 4 // #ChannelID
-
 # Structure
 # "Automation" <<-- Main View
 #    "Setup" <<-- Sub View
 #               <<-- Sub Sub View ()
 
-ConfigData = {
-    "Automation": { # <-- option
-        "Setup": { # <-- sub_option
-            "ValueID": 1,
-            "Buttons": ["Enable", "Disable", "Change Timing"]
+Data = {
+    "Automation": {
+        "Setup": {
+            "Type": "Automation",
+            "Options": ["Enable", "Disable", "Change Timing"],
         },
-        "Checkin" : { # <-- sub_option
-            "ValueID": 1,
-            "Buttons": ["Enable", "Disable", "Change Timing"]
+        "Checkin" : {
+            "Type": "Automation",            
+            "Options": ["Enable", "Disable", "Change Timing"],
         },
-
-        "Poi" : { # <-- sub_option
-            "ValueID": 1,
-            "Buttons": ["Enable", "Disable", "Change Timing"]
+        "Poi" : {
+            "Type": "Automation",
+            "Options": ["Enable", "Disable", "Change Timing"],
         }
     },
-    "Channels": { # <-- option
-        "Announcement" : { # <-- sub_option
-            "ValueID": 4,
-            "Buttons": ["Change Channel"]
+    "Channels": {
+        "Announcement" : {
+            "Type": "Channel",
+            "Options": ["Change Channel"],
         },
-        "Rules" : { # <-- sub_option
-            "ValueID": 4,
-            "Buttons": ["Change Channel"]
+        "Rules": {
+            "Type": "Channel",
+            "Options": ["Change Channel"],
         },
-        "Format" : { # <-- sub_option
-            "ValueID": 4,
-            "Buttons": ["Change Channel"]
+        "Format": {
+            "Type": "Channel",
+            "Options": ["Change Channel"],
         },
-        "Poi" : { # <-- sub_option
-            "ValueID": 4,
-            "Buttons": ["Change Channel"]
+        "Poi": {
+            "Type": "Channel",
+            "Options": ["Change Channel"],
         },
-        "Log" : { # <-- sub_option
-            "ValueID": 4,
-            "Buttons": ["Change Channel"]
+        "Log": {
+            "Type": "Channel",
+            "Options": ["Change Channel"],
         }
     },
-    "Messages": { # <-- option
-        "Announcement" : { # <-- sub_option
-            "ValueID": 3,
-            "Buttons": ["Change Message"]
+    "Messages": {
+        "Announcement": {
+            "Type": "Message",
+            "Options": ["Change Message"], # [Change Message, Edit Type]
         },
-        "Checkin" : { # <-- sub_option
-            "ValueID": 3,
-            "Buttons": ["Change Message"]
+        "Checkin": {
+            "Type": "Message",
+            "Options": ["Change Message"], # [Change Message, Edit Type]
         },
-        "Rules" : { # <-- sub_option
-            "ValueID": 3,
-            "Buttons": ["Change Message"]
+        "Rules": {
+            "Type": "Message",
+            "Options": ["Change Message"], # [Change Message, Edit Type]
         },
-        "Format" : { # <-- sub_option
-            "ValueID": 3,
-            "Buttons": ["Change Message"]
+        "Format": {
+            "Type": "Message",
+            "Options": ["Change Message"], # [Change Message, Edit Type]
         },
-        "Poi" : { # <-- sub_option
-            "ValueID": 3,
-            "Buttons": ["Change Message"]
+        "Poi": {
+            "Type": "Message",
+            "Options": ["Change Message"], # [Change Message, Edit Type]
         },
-        "Registration" : { # <-- sub_option
-            "ValueID": 3,
-            "Buttons": ["Change Message"]
+        "Registration": {
+            "Type": "Message",
+            "Options": ["Change Message"], # [Change Message, Edit Type]
         },
-        "Reserve" : { # <-- sub_option
-            "ValueID": 3,
-            "Buttons": ["Change Message"]
+        "Reserve": {
+            "Type": "Message",
+            "Options": ["Change Message"], # [Change Message, Edit Type]
         }
     },
-    "Scrims": { # <-- option
-        "Caster" : { # <-- sub_option
-            "ValueID": 2,
-            "Buttons": ["Enable", "Disable", "Change Role"]
+    "Scrims": {
+        "Caster": {
+            "Type": "Role",
+            "Options": ["Enable", "Disable", "Change Role"],
         }
     }
 }

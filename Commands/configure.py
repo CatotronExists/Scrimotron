@@ -516,7 +516,8 @@ class ChangeRoleModal(nextcord.ui.Modal):
             label=f"Change {sub_option} Role",
             placeholder="Enter Role ID",
             min_length=0,
-            max_length=20)
+            max_length=20
+        )
 
         self.input.callback = self.callback
         self.add_item(self.input)
