@@ -372,7 +372,7 @@ class IntervalView(nextcord.ui.View):
                     else:
                         embed = nextcord.Embed(title=f"Scrim Scheduling: {self.schedule_data['scrim_name']} // Confirmation", description=f"Confirm Scheduling of: **{self.schedule_data['scrim_name']}**\n\nTime: <t:{self.schedule_data['scrim_time']}:f> (**{self.schedule_data['scrim_time']}**)\nMaps: **{self.schedule_data['map_1']}** & **{self.schedule_data['map_2']}**\nPOI Selection Mode: **{self.schedule_data['poi_selection_mode']}**\nTeam Type: **{self.schedule_data['team_type']}**\nMax Teams: **{self.schedule_data['max_teams']}**\nTotal Games: **{self.schedule_data['total_games']}**\nInterval: **{self.schedule_data['interval']}**", color=White)
 
-                    await interaction.response.edit_message(embed=embed, view=ConfirmationView(interaction, self.schedule_data))
+                    await interaction.response.edit_message(embed=embed, view=RegistrationChannelView(interaction, self.schedule_data))
 
                 elif action == "Cancel":
                     embed = nextcord.Embed(title=f"Scrim Scheduling: {self.schedule_data['scrim_name']} // Scrim Scheduling Cancelled", description="Scrim Scheduling has been cancelled", color=Red)
@@ -566,6 +566,7 @@ class ConfirmationView(nextcord.ui.View):
                                 "poiSelectionMode": self.schedule_data['poi_selection_mode'],
                                 "totalGames": self.schedule_data['total_games'],
                                 "registrationChannel": self.schedule_data['registration_channel'],
+                                "registrationMessages": [],
                                 "open": {
                                     "checkin": False,
                                     "poi": False
@@ -593,9 +594,9 @@ class ConfirmationView(nextcord.ui.View):
                             })
 
                         if self.schedule_data['map_2'] == None:
-                            embed = nextcord.Embed(title=f"Scrim Scheduled: {self.schedule_data['scrim_name']} // Scheduled", description=f"Confirm Scheduling of: **{self.schedule_data['scrim_name']}**\n\nTime: <t:{self.schedule_data['scrim_time']}:f> (**{self.schedule_data['scrim_time']}**)\nMap: **{self.schedule_data['map_1']}**\nPOI Selection Mode: **{self.schedule_data['poi_selection_mode']}**\nTeam Type: **{self.schedule_data['team_type']}**\nMax Teams: **{self.schedule_data['max_teams']}**\nTotal Games: **{self.schedule_data['total_games']}**\nInterval: **{self.schedule_data['interval']}**\nRecurrence: **{self.schedule_data['recurrence']}**\nRegistration Channel: <#{self.schedule_data['registration_channel']}>", color=White)
+                            embed = nextcord.Embed(title=f"Scrim Scheduled: {self.schedule_data['scrim_name']} // Scheduled", description=f"\nTime: <t:{self.schedule_data['scrim_time']}:f> (**{self.schedule_data['scrim_time']}**)\nMap: **{self.schedule_data['map_1']}**\nPOI Selection Mode: **{self.schedule_data['poi_selection_mode']}**\nTeam Type: **{self.schedule_data['team_type']}**\nMax Teams: **{self.schedule_data['max_teams']}**\nTotal Games: **{self.schedule_data['total_games']}**\nInterval: **{self.schedule_data['interval']}**\nRecurrence: **{self.schedule_data['recurrence']}**\nRegistration Channel: <#{self.schedule_data['registration_channel']}>", color=White)
                         else:
-                            embed = nextcord.Embed(title=f"Scrim Scheduled: {self.schedule_data['scrim_name']} // Scheduled", description=f"Confirm Scheduling of: **{self.schedule_data['scrim_name']}**\n\nTime: <t:{self.schedule_data['scrim_time']}:f> (**{self.schedule_data['scrim_time']}**)\nMaps: **{self.schedule_data['map_1']}** & **{self.schedule_data['map_2']}**\nPOI Selection Mode: **{self.schedule_data['poi_selection_mode']}**\nTeam Type: **{self.schedule_data['team_type']}**\nMax Teams: **{self.schedule_data['max_teams']}**\nTotal Games: **{self.schedule_data['total_games']}**\nInterval: **{self.schedule_data['interval']}**\nRecurrence: **{self.schedule_data['recurrence']}**\nRegistration Channel: <#{self.schedule_data['registration_channel']}>", color=White)
+                            embed = nextcord.Embed(title=f"Scrim Scheduled: {self.schedule_data['scrim_name']} // Scheduled", description=f"\nTime: <t:{self.schedule_data['scrim_time']}:f> (**{self.schedule_data['scrim_time']}**)\nMaps: **{self.schedule_data['map_1']}** & **{self.schedule_data['map_2']}**\nPOI Selection Mode: **{self.schedule_data['poi_selection_mode']}**\nTeam Type: **{self.schedule_data['team_type']}**\nMax Teams: **{self.schedule_data['max_teams']}**\nTotal Games: **{self.schedule_data['total_games']}**\nInterval: **{self.schedule_data['interval']}**\nRecurrence: **{self.schedule_data['recurrence']}**\nRegistration Channel: <#{self.schedule_data['registration_channel']}>", color=White)
 
                         await interaction.edit_original_message(embed=embed)
 
@@ -603,6 +604,7 @@ class ConfirmationView(nextcord.ui.View):
                         messages = getMessages(interaction.guild.id)
                         message = splitMessage(messages["scrimRegistration"], interaction.guild.id, self.schedule_data['scrim_name'])
 
+                        channel = interaction.guild.get_channel(self.schedule_data['registration_channel'])
                         embed = nextcord.Embed(title=message[0], description=message[1], color=White)
                         await channel.send(embed=embed)
 
@@ -626,7 +628,7 @@ class Command_schedule_Cog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @nextcord.slash_command(name="schedule", description="Schedule Scrims using a series of menus (Max 5 Scrims at a time). **Staff Only**", default_member_permissions=(nextcord.Permissions(administrator=True)))
+    @nextcord.slash_command(name="schedule", description="Schedule Scrims using a series of menus (Max 7 Scrims at a time). **Staff Only**", default_member_permissions=(nextcord.Permissions(administrator=True)))
     async def schedule(self, interaction: nextcord.Interaction):
         global command
         command = {"name": interaction.application_command.name, "userID": interaction.user.id, "guildID": interaction.guild.id}
