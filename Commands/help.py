@@ -59,17 +59,11 @@ help_descriptions = {
     "description": "**Admin Only**\nUnregister all teams from Scrims.\n\n**Usage:** \*optional\*\n`/unregister_all`",
     "last_updated": "Last Updated: v1.0.0 | 23/04/2024",
     },
-"status": {
-    "warning": None,
-    "small_text": "Show the status of Scrims",
-    "description": "**Admin Only**\nShow the status of Scrims.\nCurrent amount of teams checked in and POIs selected.\n\n**Usage:** \*optional\*\n`/status`",
-    "last_updated": "Last Updated: v1.0.0 | 23/04/2024",
-    },
 "configure": {
-    "warning": ":warning: *Major Rework Upcoming*",
-    "small_text": "Configure the bot for your server",
-    "description": "**Admin Only**\nConfigure the bot for your server.\nOpens a series of menus.\nMost things in scrimotron can be altered to your server's needs\n\n**Usage:** \*optional\*\n`/configure`",
-    "last_updated": "Last Updated: v1.0.0 | 23/04/2024",
+    "warning": ":warning: *Reworked in v1.1.0*",
+    "small_text": "Configure Scrimotron for your server",
+    "description": "**Admin Only**\nConfigure Scrimotron for your server.\nOpens a series of menus.\nMost things in scrimotron can be altered to your server's needs\n\n**Usage:** \*optional\*\n`/configure`",
+    "last_updated": "Last Updated: v1.1.0 | xx/05/2024",
     },
 "score": {
     "warning": None,
@@ -82,7 +76,13 @@ help_descriptions = {
     "small_text": "Submit Feedback/Suggestions/Bug Reports to Catotron",
     "description": "Submit Feedback/Suggestions/Bug Reports to Catotron.\nOpens a form to enter feedback which is directly sent to Catotron.\n\n**Usage:** \*optional\*\n`/feedback`",
     "last_updated": "Last Updated: v1.1.0 | xx/05/2024",
-    }
+    },
+"scrims": {
+    "warning": ":bulb: *New in v1.1.0*",
+    "small_text": "View and edit all currently scheduled scrims",
+    "description": "**Admin Only**\nView and edit all currently scheduled scrims.\nView all scrims with basic information\n**OR**\nView one scrim with all information and option to make edits.\n\n**Usage:** \*optional\*\n`/scrims`",
+    "last_updated": "Last Updated: v1.1.0 | xx/05/2024",
+    },
 }
 
 class dropdown_menu(nextcord.ui.View):

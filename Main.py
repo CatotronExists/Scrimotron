@@ -11,7 +11,7 @@ from BotData.colors import *
 import re
 
 # Command Lists
-command_list = admin_command_list = ["team_list", "register_trio", "register_duo", "register_solo", "end", "schedule", "select_poi", "help", "unregister_all", "status", "configure", "score", "feedback", "scrims"]
+command_list = admin_command_list = ["team_list", "register_trio", "register_duo", "register_solo", "end", "schedule", "select_poi", "help", "unregister_all", "configure", "score", "feedback", "scrims"]
 public_command_list = ["team_list", "register_trio", "register_duo", "register_solo", "select_poi", "help", "feedback"]
 
 # Discord Vars
