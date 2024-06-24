@@ -2,6 +2,7 @@ import nextcord
 import traceback
 from nextcord.ext import commands
 from Main import formatOutput, errorResponse, DB, getScrims, getScrim, getTeam, getMessages, splitMessage
+from BotData.mapdata import MapData
 from BotData.colors import *
 
 class RegisterView(nextcord.ui.View):
@@ -65,11 +66,9 @@ class RegisterView(nextcord.ui.View):
 
                             DB.Scrimotron.SavedMessages.update_one({"messageID": reserve_message.id}, {"$set": {"messageID": first_reserve.id}}) # Update saved messages
 
-                            message_data = DB.Scrimotron.SavedMessages.find_one({"messageID": first_reserve.id}) # Update view
-                            if message_data['viewType'] == "registration": view = RegisterView(interaction=DB.Scrimotron.SavedMessages.find_one({"messageID": first_reserve.id})["interactionID"])
-                            elif message_data['viewType'] == "checkin": view = CheckinView(interaction=DB.Scrimotron.SavedMessages.find_one({"messageID": first_reserve.id})["interactionID"])
+                            new_view = AutomatedRegisterView(interaction=DB.Scrimotron.SavedMessages.find_one({"messageID": first_reserve.id})["interactionID"], type=None, guildID=interaction.guild.id, channelID=interaction.channel.id)
 
-                            first_reserve_id = await reserve_message.edit(embed=first_reserve_embed, view=view) # Edit reserve message to first reserve
+                            first_reserve_id = await reserve_message.edit(embed=first_reserve_embed, view=new_view) # Edit reserve message to first reserve
                             reserve_message_id = await first_reserve.edit(embed=reserve_message_embed, view=None) # Edit first reserve to reserve message
 
                             DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.IDs.reserveMessage": reserve_message_id.id}})
@@ -90,34 +89,41 @@ class RegisterView(nextcord.ui.View):
 
             except Exception as e: await errorResponse(e, command, interaction, error_traceback=traceback.format_exc())
         return callback
-
-class CheckinView(nextcord.ui.View):
-    def __init__(self, interaction: nextcord.Interaction):
+    
+class AutomatedRegisterView(nextcord.ui.View):
+    def __init__(self, interaction: nextcord.Interaction, type, guildID, channelID):
         super().__init__(timeout=None)
+        scrim_name = None
         self.interaction = interaction
+        scrims = getScrims(guildID)
+
+        for scrim in scrims:
+            if scrim['scrimConfiguration']['registrationChannel'] == channelID:
+                scrim_name = scrim['scrimName']
+                break
+        scrim = getScrim(guildID, scrim_name)
 
         edit_button = nextcord.ui.Button(style=nextcord.ButtonStyle.primary, label="Edit")
-        edit_button.callback = self.create_callback("edit")
+        edit_button.callback = self.create_callback("edit", scrim)
         self.add_item(edit_button)
 
         unregister_button = nextcord.ui.Button(style=nextcord.ButtonStyle.danger, label="Unregister")
-        unregister_button.callback = self.create_callback("unregister")
+        unregister_button.callback = self.create_callback("unregister", scrim)
         self.add_item(unregister_button)
 
-        checkin_button = nextcord.ui.Button(style=nextcord.ButtonStyle.success, label="Check In ✅")
-        checkin_button.callback = self.create_callback("checkin")
-        self.add_item(checkin_button)
+        if type == "checkin" or scrim["scrimConfiguration"]["open"]["checkin"] == True:
+            checkin_button = nextcord.ui.Button(style=nextcord.ButtonStyle.success, label="Check In ✅")
+            checkin_button.callback = self.create_callback("checkin", scrim)
+            self.add_item(checkin_button)
+        
+        if type == "poi" or scrim["scrimConfiguration"]["open"]["poi"] == True:
+            poi_button = nextcord.ui.Button(style=nextcord.ButtonStyle.success, label="POI Selection")
+            poi_button.callback = self.create_callback("poi", scrim)
+            self.add_item(poi_button)
 
-    def create_callback(self, custom_id):
+    def create_callback(self, custom_id, scrim):
         async def callback(interaction: nextcord.Interaction):
-            scrim_name = None
-            scrims = getScrims(interaction.guild.id)
-            for scrim in scrims:
-                if scrim['scrimConfiguration']['registrationChannel'] == interaction.channel.id:
-                    scrim_name = scrim['scrimName']
-                    break
-
-            team = getTeam(interaction.guild.id, scrim_name, interaction.message.embeds[0].title)
+            team = getTeam(interaction.guild.id, scrim['scrimName'], interaction.message.embeds[0].title)
 
             try:
                 if custom_id == "edit":
@@ -130,16 +136,16 @@ class CheckinView(nextcord.ui.View):
 
                 elif custom_id == "unregister":
                     if interaction.user.id == team["teamPlayer1"] or interaction.user.guild_permissions.administrator == True:
-                        msgindex = DB[str(interaction.guild.id)]["ScrimData"].find_one({"scrimName": scrim_name})["scrimConfiguration"]["registrationMessages"]
+                        msgindex = DB[str(interaction.guild.id)]["ScrimData"].find_one({"scrimName": scrim['scrimName']})["scrimConfiguration"]["registrationMessages"]
 
                         # Reserve Message Editing
                         if len(msgindex) < scrim['scrimConfiguration']['maxTeams'] - 1: # If there are less than max_teams (-1 to remove unregistered team)
-                            if scrim['scrimConfiguration']['reserveMessage'] != None: # and a reserve message exists, delete it
+                            if scrim['scrimConfiguration']['IDs']['reserveMessage'] != None: # and a reserve message exists, delete it
                                 reserve_message = await interaction.channel.fetch_message(scrim['scrimConfiguration']['reserveMessage'])
                                 await reserve_message.delete()
 
-                                DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim_name}, {"scrimConfiguration.reserveMessage": None})
-                                DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim_name}, {"$pull": {"scrimConfiguration.registrationMessages": reserve_message.id}})
+                                DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim["scrimName"]}, {"scrimConfiguration.reserveMessage": None})
+                                DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim["scrimName"]}, {"$pull": {"scrimConfiguration.registrationMessages": reserve_message.id}})
 
                         elif len(msgindex) >= scrim['scrimConfiguration']['maxTeams'] - 1: # If there are max_teams or more (-1 to remove unregistered team)
                             # Then swap first reserve index[max_teams + 1] with index[max_teams] (then delete unregistered team index)
@@ -147,7 +153,7 @@ class CheckinView(nextcord.ui.View):
                             reserve_message = await interaction.channel.fetch_message(scrim['scrimConfiguration']['IDs']['reserveMessage']) # Reserve Message
                             first_reserve = await interaction.channel.fetch_message(msgindex[scrim['scrimConfiguration']['maxTeams']+ 1]) # First Reserve
 
-                            reserve_message_raw = splitMessage(getMessages(interaction.guild.id)['scrimReserve'], interaction.guild.id, scrim_name)
+                            reserve_message_raw = splitMessage(getMessages(interaction.guild.id)['scrimReserve'], interaction.guild.id, scrim["scrimName"])
                             reserve_message_embed = nextcord.Embed(title=reserve_message_raw[0], description=reserve_message_raw[1], color=White) # Build new reserve message
 
                             first_reserve_embed = nextcord.Embed(title=first_reserve.embeds[0].title, description=first_reserve.embeds[0].description)
@@ -155,21 +161,19 @@ class CheckinView(nextcord.ui.View):
 
                             DB.Scrimotron.SavedMessages.update_one({"messageID": reserve_message.id}, {"$set": {"messageID": first_reserve.id}}) # Update saved messages
 
-                            message_data = DB.Scrimotron.SavedMessages.find_one({"messageID": first_reserve.id}) # Update view
-                            if message_data['viewType'] == "registration": view = RegisterView(interaction=DB.Scrimotron.SavedMessages.find_one({"messageID": first_reserve.id})["interactionID"])
-                            elif message_data['viewType'] == "checkin": view = CheckinView(interaction=DB.Scrimotron.SavedMessages.find_one({"messageID": first_reserve.id})["interactionID"])
+                            new_view = AutomatedRegisterView(interaction=DB.Scrimotron.SavedMessages.find_one({"messageID": first_reserve.id})["interactionID"], type=None, guildID=interaction.guild.id, channelID=interaction.channel.id)
 
-                            first_reserve_id = await reserve_message.edit(embed=first_reserve_embed, view=view) # Edit reserve message to first reserve
+                            first_reserve_id = await reserve_message.edit(embed=first_reserve_embed, view=new_view) # Edit reserve message to first reserve
                             reserve_message_id = await first_reserve.edit(embed=reserve_message_embed, view=None) # Edit first reserve to reserve message
 
-                            DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.IDs.reserveMessage": reserve_message_id.id}})
-                            DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim_name}, {"$set": {f"scrimTeams.{first_reserve.embeds[0].title}.messageID": first_reserve_id.id}})
+                            DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim["scrimName"]}, {"$set": {"scrimConfiguration.IDs.reserveMessage": reserve_message_id.id}})
+                            DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim["scrimName"]}, {"$set": {f"scrimTeams.{first_reserve.embeds[0].title}.messageID": first_reserve_id.id}})
 
                         else: # Nothing happens (no reserves exist yet)
                             pass
 
-                        DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim_name}, {"$unset": {f"scrimTeams.{interaction.message.embeds[0].title}": ""}})
-                        DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim_name}, {"$pull": {"scrimConfiguration.registrationMessages": team["messageID"]}})
+                        DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim["scrimName"]}, {"$unset": {f"scrimTeams.{interaction.message.embeds[0].title}": ""}})
+                        DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim["scrimName"]}, {"$pull": {"scrimConfiguration.registrationMessages": team["messageID"]}})
 
                         message = await interaction.channel.fetch_message(team["messageID"])
                         await message.delete()
@@ -185,7 +189,7 @@ class CheckinView(nextcord.ui.View):
                             message = await interaction.channel.fetch_message(team["messageID"])
                             await message.edit(embed=message.embeds[0].set_footer(text="Checked In ✅"))
 
-                            embed = nextcord.Embed(title="Team Checked In", description=f"**{interaction.message.embeds[0].title}** has been checked in for **{scrim_name}**", color=Green)
+                            embed = nextcord.Embed(title="Team Checked In", description=f"**{interaction.message.embeds[0].title}** has been checked in for **{scrim["scrimName"]}**", color=Green)
                             await interaction.response.send_message(embed=embed, ephemeral=True)
                         else:
                             embed = nextcord.Embed(title="Team Already Checked In", description=f"**{interaction.message.embeds[0].title}** has already checked in!", color=Red)
@@ -193,7 +197,69 @@ class CheckinView(nextcord.ui.View):
                     else:
                         embed = nextcord.Embed(title="Only the Team Captain can check in!", color=Red)
                         await interaction.response.send_message(embed=embed, ephemeral=True)
+                
+                elif custom_id == "poi":
+                    if interaction.user.id == team["teamPlayer1"]:
+                        if scrim["scrimConfiguration"]["poiSelectionMode"] == "Simple": embed = nextcord.Embed(title=f"Select a POI for Map 1 ({scrim['scrimConfiguration']['maps']['map1']})", description="Selection Mode: Simple - Pick one POI per map\nGray Buttons indicate no team has chosen that POI yet,\nRed Buttons indicate that another team has picked that POI")
+                        elif scrim["scrimConfiguration"]["poiSelectionMode"] == "Advanced": embed = nextcord.Embed(title=f"Select a POI for Map 1 ({scrim['scrimConfiguration']['maps']['map1']})", description="Selection Mode: Advanced - Option to pick Secondary POIs and Tridents\nGray Buttons indicate no team has chosen that POI yet,\nRed Buttons indicate that another team has picked that POI")
 
+                        await interaction.response.send_message(embed=embed, view=POIView(interaction, scrim, team, map_num=1), ephemeral=True)
+
+                    else:
+                        embed = nextcord.Embed(title="Only the Team Captain can open POI Selection!", color=Red)
+                        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+            except Exception as e: await errorResponse(e, command, interaction, error_traceback=traceback.format_exc())
+        return callback
+
+
+class POIView(nextcord.ui.View):
+    def __init__(self, interaction: nextcord.Interaction, scrim, team, map_num):
+        super().__init__(timeout=None)
+        self.interaction = interaction
+        self.scrim = scrim
+        self.team = team
+
+        for poi in MapData[f"{scrim['scrimConfiguration']['maps'][f'map{map_num}']}"]:
+            if poi not in [team["teamPois"][f"map{map_num}"][f"map{map_num}POI"] for team in self.scrim["scrimTeams"].values()]: button = nextcord.ui.Button(label=poi, style=nextcord.ButtonStyle.gray)
+            else: button = nextcord.ui.Button(label=poi, style=nextcord.ButtonStyle.red, disabled=True)
+
+            button.callback = self.create_callback(poi, map_num)
+            self.add_item(button)
+
+    def create_callback(self, poi, map_num):
+        async def callback(interaction: nextcord.Interaction):
+            try:
+                DB[str(interaction.guild.id)]["TeamData"].update_one({"teamName": self.team["teamName"]}, {"$set": {f"teamPois.map{map_num}.map{map_num}POI": poi}})
+
+                if self.scrim["scrimConfiguration"]["maps"]["map2"] != None:
+                    if map_num == 2: # Edit message
+                        message = await interaction.guild.get_channel(self.scrim["scrimConfiguration"]["registrationChannel"]).fetch_message(self.team["messageID"])
+                        embed_title = message.embeds[0].title
+                        embed_description = message.embeds[0].description
+
+                        embed = nextcord.Embed(title=embed_title, description=f"POI: {poi}\n{embed_description}")
+                        await message.edit(embed=embed)
+                    
+                        embed = nextcord.Embed(title="POI Selection Confirmed", description=f"**{self.team['teamName']}** has selected **{poi}** for **{self.scrim['scrimName']}**", color=Green)
+                        await interaction.response.edit_message(embed=embed, view=None)
+
+                    else: # Open map 2 selection
+                        embed = nextcord.Embed(f"Select a POI for Map 2 ({self.scrim['scrimConfiguration']['maps']['map2']})\nSelection Mode: Simple - Pick one POI per map\nGray Buttons indicate no team has chosen that POI yet,\nRed Buttons indicate that another team has picked that POI")
+                        embed.set_footer(text=f"Map 1 Selection - {poi}")
+                        await interaction.response.edit_message(embed=embed, view=POIView(interaction, self.scrim, self.team, map_num=2))
+                
+                else:
+                    message = await interaction.guild.get_channel(self.scrim["scrimConfiguration"]["registrationChannel"]).fetch_message(self.team["messageID"])
+                    embed_title = message.embeds[0].title
+                    embed_description = message.embeds[0].description
+
+                    embed = nextcord.Embed(title=embed_title, description=f"POI: {poi}\n{embed_description}")
+                    await message.edit(embed=embed)
+
+                    embed = nextcord.Embed(title="POI Selection Confirmed", description=f"**{self.team['teamName']}** has selected **{poi}** for **{self.scrim['scrimName']}**", color=Green)
+                    await interaction.response.edit_message(embed=embed, view=None)
+        
             except Exception as e: await errorResponse(e, command, interaction, error_traceback=traceback.format_exc())
         return callback
 
@@ -226,6 +292,7 @@ class RegisterDropdown(nextcord.ui.Select):
                 DB[str(interaction.guild.id)]["ScrimData"].update_one(
                     {"scrimName": scrim['scrimName']},
                     {"$set": {f"scrimTeams.{self.team_data[0]}": {
+                        "teamName": self.team_data[0],
                         "teamType": "Trios",
                         "teamLogo": self.team_data[1],
                         "teamPlayer1": self.IDs[1],
@@ -245,8 +312,6 @@ class RegisterDropdown(nextcord.ui.Select):
                                 "map2Split": None,
                                 "map2Vechicle": None}},
                         "teamSetup": {
-                            "checkinMessageID": None,
-                            "poiMessageID": None,
                             "roleID": None,
                             "channelID": None},
                         "teamStatus": {

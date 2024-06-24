@@ -41,12 +41,6 @@ help_descriptions = {
     "description": "**Admin Only**\nSchedule Scrims.\nOpens a series of menus to customise and schedule scrims\nPlus creating a Discord event for Scrims.\n\n**Usage:** \*optional\*\n`/schedule`",
     "last_updated": "Last Updated: v1.1.0 | xx/05/2024",
     },
-"select_poi": {
-    "warning": None,
-    "small_text": "Select a POI for your team",
-    "description": "Select a POI for your team.\nMutliple different modes for selection, chosen when scheduling scrims\n\n**Usage:** \*optional\*\n`/select_poi`",
-    "last_updated": "Last Updated: v1.0.0 | 23/04/2024",
-    },
 "help": {
     "warning": ":warning: *Majorly Updated in v1.1.0*",
     "small_text": "Opens a help",

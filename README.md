@@ -35,7 +35,6 @@ Bugs are expected, if you find one please report it [here](https://github.com/Ca
 - `/register_duo`: Register for a duo scrim (2 Players + team logo & 1 sub)
 - `/register_trio`: Register for a trio scrim (3 Players + team logo & 2 subs)
 - `/team_list`: Shows a list of all the teams that have been registered
-- `/select_poi`: Allows teams to select their POIs
 - `/feedback`: Submit Feedback/Suggestions/Bug Reports to Catotron
 
 - `/configure`: Configure Scrimotron **Admin Only**
@@ -45,7 +44,6 @@ Bugs are expected, if you find one please report it [here](https://github.com/Ca
 
 ## Roadmap
 **v1.0.0 is not the end**\
-Development will slow as other things will take priority\
 Keep up to date in the [Dev Branch](https://github.com/CatotronExists/Scrimotron/tree/dev)\
 **v1.0.0** - Scrimotron UNLEASHED [23/04/2024]\
 ||\
