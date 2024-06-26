@@ -11,8 +11,8 @@ from BotData.colors import *
 import re
 
 # Command Lists
-command_list = admin_command_list = ["team_list", "register_trio", "register_duo", "register_solo", "end", "schedule", "select_poi", "help", "configure", "score", "feedback", "scrims"]
-public_command_list = ["team_list", "register_trio", "register_duo", "register_solo", "select_poi", "help", "feedback"]
+command_list = admin_command_list = ["team_list", "register_trio", "register_duo", "register_solo", "schedule", "help", "configure", "score", "feedback", "scrims"]
+public_command_list = ["team_list", "register_trio", "register_duo", "register_solo", "help", "feedback"]
 
 # Discord Vars
 intents = nextcord.Intents.all()
@@ -194,7 +194,7 @@ async def on_ready():
     formatOutput(f"{bot.user.name} has connected to Discord (Took {startup_time}ms)", status="Good", guildID="STARTUP")
     formatOutput(f"Resuming Views...", status="Normal", guildID="STARTUP")
 
-    from Commands.register_trio import RegisterView, CheckinView
+    from Commands.register_trio import AutomatedRegisterView
     view_count = 1
     success_count = deleted_messages = 0
     messageData = list(DB.Scrimotron.SavedMessages.find({}))
@@ -208,8 +208,7 @@ async def on_ready():
             interaction = entry["interactionID"]
             viewType = entry["viewType"]
             # Resume View
-            if viewType == "registration": view = RegisterView(interaction)
-            if viewType == "checkin": view = CheckinView(interaction)
+            view = AutomatedRegisterView(interaction, type=viewType, guildID=entry["guildID"], channelID=entry["channelID"])
             await message.edit(view=view)
             formatOutput(f"   Resuming Views: {view_count}/{len(messageData)}", status="Good", guildID="RESUMER")
             view_count = view_count + 1
@@ -234,38 +233,38 @@ async def on_ready():
     formatOutput("---------------------------------", status="Normal", guildID="STARTUP")
 
 ##### Scheduler
-async def checkin_handler(config_data, guildID, scrim_name): # Runs checkin automation
-    formatOutput(f"   Opening Checkins, Less than {config_data['toggleCheckinTime']} Hour(s) until start", status="Normal", guildID=guildID)
-    channels = getChannels(guildID)
+async def registration_updater(config_data, guildID, scrim_name, type): # Edits registrations to inlclude checkin and or poi buttons
+    formatOutput(f"   Opening {type}, Less than {config_data[f'toggle{type}Time']} Hour(s) until start", status="Normal", guildID=guildID)
     try:
+        channels = getChannels(guildID)
         scrim = getScrim(guildID, scrim_name)
         teams = getTeams(guildID, scrim_name)
-
-        from Commands.register_trio import CheckinView
+        
+        from Commands.register_trio import AutomatedRegisterView
         for team, team_data in teams.items():
             messageID = team_data["messageID"]
-            data = DB.Scrimotron.SavedMessages.find_one_and_update({"messageID": messageID}, {"$set": {"viewType": "checkin"}})
+            data = DB.Scrimotron.SavedMessages.find_one_and_update({"messageID": messageID}, {"$set": {"viewType": type.lower()}})
 
             interaction = data["interactionID"]
             message = await bot.get_channel(data['channelID']).fetch_message(messageID)
-            await message.edit(view=CheckinView(interaction))
+            await message.edit(view=AutomatedRegisterView(interaction, type.lower(), guildID=guildID, channelID=scrim["scrimConfiguration"]["registrationChannel"]))
 
-        message = splitMessage(getMessages(guildID)["scrimCheckin"], guildID, scrim_name)
+        message = splitMessage(getMessages(guildID)[f"scrim{type}"], guildID, scrim_name)
         channel = bot.get_channel(scrim["scrimConfiguration"]["registrationChannel"])
 
         embed = nextcord.Embed(title=message[0], description=message[1], color=White)
         await channel.send(embed=embed)
 
-        embed = nextcord.Embed(title="Checkins are Open!", color=Green)
-        embed.set_footer(text=f"🛠 Automatically Opened {config_data['toggleCheckinTime']} hour(s) before start")
+        embed = nextcord.Embed(title=f"{type}s are Open!", color=Green)
+        embed.set_footer(text=f"🛠 Automatically Opened {config_data[f'toggle{type}Time']} hour(s) before start")
 
         await bot.get_channel(channels["scrimLogChannel"]).send(embed=embed)
-        formatOutput(f"      Automation | Checkins Opened", status="Good", guildID=guildID)
-        DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.complete.checkin": True}})
+        formatOutput(f"      Automation | {type}s Opened", status="Good", guildID=guildID)
+        DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {f"scrimConfiguration.complete.{type.lower()}": True}})
 
     except Exception as e:
-        formatOutput(output=f"   Automation | Something went wrong while opening checkins. Error: {e} {traceback.format_exc()}", status="Error", guildID=guildID)
-        embed = nextcord.Embed(title="Error Encountered", description=f"Error while opening checkins.\nError: {e} {traceback.format_exc()}", color=Red)
+        formatOutput(output=f"   Automation | Something went wrong while opening {type.lower()}s. Error: {e} {traceback.format_exc()}", status="Error", guildID=guildID)
+        embed = nextcord.Embed(title="Error Encountered", description=f"Error while opening {type.lower()}s.\nError: {e} {traceback.format_exc()}", color=Red)
         await bot.get_channel(channels["scrimLogChannel"]).send(embed=embed)
 
 async def setup_handler(config_data, guildID, scrim_name): # Runs setup automation
@@ -290,8 +289,8 @@ async def setup_handler(config_data, guildID, scrim_name): # Runs setup automati
             embed.set_footer(text=f"🛠 Automatically Started {config_data['toggleSetupTime']} hour(s) before start")
 
             message = await bot.get_channel(channels["scrimLogChannel"]).send(embed=embed)
-            messageID = message.id
-            message = await bot.get_channel(channels["scrimLogChannel"]).fetch_message(messageID)
+            #messageID = message.id
+            #message = await bot.get_channel(channels["scrimLogChannel"]).fetch_message(messageID)
 
     except Exception as e:
         formatOutput(output=f"   Automation | Something went wrong while running setup. Error: {e} | {traceback.format_exc()}", status="Error", guildID=guildID)
@@ -468,30 +467,9 @@ async def setup_handler(config_data, guildID, scrim_name): # Runs setup automati
         await message.edit(embed=embed)
         formatOutput(f"      Automation | Setup Failed", status="Error")
 
-async def poi_handler(config_data, guildID): # Runs poi automation
-    # scrim_setup = getScrim(guildID, scrim_name)
-    channels = getChannels(guildID)
-    try:
-        formatOutput(f"   Opening POI Selections, Less than {config_data['togglePoiTime']} hour(s) until start", status="Normal", guildID=guildID)
-        # maps = scrim_setup["maps"]
-        # map1 = maps["maps"]["map1"]
-        # map2 = maps["maps"]["map2"]
-        # embed = nextcord.Embed(title="POI Selections are Open!", description=f"Select a POI for {map1} & {map2} using /select_poi", color=Black)
-        await bot.get_channel(channels["scrimPoiChannel"]).send(embed=embed)
-        embed = nextcord.Embed(title="POI Selections are Open!", color=Green)
-        embed.set_footer(text=f"🛠 Automatically Opened {config_data['togglePoiTime']} hour(s) before start")
-        await bot.get_channel(channels["scrimLogChannel"]).send(embed=embed)
-        DB[str(guildID)]["ScrimData"].find_one({"scrimSetup": {"$exists": True}})["scrimSetup"]["complete"]["poiComplete"] = True
-        formatOutput(f"      Automation | POI Selections Opened", status="Good", guildID=guildID)
-
-    except Exception as e:
-        formatOutput(output=f"   Automation | Something went wrong while opening POI selection. Error: {e} | {traceback.format_exc()}", status="Error", guildID=guildID)
-        embed = nextcord.Embed(title="Error Encountered", description=f"Error while opening POI selection\nError: {e} | {traceback.format_exc()}", color=Red)
-        await bot.get_channel(channels["scrimLogChannel"]).send(embed=embed)
-
 async def event_checker(): # Gets events from discord and runs automation
     for id in DB.list_database_names(): # Get Guilds to check
-        if id == "Scrimotron" or id == "admin" or id == "local": continue
+        if id == "Scrimotron" or id == "admin" or id == "local": continue # Ignore other DBs
         guildID = int(id)
         scrims = getScrims(guildID)
 
@@ -500,15 +478,89 @@ async def event_checker(): # Gets events from discord and runs automation
             for scrim in scrims:
                 scrim_name = scrim["scrimName"]
                 scrim_epoch = scrim["scrimEpoch"]
-                time_until_start = scrim_epoch - datetime.datetime.now().timestamp()
-                print(type(time_until_start)) # Debug
-                hours_until_start = time_until_start.total_seconds() / 3600
-                config_data = getConfigData(guildID) # Get server config & check conditions
+                current_epoch = datetime.datetime.now().timestamp()
+                hours_until_start = (int(scrim_epoch) - int(current_epoch)) / 3600
 
-                ### ADD CHECK FOR IF AUTOMATED ACTION HAS ALREADY BEEN COMPLETED
-                if hours_until_start < config_data["toggleCheckinTime"] and config_data["toggleCheckin"] == True: checkin_handler(config_data, guildID, scrim_name)
-                if hours_until_start < config_data["toggleSetupTime"] and config_data["toggleSetup"] == True: setup_handler(config_data, guildID, scrim_name)
-                if hours_until_start < config_data["togglePoiTime"] and config_data["togglePoi"] == True: poi_handler(config_data, guildID, scrim_name)
+                config_data = getConfigData(guildID)
+
+                if hours_until_start <= -4: # If scrim started more than 4 hours ago
+                    formatOutput(f"   Ending {scrim_name} | Scrim Started More Than 4 Hours Ago", status="Normal", guildID=guildID)
+
+                    team_data = getTeams(guildID, scrim_name)
+                    guild = bot.get_guild(guildID)
+
+                    if config_data["toggleSetup"] == True: # Delete VCs
+                        try:
+                            for team, data in team_data.items():
+                                vc = bot.get_channel(data["teamSetup"]["channelID"])
+                                await vc.delete()
+
+                            vc_catergory = scrim["scrimConfiguration"]["IDs"]["vcCatergory"]
+                            await guild.get_channel(vc_catergory).delete()
+                            formatOutput(f"   Deleted VCs for {scrim_name}", status="Good", guildID=guildID)
+
+                        except Exception as e:
+                            formatOutput(f"   Failed to delete VCs for {scrim_name}. Error: {e} {traceback.format_exc()}", status="Error", guildID=guildID)
+                            await logAction(guildID, "AUTOMATED ACTION", f"Failed to delete VCs. Error: {e}", "Error")
+
+                    try: # Delete registrations
+                        for team, data in team_data.items():
+                            messageID = data["messageID"]
+                            message = await bot.get_channel(scrim["scrimConfiguration"]["registrationChannel"]).fetch_message(messageID)
+                            await message.delete()
+                        
+                        formatOutput(f"   Deleted Registrations for {scrim_name}", status="Good", guildID=guildID)
+                    
+                    except Exception as e:
+                        formatOutput(f"   Failed to delete Registrations for {scrim_name}. Error: {e} {traceback.format_exc()}", status="Error", guildID=guildID)
+                        await logAction(guildID, "AUTOMATED ACTION", f"Failed to delete Registrations. Error: {e}", "Error")
+
+                    try: # Delete team data
+                        DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimTeams": {}}})
+                        formatOutput(f"   Deleted Team Data for {scrim_name}", status="Good", guildID=guildID)
+
+                    except Exception as e:
+                        formatOutput(f"   Failed to delete Team Data for {scrim_name}. Error: {e} {traceback.format_exc()}", status="Error", guildID=guildID)
+                        await logAction(guildID, "AUTOMATED ACTION", f"Failed to delete Team Data. Error: {e}", "Error")
+
+                    if scrim['scrimConfiguration']['interval']['repeating'] == True: # if set to repeat, reschedule
+                        formatOutput(f"   {scrim_name} is Repeating", status="Normal", guildID=guildID)
+                        if scrim['scrimConfiguration']['interval']['interval'] == "Daily": next_interval = 86400
+                        elif scrim['scrimConfiguration']['interval']['interval'] == "Weekly": next_interval = 604800
+                        elif scrim['scrimConfiguration']['interval']['interval'] == "Fortnightly": next_interval = 1209600
+                        elif scrim['scrimConfiguration']['interval']['interval'] == "Monthly": next_interval = 2419200
+                        new_epoch = scrim_epoch + next_interval
+
+                        DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimEpoch": new_epoch}})
+                        DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.interval.next": new_epoch + next_interval}})
+
+                        formatOutput(f"   {scrim_name} has been rescheduled", status="Good", guildID=guildID)
+                        await logAction(guildID, "AUTOMATED ACTION", f"Rescheduled {scrim_name}", "Good")
+                    
+                    else: # if not repeating, delete
+                        DB[str(guildID)]["ScrimData"].delete_one({"scrimName": scrim_name})
+                        await logAction(guildID, "AUTOMATED ACTION", f"Ended {scrim_name}", "Good")
+    
+                    DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.open.checkin": False}})
+                    DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.open.poi": False}})
+                    DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.complete.poi": False}})
+                    DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.complete.checkin": False}})
+                    DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.complete.setup": False}})
+
+                    formatOutput(f"   {scrim_name} has Ended", status="Good", guildID=guildID)
+
+                else: # Not started more than 4 hours ago -> Check for automation
+                    automated_actions = ["toggleCheckin", "toggleSetup", "togglePoi"]
+                    for action in automated_actions:
+                        if action == "toggleCheckin": short = "checkin"
+                        if action == "toggleSetup": short = "setup"
+                        if action == "togglePoi": short = "poi"
+
+                        if config_data[action] == True: # If enabled
+                            if scrim["scrimConfiguration"]["complete"][short] == False: # If not already completed
+                                if hours_until_start < config_data[f"{action}Time"] and config_data[action] == True: # If time to run
+                                    if action == "toggleCheckin" or action == "togglePoi": await registration_updater(config_data, guildID, scrim_name, type=short.capitalize())
+                                    #if action == "toggleSetup": setup_handler(config_data, guildID, scrim_name)
 
         else:
             formatOutput(f"   No Scheduled Scrims Found for {guildID}", status="Warning", guildID=guildID)
@@ -556,7 +608,7 @@ async def startScheduler():
         formatOutput("Starting Scheduler...", status="Normal", guildID="STARTUP")
         scheduler = AsyncIOScheduler()
         scheduler.add_job(event_checker, 'cron', minute=0) # At xx:00
-        scheduler.add_job(presence_updater, 'cron', minute='*/4') # Every 4 minutes
+        scheduler.add_job(presence_updater, 'cron', minute='*/5') # Every 5 minutes
         scheduler.add_job(global_messager, 'cron', minute='*/1') # Every minute
         scheduler.start()
         formatOutput("Scheduler Started", status="Good", guildID="STARTUP")
@@ -569,7 +621,7 @@ async def on_guild_join(guild):
     try:
         formatOutput(f"Joined {guild.name} ({guild.id})", status="Good", guildID=f"{CBOLD} JOINED GUILD {CLEAR}")
         embed = nextcord.Embed(title="Scrimotron has Arrived", description=f"Ready to Supercharge and automate your scrims? Run `/configure`! and customise the bot to your needs!\n\nOpen Source Apex Scrim Bot.\nhttps://github.com/CatotronExists/Scrimotron", color=White)
-        embed.set_footer(text=f"Created by @Catotron")
+        embed.set_footer(text=f"Created by @Catotron | v1.1.0 MULTIPLEX")
         await guild.system_channel.send(embed=embed)
 
         if str(guild.id) in DB.list_database_names(): # Check for existing DB
