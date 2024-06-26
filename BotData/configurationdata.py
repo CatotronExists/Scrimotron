@@ -31,10 +31,6 @@ Data = {
             "Type": "Channel",
             "Options": ["Change Channel"],
         },
-        "Poi": {
-            "Type": "Channel",
-            "Options": ["Change Channel"],
-        },
         "Log": {
             "Type": "Channel",
             "Options": ["Change Channel"],
