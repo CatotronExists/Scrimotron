@@ -1,6 +1,5 @@
 import nextcord
 import openpyxl
-import datetime
 import shutil
 from nextcord.ext import commands
 from Main import formatOutput, errorResponse
@@ -121,10 +120,10 @@ class Command_score_Cog(commands.Cog):
 
                         row += 1
 
-                excel_file.save(f"scrimotron/Spreadsheets/{spreadsheet_name}")
+                excel_file.save(f"Spreadsheets/{spreadsheet_name}")
                 excel_file.close()
 
-                with open(f'scrimotron/Spreadsheets/{spreadsheet_name}', 'rb') as fp:
+                with open(f'Spreadsheets/{spreadsheet_name}', 'rb') as fp:
                     await interaction.edit_original_message(embed=embed, file=nextcord.File(fp, spreadsheet_name))
 
                 fp.close() # not actually closing the file, restart to be able to delete it
@@ -139,5 +138,3 @@ class Command_score_Cog(commands.Cog):
 
 def setup(bot):
     bot.add_cog(Command_score_Cog(bot))
-
-# bot hosting requires scrimotron/(path)
