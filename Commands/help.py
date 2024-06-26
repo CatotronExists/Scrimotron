@@ -6,10 +6,10 @@ from BotData.colors import *
 
 help_descriptions = {
 "team_list": {
-    "warning": None,
+    "warning": ":warning: *Majorly Updated in v1.1.0*",
     "small_text": "Shows a full list of teams, players and subs",
-    "description": "Shows a full list of teams with players and subs.\nPlus a total team, player and sub count.\n\n**Usage:** \*optional\*\n/team_list",
-    "last_updated": "Last Updated: v1.0.0 | 23/04/2024",
+    "description": "Shows a full list of teams with players and subs for selected scrim.\nPlus a total team, player and sub count.\n\n**Usage:** \*optional\*\n/team_list",
+    "last_updated": "Last Updated: v1.1.0 | xx/05/2024",
     },
 "register_trio": {
     "warning": ":warning: *Renamed and Reworked in v1.1.0 (was `/register`)*",
@@ -28,12 +28,6 @@ help_descriptions = {
     "small_text": "Register a solo team for Scrims",
     "description": "Register a solo team for Scrims.\nInclude 1 player and an optional team logo.\nA dropdown will appear with all scheduled scrims to join\n\n**Usage:** \*optional\*\n`/register_solo player_name: *logo*:`",
     "last_updated": "Last Updated: v1.1.0 | xx/05/2024",
-    },
-"end" : {
-    "warning": ":stop_sign: *Pending Removal*",
-    "small_text": "End Scrims, Deletes Roles and VCs for teams",
-    "description": "**Admin Only**\nEnd Scrims, Deletes Roles and VCs for teams.\n\n**Usage:** \*optional\*\n`/end`",
-    "last_updated": "Last Updated: v1.0.0 | 23/04/2024",
     },
 "schedule": {
     "warning": ":warning: *Majorly Updated in v1.1.0*",
