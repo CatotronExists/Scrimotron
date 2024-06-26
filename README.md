@@ -6,7 +6,7 @@ Automating the process of check-ins, POI selections and creating team VCs. Plus 
 
 ## Dev Branch
 Currently working on v1.1.0 - MULTIPLEX\
-Estimated Release: Any Day Now
+Estimated Release: TODAY
 
 **Versioning**
 Dev Versions (v1.x.x-dx) are likely to have breaking issues\
@@ -20,7 +20,7 @@ Schedule More - (Host up to 7 scrims at once)\
 Manage More - (New command to view/edit/manage scrims)\
 Register More - (Register as different team sizes: solo, duo or trio)
 
-*Do More with Scrimotron MULTIPLEX*
+*Do MORE with Scrimotron MULTIPLEX*
 
 Any Suggestions? Leave a sugestion [here](https://github.com/CatotronExists/Scrimotron/issues/new?assignees=&labels=&projects=&template=feature_request.md&title=%5BSuggestion%5D) or via Scrimotron using `/feedback` or even just by sending me a message on discord (@Catotron)\
 Bugs are expected, if you find one please report it [here](https://github.com/CatotronExists/Scrimotron/issues/new?assignees=&labels=&projects=&template=bug_report.md&title=%5BBug%5D) or via Scrimotron using `/feedback` or even just by sending me a message on discord (@Catotron)
@@ -47,17 +47,19 @@ Bugs are expected, if you find one please report it [here](https://github.com/Ca
 Keep up to date in the [Dev Branch](https://github.com/CatotronExists/Scrimotron/tree/dev)\
 **v1.0.0** - Scrimotron UNLEASHED [23/04/2024]\
 ||\
-**v1.1.0** - Scrimotron MULTIPLEX (May 2024)\
+**v1.1.0** - Scrimotron MULTIPLEX [26/06/2024]\
 ||\
-**v1.2.0** - Player Statistics (June 2024)\
+**v1.2.0** - Scrim Tools (Mid July 2024)\
 ||\
-**v1.3.0** - Alternate BR Modes [Hide and Seek, etc] (August 2024)\
+**v1.3.0** - Player Statistics (August 2024)\
 ||\
-**v1.4.0** - Why Just BR Scrims? [Expansion to Mixtape Modes (TDM)] (September 2024)\
+**v1.4.0** - Alternate BR Modes [Hide and Seek, etc] (September 2024)\
 ||\
-**v1.5.0** - Command Overload (October 2024)\
+**v1.5.0** - Why Just BR Scrims? [Expansion to Mixtape Modes (TDM)] (October 2024)\
 ||\
-**v1.6.0** - Major QOL Update (December 2024)\
+**v1.6.0** - Command Overload (November 2024)\
+||\
+**v1.7.0** - Major QOL Update (December 2024)\
 \+ Regular updates and bug fixes. Keeping upto date with apex, New maps and Map changes! (Ongoing)
 
 *Roadmap will change overtime, suggest features and shape scrimotron!*

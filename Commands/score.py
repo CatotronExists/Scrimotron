@@ -67,8 +67,8 @@ class Command_score_Cog(commands.Cog):
                 tournament_name = api_data["ALSData"]["name"]
                 if "/" in tournament_name: tournament_name = tournament_name.replace("/", "-")
                 spreadsheet_name = f"Spreadsheet-{tournament_name}.xlsx"
-                shutil.copy("scrimotron/Spreadsheets/Spreadsheet Template.xlsx", f"scrimotron/Spreadsheets/{spreadsheet_name}")
-                excel_file = openpyxl.load_workbook(f"scrimotron/Spreadsheets/{spreadsheet_name}")
+                shutil.copy("Spreadsheets/Spreadsheet Template.xlsx", f"Spreadsheets/{spreadsheet_name}")
+                excel_file = openpyxl.load_workbook(f"Spreadsheets/{spreadsheet_name}")
                 sheet = excel_file.active
 
                 row = 4
