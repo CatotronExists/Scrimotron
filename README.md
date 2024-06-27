@@ -1,33 +1,29 @@
-![Scrimotron Unleashed v1 0 0 Header](https://github.com/CatotronExists/Scrimotron/assets/101963814/4d549e35-a664-4bb0-8dcb-1c7d9b0ced03)
+![Scrimotron Multiplex v1 1 0 Header](https://github.com/CatotronExists/Scrimotron/assets/101963814/0a189bae-4d3b-4496-bb03-ff0be482436f)
 # Scrimotron (Scrim-o-tron)
 A discord bot designed to Run and Manage Apex Scrims
 
 Automating the process of check-ins, POI selections and creating team VCs. Plus scoring!
 
 ## Dev Branch
-Currently working on v1.1.0 - MULTIPLEX\
-Estimated Release: TODAY
+Currently working on v1.2.0 - TOOLKIT\
+Estimated Release: Mid July
 
 **Versioning**
 Dev Versions (v1.x.x-dx) are likely to have breaking issues\
 Preview Versions (v1.x.x-px) are more polished and are for the later stages of update development\
 Final Versions (v1.x.x-FINALx) will be the version released, unless breaking bugs are discovered
 
-## SCRIMOTRON MULTIPLEX (v1.1.0)
-**Major Update v1.1.0 Brings the option to host multiple scrims at once with more customisation!**
+## SCRIMOTRON MULTIPLEX (v1.2.0)
+**Major Update v1.2.0 Unpacks new tools to keep scrims running smoothly**
 
-Schedule More - (Host up to 7 scrims at once)\
-Manage More - (New command to view/edit/manage scrims)\
-Register More - (Register as different team sizes: solo, duo or trio)
-
-*Do MORE with Scrimotron MULTIPLEX*
+*More information soon...*
 
 Any Suggestions? Leave a sugestion [here](https://github.com/CatotronExists/Scrimotron/issues/new?assignees=&labels=&projects=&template=feature_request.md&title=%5BSuggestion%5D) or via Scrimotron using `/feedback` or even just by sending me a message on discord (@Catotron)\
 Bugs are expected, if you find one please report it [here](https://github.com/CatotronExists/Scrimotron/issues/new?assignees=&labels=&projects=&template=bug_report.md&title=%5BBug%5D) or via Scrimotron using `/feedback` or even just by sending me a message on discord (@Catotron)
 
 [**-->> Invite Scrimotron <<--**](https://discord.com/oauth2/authorize?client_id=1165565006763536445&permissions=8&scope=bot+applications.commands)
 
-[Full Patch Notes](https://github.com/CatotronExists/Scrimotron/releases/tag/v1.1.0)
+[Full Patch Notes (LATER)](https://github.com/CatotronExists/Scrimotron/releases/tag/v1.2.0)
 
 ## Command List
 - `/help`: Open a help menu for information on all commands. Plus examples of usage
@@ -49,7 +45,7 @@ Keep up to date in the [Dev Branch](https://github.com/CatotronExists/Scrimotron
 ||\
 **v1.1.0** - Scrimotron MULTIPLEX [26/06/2024]\
 ||\
-**v1.2.0** - Scrim Tools (Mid July 2024)\
+**v1.2.0** - Scrimotron TOOLKIT (Mid July 2024)\
 ||\
 **v1.3.0** - Player Statistics (August 2024)\
 ||\
