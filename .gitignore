@@ -11,13 +11,11 @@ maker.py
 # Template
 **/Commands/atemplate.py
 **/Spreadsheets/Spreadsheet Backup.xlsx
-**/Spreadsheets/Spreadsheet Template.xlsx
 
 # Cache
 **/__pycache__
 
 # Unfinished
-**/Commands/better_scheduling.py
 **/Commands/better_select_poi.py
 
 # AI Testing

@@ -1,14 +1,12 @@
 from discord import TextInputStyle
-import time
-import datetime
 import nextcord
 import traceback
 from nextcord.ext import commands
-from Main import formatOutput, errorResponse, getConfigData, getChannels, getScrimInfo, getMessages, DB, splitMessage, unformatMessage
+from Main import formatOutput, errorResponse, getConfigData, getChannels, getMessages, DB, splitMessage, unformatMessage
 from BotData.colors import *
-from BotData.configurationdata import ConfigData
+from BotData.configurationdata import Data
 
-class set_log_view(nextcord.ui.View):
+class SetLogView(nextcord.ui.View):
     def __init__(self, interaction: nextcord.Interaction):
         super().__init__(timeout=None)
         self.interaction = interaction
@@ -19,68 +17,61 @@ class set_log_view(nextcord.ui.View):
 
     def create_callback(self):
         async def callback(interaction: nextcord.Interaction):
-            try:
-                await interaction.response.send_modal(modal=set_log_modal(interaction))
+            try: await interaction.response.send_modal(modal=SetLogModal(interaction))
 
-            except Exception as e:
-                error_traceback = traceback.format_exc()
-                await errorResponse(e, command, interaction, error_traceback)
+            except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
+
         return callback
 
-class set_log_modal(nextcord.ui.Modal):
+class SetLogModal(nextcord.ui.Modal):
     def __init__(self, interaction: nextcord.Interaction):
         super().__init__("Channel ID", timeout=None)
         self.interaction = interaction
 
         self.input = nextcord.ui.TextInput(
-            label="Channel ID", 
+            label="Channel ID",
             placeholder="Enter Channel ID",
-            min_length=0, 
-            max_length=20)
+            min_length=0,
+            max_length=20
+        )
 
         self.input.callback = self.callback
         self.add_item(self.input)
 
     async def callback(self, interaction: nextcord.Interaction):
-        config_data = getConfigData(interaction.guild.id)
-        messages = getMessages(interaction.guild.id)
-        channels = getChannels(interaction.guild.id)
-
         response = self.input.value
         try:
             if response.isnumeric() == True:
                 response = int(response)
 
                 channel = interaction.guild.get_channel(response)
-                if channel == None: # Channel Not Found
-                    embed = nextcord.Embed(title="Scrimotron Configuration", description="**Log Channel Not Set**\nA log channel is nessesary for the bot to function correctly\nThe log channel should be private and only viewable by mods/admins. Copy the Channel ID and click \"Set\"\n\n**ERROR** | Channel ID Must Be A Valid Channel", color=Red)
-                    await interaction.send(embed=embed, view=set_log_view(interaction), ephemeral=True)
-                
-                else: 
+                if channel != None:
                     DB[str(interaction.guild.id)]["Config"].update_one({"channels": {"$exists": True}}, {"$set": {f"channels.scrimLogChannel": response}})
 
                     embed = nextcord.Embed(title="Scrimotron Configuration", description=f"**Channels -> Log -> Change Channel** Set To <#{response}>", color=Green)
-                    await interaction.send(embed=embed, ephemeral=True)
+                    await interaction.response.edit_message(embed=embed, view=None)
 
                     formatOutput(output=f"Channels Log Updated by {interaction.user.id} | @{interaction.user.name}", status="Normal", guildID=interaction.guild.id)
 
                     embed.set_footer(text=f"Config Updated by @{interaction.user.name}")
                     await channel.send(embed=embed)
 
-            else:
+                else: # Channel Not Found
+                    embed = nextcord.Embed(title="Scrimotron Configuration", description="**Log Channel Not Set**\nA log channel is nessesary for the bot to function correctly\nThe log channel should be private and only viewable by mods/admins. Copy the Channel ID and click \"Set\"\n\n**ERROR** | Channel ID Must Be A Valid Channel", color=Red)
+                    await interaction.response.edit_message(embed=embed, view=SetLogView(interaction), ephemeral=True)
+
+            else: # Non numerical input
                 embed = nextcord.Embed(title="Scrimotron Configuration", description="**Log Channel Not Set**\nA log channel is nessesary for the bot to function correctly\nThe log channel should be private and only viewable by mods/admins. Copy the Channel ID and click \"Set\"\n\n**ERROR** | Channel ID Must Be A Numerical Value (e.g 123456789)", color=Red)
-                await interaction.send(embed=embed, view=set_log_view(interaction), ephemeral=True)
+                await interaction.response.edit_message(embed=embed, view=SetLogView(interaction), ephemeral=True)
 
-        except Exception as e:
-            error_traceback = traceback.format_exc()
-            await errorResponse(e, command, interaction, error_traceback)
+        except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
 
-class main_view(nextcord.ui.View):
+class MainView(nextcord.ui.View):
     def __init__(self, interaction: nextcord.Interaction):
         super().__init__(timeout=None)
         self.interaction = interaction
 
-        for option in ConfigData.keys():
+        for option in Data.keys():
             button = nextcord.ui.Button(label=option, style=nextcord.ButtonStyle.blurple)
             button.callback = self.create_callback(option)
             self.add_item(button)
@@ -88,93 +79,94 @@ class main_view(nextcord.ui.View):
         button = nextcord.ui.Button(label="RESET", style=nextcord.ButtonStyle.danger)
         button.callback = self.create_callback("RESET")
         self.add_item(button)
-        
-    def create_callback(self, option):
+
+    def create_callback(self, option): # Show Sub Options
         async def callback(interaction: nextcord.Interaction):
             try:
                 config_data = getConfigData(interaction.guild.id)
                 messages = getMessages(interaction.guild.id)
                 channels = getChannels(interaction.guild.id)
-                if option != "RESET": # Not Reset
-                    embed = nextcord.Embed(title=f"Scrimotron Configuration -> {option}", description=f"Change {option} Options", color=White)
-                    for sub_option in ConfigData[option]:
-                        if ConfigData[option][sub_option]["ValueID"] == 1: value = f"{config_data[f'toggle{sub_option}']} | Set to {config_data[f'toggle{sub_option}Time']} hour(s) before start"
 
-                        elif ConfigData[option][sub_option]["ValueID"] == 2: 
+                if option != "RESET": # Not Reset
+                    embed = nextcord.Embed(title=f"{"Scrimotron Configuration"} -> {option}", description=f"Change {option} Options", color=White)
+                    for sub_option in Data[option]:
+                        if Data[option][sub_option]["Type"] == "Automation": value = f"{config_data[f'toggle{sub_option}']} | Set to {config_data[f'toggle{sub_option}Time']} hour(s) before start"
+
+                        elif Data[option][sub_option]["Type"] == "Role":
                             if config_data['casterRole'] == None: value = f"{config_data['caster']} | Role: **Not Set**"
                             else: value = f"{config_data['caster']} | Role: <@&{config_data['casterRole']}>"
 
-                        elif ConfigData[option][sub_option]["ValueID"] == 3:
+                        elif Data[option][sub_option]["Type"] == "Message":
                             default_message = DB.Scrimotron.GlobalData.find_one({"defaultMessages": {"$exists": True}})["defaultMessages"][f"scrim{sub_option}"]
                             if messages[f'scrim{sub_option}'] == default_message: value = "**Default Message** | Click to View/Edit"
                             else: value = f"**Custom Message** | Click to View/Edit"
 
-                        elif ConfigData[option][sub_option]["ValueID"] == 4:
+                        elif Data[option][sub_option]["Type"] == "Channel":
                             if channels[f"scrim{sub_option}Channel"] == None: value = "**Not Set**"
                             else: value = f"<#{channels[f'scrim{sub_option}Channel']}>"
 
                         embed.add_field(name=sub_option, value=value, inline=False)
-                    await interaction.send(embed=embed, view=sub_view(interaction, option), ephemeral=True)
+                    await interaction.response.edit_message(embed=embed, view=SubView(interaction, option))
 
-                else: 
+                else:
                     embed = nextcord.Embed(title="**RESET CONFIG DATA?**", description="Are you sure you want to reset all config data?\n*Only log channel settings will remain!*", color=Red)
-                    await interaction.send(embed=embed, view=reset_view(interaction, option), ephemeral=True)
+                    await interaction.response.edit_message(embed=embed, view=ResetView(interaction, option))
 
-            except Exception as e:
-                error_traceback = traceback.format_exc()
-                await errorResponse(e, command, interaction, error_traceback)
+            except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
+
         return callback
 
-class sub_view(nextcord.ui.View):
+class SubView(nextcord.ui.View):
     def __init__(self, interaction: nextcord.Interaction, option):
         super().__init__(timeout=None)
         self.interaction = interaction
         self.option = option
 
-        for sub_option in ConfigData[option]:
+        for sub_option in Data[option]:
             button = nextcord.ui.Button(label=sub_option, style=nextcord.ButtonStyle.blurple)
             button.callback = self.create_callback(sub_option)
             self.add_item(button)
-        
+
         button = nextcord.ui.Button(label="Back", style=nextcord.ButtonStyle.grey)
         button.callback = self.create_callback("Back")
         self.add_item(button)
 
-    def create_callback(self, sub_option):
+    def create_callback(self, sub_option): # Show Sub Sub Options
         async def callback(interaction: nextcord.Interaction):
             try:
                 if sub_option == "Back":
-                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started", color=White)
-                    await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
+                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised\nPick a button below to get started", color=White)
+                    await interaction.response.edit_message(embed=embed, view=MainView(interaction))
 
-                else: 
+                else:
                     config_data = getConfigData(interaction.guild.id)
                     messages = getMessages(interaction.guild.id)
                     channels = getChannels(interaction.guild.id)
-                    embed = nextcord.Embed(title=f"Scrimotron Configuration -> {self.option} -> {sub_option}", description=f"Change {sub_option} Options", color=White)
-                    if ConfigData[self.option][sub_option]["ValueID"] == 1: value = f"{config_data[f'toggle{sub_option}']} | Set to {config_data[f'toggle{sub_option}Time']} hour(s) before start"
 
-                    elif ConfigData[self.option][sub_option]["ValueID"] == 2: 
+                    embed = nextcord.Embed(title=f"{"Scrimotron Configuration"} -> {self.option} -> {sub_option}", description=f"Change {sub_option} Options", color=White)
+                    if Data[self.option][sub_option]["Type"] == "Automation": value = f"{config_data[f'toggle{sub_option}']} | Set to {config_data[f'toggle{sub_option}Time']} hour(s) before start"
+
+                    elif Data[self.option][sub_option]["Type"] == "Role":
                         if config_data['casterRole'] == None: value = f"{config_data['caster']} | Role: **Not Set**"
                         else: value = f"{config_data['caster']} | Role: <@&{config_data['casterRole']}>"
 
-                    elif ConfigData[self.option][sub_option]["ValueID"] == 3:
-                        if messages[f'scrim{sub_option}'] == DB.Scrimotron.GlobalData["defaultMessages"][f"scrim{sub_option}"]: value = "**Default Message** | Click to View/Edit"
+                    elif Data[self.option][sub_option]["Type"] == "Message":
+                        default_message = DB.Scrimotron.GlobalData.find_one({"defaultMessages": {"$exists": True}})["defaultMessages"][f"scrim{sub_option}"]
+                        if messages[f'scrim{sub_option}'] == default_message: value = "**Default Message** | Click to View/Edit"
                         else: value = f"**Custom Message** | Click to View/Edit"
 
-                    elif ConfigData[self.option][sub_option]["ValueID"] == 4:
+                    elif Data[self.option][sub_option]["Type"] == "Channel":
                         if channels[f"scrim{sub_option}Channel"] == None: value = "**Not Set**"
                         else: value = f"<#{channels[f'scrim{sub_option}Channel']}>"
 
                     embed.add_field(name=sub_option, value=value, inline=False)
-                    await interaction.send(embed=embed, view=sub_sub_view(interaction, self.option, sub_option), ephemeral=True)
+                    await interaction.response.edit_message(embed=embed, view=SubSubView(interaction, self.option, sub_option))
 
-            except Exception as e:
-                error_traceback = traceback.format_exc()
-                await errorResponse(e, command, interaction, error_traceback)
+            except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
+
         return callback
 
-class sub_sub_view(nextcord.ui.View):
+class SubSubView(nextcord.ui.View): # Enable/Disable or change view
     def __init__(self, interaction: nextcord.Interaction, option, sub_option):
         super().__init__(timeout=None)
         self.interaction = interaction
@@ -182,29 +174,28 @@ class sub_sub_view(nextcord.ui.View):
         self.sub_option = sub_option
 
         config_data = getConfigData(interaction.guild.id)
-        messages = getMessages(interaction.guild.id)
-        channels = getChannels(interaction.guild.id)
 
-        for button_label in ConfigData[option][sub_option]["Buttons"]:
+        for button_label in Data[option][sub_option]["Options"]:
+            current = None
             if button_label == "Enable":
-                if ConfigData[option][sub_option]["ValueID"] == 1:
-                    if config_data[f'toggle{sub_option}'] == False: button = nextcord.ui.Button(label=button_label, style=nextcord.ButtonStyle.success)
-                    else: button = nextcord.ui.Button(label=button_label, style=nextcord.ButtonStyle.success, disabled=True)
+                if sub_option == "Setup": current = config_data[f'toggle{sub_option}']
+                elif sub_option == "Caster": current = config_data['caster']
 
-                elif ConfigData[option][sub_option]["ValueID"] == 2:
-                    if config_data['caster'] == False: button = nextcord.ui.Button(label=button_label, style=nextcord.ButtonStyle.success)
-                    else: button = nextcord.ui.Button(label=button_label, style=nextcord.ButtonStyle.success, disabled=True)
+                if current == True: # Enable button is disabled
+                    button = nextcord.ui.Button(label=button_label, style=nextcord.ButtonStyle.success, disabled=True)
+                else: # Enable button is enabled
+                    button = nextcord.ui.Button(label=button_label, style=nextcord.ButtonStyle.success, disabled=False)
 
             elif button_label == "Disable":
-                if ConfigData[option][sub_option]["ValueID"] == 1:
-                    if config_data[f'toggle{sub_option}'] == True: button = nextcord.ui.Button(label=button_label, style=nextcord.ButtonStyle.danger)
-                    else: button = nextcord.ui.Button(label=button_label, style=nextcord.ButtonStyle.danger, disabled=True)
+                if sub_option == "Setup": current = config_data[f'toggle{sub_option}']
+                elif sub_option == "Caster": current = config_data['caster']
 
-                elif ConfigData[option][sub_option]["ValueID"] == 2:
-                    if config_data['caster'] == True: button = nextcord.ui.Button(label=button_label, style=nextcord.ButtonStyle.danger)
-                    else: button = nextcord.ui.Button(label=button_label, style=nextcord.ButtonStyle.danger, disabled=True)
-            else: 
-                button = nextcord.ui.Button(label=button_label, style=nextcord.ButtonStyle.blurple)
+                if current == False: # Disable button is disabled
+                    button = nextcord.ui.Button(label=button_label, style=nextcord.ButtonStyle.danger, disabled=True)
+                else:  # Disable button is enabled
+                    button = nextcord.ui.Button(label=button_label, style=nextcord.ButtonStyle.danger, disabled=False)
+
+            else: button = nextcord.ui.Button(label=button_label, style=nextcord.ButtonStyle.blurple)
 
             button.callback = self.create_callback(button_label, option, sub_option)
             self.add_item(button)
@@ -218,131 +209,103 @@ class sub_sub_view(nextcord.ui.View):
             config_data = getConfigData(interaction.guild.id)
             messages = getMessages(interaction.guild.id)
             channels = getChannels(interaction.guild.id)
+
             try:
                 if action == "Back":
-                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started", color=White)
-                    await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                    
+                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised\nPick a button below to get started", color=White)
+                    await interaction.response.edit_message(embed=embed, view=MainView(interaction))
+
                 else:
-                    if action == "Enable":
-                        if ConfigData[option][sub_option]["ValueID"] == 1:
-                            DB[str(interaction.guild.id)]["Config"].update_one({"config": {"$exists": True}}, {"$set": {f"config.toggle{sub_option}": True}})
-                        elif ConfigData[option][sub_option]["ValueID"] == 2:
-                            DB[str(interaction.guild.id)]["Config"].update_one({"config": {"$exists": True}}, {"$set": {"config.caster": True}})
+                    if action == "Enable" or action == "Disable":
+                        if action == "Enable": new_value = True
+                        elif action == "Disable": new_value = False
 
-                        embed = nextcord.Embed(title="Scrimotron Configuration", description=f"**{self.option} -> {self.sub_option}** set to {action}", color=Green)
-                        await interaction.send(embed=embed, ephemeral=True)
-                        formatOutput(output=f"{self.option} {self.sub_option} Updated by {interaction.user.id} | @{interaction.user.name}", status="Normal", guildID=interaction.guild.id)
+                        if option == "Automation": DB[str(interaction.guild.id)]["Config"].update_one({"config": {"$exists": True}}, {"$set": {f"config.toggle{sub_option}": new_value}})
+                        elif option == "Scrims": DB[str(interaction.guild.id)]["Config"].update_one({"config": {"$exists": True}}, {"$set": {"config.caster": new_value}})
 
-                        embed.set_footer(text=f"Config Updated by @{interaction.user.name}")
-                        channel = interaction.guild.get_channel(channels["scrimLogChannel"])
-                        await channel.send(embed=embed)
-
-                    elif action == "Disable":
-                        if ConfigData[option][sub_option]["ValueID"] == 1:
-                            DB[str(interaction.guild.id)]["Config"].update_one({"config": {"$exists": True}}, {"$set": {f"config.toggle{sub_option}": False}})
-                        elif ConfigData[option][sub_option]["ValueID"] == 2:
-                            DB[str(interaction.guild.id)]["Config"].update_one({"config": {"$exists": True}}, {"$set": {"config.caster": False}})
-                        
-                        embed = nextcord.Embed(title="Scrimotron Configuration", description=f"**{self.option} -> {self.sub_option}** set to {action}", color=Green)
-                        await interaction.send(embed=embed, ephemeral=True)
-                        formatOutput(output=f"{self.option} {self.sub_option} Updated by {interaction.user.id} | @{interaction.user.name}", status="Normal", guildID=interaction.guild.id)
+                        embed = nextcord.Embed(title="Scrimotron Configuration", description=f"**{self.option} -> {self.sub_option}** {action.lower()}d", color=Green)
+                        await interaction.response.edit_message(embed=embed, view=None)
+                        formatOutput(output=f"{self.option} {self.sub_option} Updated by {interaction.user.id} | @{interaction.user.name}", status="Normal", guildID=command['guildID'])
 
                         embed.set_footer(text=f"Config Updated by @{interaction.user.name}")
                         channel = interaction.guild.get_channel(channels["scrimLogChannel"])
                         await channel.send(embed=embed)
-                    
+
                     elif action == "Change Timing":
                         embed = nextcord.Embed(title=f"Scrimotron Configuration -> {option} -> {sub_option} -> {action}", description=f"Change {sub_option} Timing", color=White)
-                        embed.add_field(name=sub_option, value=f"Set to **{config_data[f"toggle{sub_option}Time"]}** hour(s) before start", inline=False)
-                        await interaction.send(embed=embed, view=change_timing_view(interaction, option, sub_option, action), ephemeral=True)
-                        
+                        embed.add_field(name=sub_option, value=f"Set to **{config_data[f"toggle{sub_option}Time"]}** hour(s) before start")
+                        await interaction.response.send_modal(modal=ChangeTimingModal(interaction, option, sub_option, action))
+
                     elif action == "Change Channel":
                         embed = nextcord.Embed(title=f"Scrimotron Configuration -> {option} -> {sub_option} -> {action}", description=f"Change {sub_option} Channel", color=White)
-                        if channels[f"scrim{sub_option}Channel"] == None: embed.add_field(name=sub_option, value="**Not Set**", inline=False)
-                        else: embed.add_field(name=sub_option, value=f"Set to <#{channels[f'scrim{sub_option}Channel']}>", inline=False)
-                        await interaction.response.send_modal(modal=change_channel_view(interaction, option, sub_option, action))
+                        if channels[f"scrim{sub_option}Channel"] == None: embed.add_field(name=sub_option, value="**Not Set**")
+                        else: embed.add_field(name=sub_option, value=f"Set to <#{channels[f'scrim{sub_option}Channel']}>")
+                        await interaction.response.send_modal(modal=ChangeChannelModal(interaction, option, sub_option, action))
 
                     elif action == "Change Message":
                         embed = nextcord.Embed(title=f"Scrimotron Configuration -> {option} -> {sub_option} -> {action}", description=f"Change {sub_option} Message", color=White)
-                        if messages[f'scrim{sub_option}'] == DB.Scrimotron.GlobalData["defaultMessages"][f"scrim{sub_option}"]: embed.add_field(name=sub_option, value="**Default Message** | Click to View/Edit", inline=False)
-                        else: embed.add_field(name=sub_option, value="**Custom Message** | Click to View/Edit", inline=False)
-                        await interaction.send(embed=embed, view=change_message_view(interaction, option, sub_option, action), ephemeral=True)
+                        default_message = DB.Scrimotron.GlobalData.find_one({"defaultMessages": {"$exists": True}})["defaultMessages"][f"scrim{sub_option}"]
+                        if messages[f'scrim{sub_option}'] == default_message: embed.add_field(name=sub_option, value="**Default Message** | Click to View/Edit")
+                        else: embed.add_field(name=sub_option, value=f"**Custom Message** | Click to View/Edit")
+                        await interaction.response.edit_message(embed=embed, view=ChangeMessageView(interaction, option, sub_option, action))
 
                     elif action == "Change Role":
                         embed = nextcord.Embed(title=f"Scrimotron Configuration -> {option} -> {sub_option} -> {action}", description=f"Change {sub_option} Role", color=White)
                         if config_data['casterRole'] == None: embed.add_field(name=sub_option, value="**Not Set**", inline=False)
                         else: embed.add_field(name=sub_option, value=f"Set to <@&{config_data['casterRole']}>", inline=False)
-                        await interaction.response.send_modal(modal=change_role_modal(interaction, option, sub_option, action))
+                        await interaction.response.send_modal(modal=ChangeRoleModal(interaction, option, sub_option, action))
 
-            except Exception as e:
-                error_traceback = traceback.format_exc()
-                await errorResponse(e, command, interaction, error_traceback)
+            except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
+
         return callback
-    
-class change_timing_view(nextcord.ui.View):
-    def __init__(self, interaction: nextcord.Interaction, option, sub_option, action):
-        super().__init__(timeout=None)
+
+class ChangeTimingModal(nextcord.ui.Modal):
+    def __init__(self, interaction, option, sub_option, action):
+        super().__init__("Timing", timeout=None)
         self.interaction = interaction
         self.option = option
         self.sub_option = sub_option
         self.action = action
 
-        actions = ["-3", "-1", "+1", "+3", "Confirm", "Cancel"]
+        self.input = nextcord.ui.TextInput(
+            label="Timing",
+            placeholder="Enter hours before start (1-48)",
+            min_length=0,
+            max_length=20)
 
-        for item in actions:
-            if item == "Confirm": button = nextcord.ui.Button(label=item, style=nextcord.ButtonStyle.success)
-            elif item == "Cancel": button = nextcord.ui.Button(label=item, style=nextcord.ButtonStyle.danger)
-            else: button = nextcord.ui.Button(label=item, style=nextcord.ButtonStyle.blurple)
-            button.callback = self.create_callback(option, sub_option, action, pressed=item)
-            self.add_item(button)
+        self.input.callback = self.callback
+        self.add_item(self.input)
+    
+    async def callback(self, interaction: nextcord.Interaction):
+        channels = getChannels(interaction.guild.id)
 
-    def create_callback(self, option, sub_option, action, pressed):
-        async def callback(interaction: nextcord.Interaction):
-            config_data = getConfigData(interaction.guild.id)
-            messages = getMessages(interaction.guild.id)
-            channels = getChannels(interaction.guild.id)
-            try:
-                previous_setting = config_data[f'toggle{self.sub_option}Time']
-                if pressed == "Cancel":
-                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started", color=White)
-                    await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
+        response = self.input.value
+        try:
+            if response.isnumeric() == True:
+                response = int(response)
 
-                elif pressed == "Confirm":
-                    if previous_setting < 0 or previous_setting == 0:
-                        embed = nextcord.Embed(title="Scrimotron Configuration", description="**ERROR** | Time Cannot Be Less Than One Hour", color=Red)
-                        await interaction.send(embed=embed, ephemeral=True)
-                        return
-                    
-                    else:
-                        DB[str(interaction.guild.id)]["Config"].update_one({"config": {"$exists": True}}, {"$set": {f"config.toggle{sub_option}Time": previous_setting}})
-
-                        embed = nextcord.Embed(title="Scrimotron Configuration", description=f"**{option} -> {sub_option} -> {action}** Set To {previous_setting}", color=Green)
-                        await interaction.send(embed=embed, ephemeral=True)
-                        formatOutput(output=f"{option} {sub_option} Updated by {interaction.user.id} | @{interaction.user.name}", status="Normal", guildID=interaction.guild.id)
-
-                        embed.set_footer(text=f"Config Updated by @{interaction.user.name}")
-                        channel = interaction.guild.get_channel(channels["scrimLogChannel"])
-                        await channel.send(embed=embed)
+                if response < 1 or response > 48:
+                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised\nPick a button below to get started\n\n**ERROR** | Time Cannot Be Less Than One Hour or More Than 48 Hours", color=White)
+                    await interaction.response.edit_message(embed=embed, view=None)
 
                 else:
-                    if pressed == "-3": new_setting = previous_setting - 3
-                    elif pressed == "-1": new_setting = previous_setting - 1
-                    elif pressed == "+1": new_setting = previous_setting + 1
-                    elif pressed == "+3": new_setting = previous_setting + 3
+                    DB[str(interaction.guild.id)]["Config"].update_one({"config": {"$exists": True}}, {"$set": {f"config.toggle{self.sub_option}Time": response}})
 
-                    DB[str(interaction.guild.id)]["Config"].update_one({"config": {"$exists": True}}, {"$set": {f"config.toggle{sub_option}Time": new_setting}})
+                    embed = nextcord.Embed(title="Scrimotron Configuration", description=f"**{self.option} -> {self.sub_option} -> {self.action}** Set to {response} hour(s) before start", color=Green)
+                    await interaction.response.edit_message(embed=embed, view=None)
+                    formatOutput(output=f"{self.option} {self.sub_option} Updated by {interaction.user.id} | @{interaction.user.name}", status="Normal", guildID=interaction.guild.id)
 
-                    embed = nextcord.Embed(title=f"Scrimotron Configuration -> {option} -> {sub_option} -> {action}", description=f"Change {sub_option} Timing", color=White)
-                    embed.add_field(name=sub_option, value=f"Set to **{new_setting}** hour(s) before start", inline=False)
-                    await interaction.send(embed=embed, view=change_timing_view(interaction, option, sub_option, action), ephemeral=True)
+                    embed.set_footer(text=f"Config Updated by @{interaction.user.name}")
+                    channel = interaction.guild.get_channel(channels["scrimLogChannel"])
+                    await channel.send(embed=embed)
 
-            except Exception as e:
-                error_traceback = traceback.format_exc()
-                await errorResponse(e, command, interaction, error_traceback)
-        return callback
+            else:
+                embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised\nPick a button below to get started\n\n**ERROR** | Time Must Be A Numerical Value (e.g 1, 2, 3)", color=White)
+                await interaction.response.edit_message(embed=embed, view=MainView(interaction))
 
-class change_channel_view(nextcord.ui.Modal):
+        except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
+
+class ChangeChannelModal(nextcord.ui.Modal):
     def __init__(self, interaction, option, sub_option, action):
         super().__init__("Channel ID", timeout=None)
         self.interaction = interaction
@@ -351,17 +314,15 @@ class change_channel_view(nextcord.ui.Modal):
         self.action = action
 
         self.input = nextcord.ui.TextInput(
-            label="Channel ID", 
+            label="Channel ID",
             placeholder="Enter Channel ID",
-            min_length=0, 
+            min_length=0,
             max_length=20)
 
         self.input.callback = self.callback
         self.add_item(self.input)
 
     async def callback(self, interaction: nextcord.Interaction):
-        config_data = getConfigData(interaction.guild.id)
-        messages = getMessages(interaction.guild.id)
         channels = getChannels(interaction.guild.id)
 
         response = self.input.value
@@ -371,181 +332,38 @@ class change_channel_view(nextcord.ui.Modal):
 
                 channel = interaction.guild.get_channel(response)
                 if channel == None:
-                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n**ERROR** | Channel ID Must Be A Valid Channel", color=White)
-                    await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                
-                else: 
-                    DB[str(interaction.guild.id)]["Config"].update_one({"channels": {"$exists": True}}, {"$set": {f"channels.scrim{self.sub_option}Channel": response}})  
+                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised\nPick a button below to get started\n\n**ERROR** | Channel ID Must Be A Valid Channel", color=White)
+                    await interaction.response.edit_message(embed=embed, view=MainView(interaction))
 
-                    if self.sub_option != "Log": # Ignoring log channel changes
-                        scrim_info = getScrimInfo(interaction.guild.id)
+                else:
+                    DB[str(interaction.guild.id)]["Config"].update_one({"channels": {"$exists": True}}, {"$set": {f"channels.scrim{self.sub_option}Channel": response}})
 
-                        if self.sub_option == "Announcement": # If announcement channel is changed
-                            if scrim_info["scrimEpoch"].isnumeric() == True: # A scrim has been scheduled before
-                                scrim_epoch = int(scrim_info["scrimEpoch"])
+                    if self.sub_option == "Log": note = "Logs will now be sent to the new channel"
+                    elif self.sub_option == "Rules" or self.sub_option == "Format": # Move Rules and Format message
+                        note = f"{self.sub_option} message has been been moved to the new channel"
+                        message = splitMessage(getMessages(command['guildID'])[f"scrim{self.sub_option}"], interaction.guild.id, None)
 
-                                if scrim_epoch > time.time(): # Scrim has already started/ended
-                                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nAnnouncement Channel Updated To <#response>, Announcement Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                                    await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                                
-                                else: # Scrim has not started yet
-                                    message = splitMessage(messages[f'scrim{self.sub_option}'], interaction.guild.id)
-                                    message_split = message.split("\n")
-                                    title = message_split[0]
-                                    description = '\n'.join(message_split[1:])
+                        embed = nextcord.Embed(title=message[0], description=message[1], color=White)
+                        await channel.send(embed=embed)
 
-                                    embed = nextcord.Embed(title=title, description=description, color=White)
-                                    await channel.send(embed=embed)
+                    else: note = "Future messages will be sent to the new channel"
 
-                                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nAnnouncement Channel Updated To <#response>, Announcement Message Moved", color=White)
-                                    await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                            
-                            else: # No scrims have ever been scheduled
-                                embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nAnnouncement Channel Updated To <#response>, Announcement Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                                await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                        
-                        elif self.sub_option == "Checkin": # If checkin channel is changed
-                            if config_data['toggleCheckin'] == True: # Checkins are enabled
-                                if scrim_info["scrimEpoch"].isnumeric() == True:
-                                    scrim_epoch = int(scrim_info["scrimEpoch"])
-                                    if scrim_epoch > time.time():
-                                        scrim_datetime = datetime.datetime.fromtimestamp(scrim_epoch)
-                                        current_datetime = datetime.datetime.now()
-                                        time_until_start = scrim_datetime - current_datetime
-                                        hours_until_start = time_until_start.total_seconds() / 3600
-
-                                        if hours_until_start < config_data['toggleCheckinTime']: # If it is time to open checkins
-                                            message = splitMessage(messages[f'scrim{self.sub_option}'], interaction.guild.id)
-                                            message_split = message.split("\n")
-                                            title = message_split[0]
-                                            description = '\n'.join(message_split[1:])
-
-                                            embed = nextcord.Embed(title=title, description=description, color=White)
-                                            await channel.send(embed=embed)
-
-                                            embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nCheckin Channel Updated To <#response>, Checkin Message Moved", color=White)
-                                            await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                                            
-                                        else: # Not time to open checkins
-                                            embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nCheckin Channel Updated To <#response>, Checkin Message Not Sent (Checkins Not Open)", color=White)
-                                            await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                                    
-                                    else: # Scrims have already started/ended
-                                        embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nCheckin Channel Updated To <#response>, Checkin Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                                        await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                                else: # No scrims have ever been scheduled
-                                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nCheckin Channel Updated To <#response>, Checkin Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                                    await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                            else: # Checkins are disabled
-                                embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nCheckin Channel Updated To <#response>, Checkin Message Not Sent (Checkins Disabled)", color=White)
-                                await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                        
-                        elif self.sub_option == "Rules": # If rules channel is changed
-                            message = splitMessage(messages[f'scrim{self.sub_option}'], interaction.guild.id)
-                            message_split = message.split("\n")
-                            title = message_split[0]
-                            description = '\n'.join(message_split[1:])
-
-                            embed = nextcord.Embed(title=title, description=description, color=White)
-                            await channel.send(embed=embed)
-
-                            embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nRules Channel Updated To <#response>, Rules Message Moved", color=White)
-                            await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                        elif self.sub_option == "Format": # If format channel is changed
-                            message = splitMessage(messages[f'scrim{self.sub_option}'], interaction.guild.id)
-                            message_split = message.split("\n")
-                            title = message_split[0]
-                            description = '\n'.join(message_split[1:])
-
-                            embed = nextcord.Embed(title=title, description=description, color=White)
-                            await channel.send(embed=embed)
-
-                            embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nFormat Channel Updated To <#response>, Format Message Moved", color=White)
-                            await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                        elif self.sub_option == "Poi": # If poi channel is changed
-                            if config_data['togglePoi'] == True: # Poi selection is enabled
-                                if scrim_info["scrimEpoch"].isnumeric() == True:
-                                    scrim_epoch = int(scrim_info["scrimEpoch"])
-                                    if scrim_epoch > time.time():
-                                        scrim_datetime = datetime.datetime.fromtimestamp(scrim_epoch)
-                                        current_datetime = datetime.datetime.now()
-                                        time_until_start = scrim_datetime - current_datetime
-                                        hours_until_start = time_until_start.total_seconds() / 3600
-
-                                        if hours_until_start < config_data['togglePoiTime']: # If it is time to open poi selection
-                                            message = splitMessage(messages[f'scrim{self.sub_option}'], interaction.guild.id)
-                                            message_split = message.split("\n")
-                                            title = message_split[0]
-                                            description = '\n'.join(message_split[1:])
-
-                                            embed = nextcord.Embed(title=title, description=description, color=White)
-                                            await channel.send(embed=embed)
-
-                                            embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nPoi Channel Updated To <#response>, Poi Message Moved", color=White)
-                                            await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                                        else: # Not time to open poi selection
-                                            embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nPoi Channel Updated To <#response>, Poi Message Not Sent (Poi Selection Not Open)", color=White)
-                                            await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                                    
-                                    else: # Scrims have already started/ended
-                                        embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nPoi Channel Updated To <#response>, Poi Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                                        await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True) 
-                                
-                                else: # No scrims have ever been scheduled
-                                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nPoi Channel Updated To <#response>, Poi Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                                    await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                            
-                            else: # Poi selection is disabled
-                                embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nPoi Channel Updated To <#response>, Poi Message Not Sent (Poi Selection Disabled)", color=White)
-                                await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                        
-                        elif self.sub_option == "Registration": # If registration channel is changed
-                            if scrim_info["scrimEpoch"].isnumeric() == True: # A scrim has been scheduled before
-                                scrim_epoch = int(scrim_info["scrimEpoch"])
-
-                                if scrim_epoch > time.time(): # Scrim has already started/ended
-                                    message = splitMessage(messages[f'scrim{self.sub_option}'], interaction.guild.id)
-                                    message_split = message.split("\n")
-                                    title = message_split[0]
-                                    description = '\n'.join(message_split[1:])
-
-                                    embed = nextcord.Embed(title=title, description=description, color=White)
-                                    await channel.send(embed=embed)
-
-                                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nRegistration Channel Updated To <#response>, Registration Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                                    await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                                else:
-                                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nRegistration Channel Updated To <#response>, Registration Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                                    await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                            
-                            else: # No scrims have ever been scheduled
-                                embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nRegistration Channel Updated To <#response>, Registration Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                                await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                    embed = nextcord.Embed(title="Scrimotron Configuration", description=f"**{self.option} -> {self.sub_option} -> {self.action}** Set To <#{response}>", color=Green)
-                    await interaction.send(embed=embed, ephemeral=True)
+                    embed = nextcord.Embed(title="Scrimotron Configuration", description=f"**{self.option} -> {self.sub_option} -> {self.action}** Set To <#{response}>\n{note}", color=Green)
+                    await interaction.response.edit_message(embed=embed, view=None)
                     formatOutput(output=f"{self.option} {self.sub_option} Updated by {interaction.user.id} | @{interaction.user.name}", status="Normal", guildID=interaction.guild.id)
 
                     embed.set_footer(text=f"Config Updated by @{interaction.user.name}")
                     if self.sub_option == "Log": channel = interaction.guild.get_channel(response)
                     else: channel = interaction.guild.get_channel(channels["scrimLogChannel"])
                     await channel.send(embed=embed)
-            
+
             else:
-                embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n **ERROR** | Channel ID Must Be A Numerical Value (e.g 123456789)", color=White)
-                await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
+                embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised\nPick a button below to get started\n\n**ERROR** | Channel ID Must Be A Numerical Value (e.g 123456789)", color=White)
+                await interaction.response.edit_message(embed=embed, view=MainView(interaction))
 
-        except Exception as e:
-            error_traceback = traceback.format_exc()
-            await errorResponse(e, command, interaction, error_traceback)
+        except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
 
-class change_message_view(nextcord.ui.View):
+class ChangeMessageView(nextcord.ui.View):
     def __init__(self, interaction: nextcord.Interaction, option, sub_option, action):
         super().__init__(timeout=None)
         self.interaction = interaction
@@ -565,20 +383,20 @@ class change_message_view(nextcord.ui.View):
 
     def create_callback(self, option, sub_option, action, pressed):
         async def callback(interaction: nextcord.Interaction):
-            config_data = getConfigData(interaction.guild.id)
             messages = getMessages(interaction.guild.id)
             channels = getChannels(interaction.guild.id)
+
             try:
                 if pressed == "Cancel":
-                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started", color=White)
-                    await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
+                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised\nPick a button below to get started", color=White)
+                    await interaction.response.edit_message(embed=embed, view=MainView(interaction))
 
                 elif pressed == "Reset":
                     default_message = DB.Scrimotron.GlobalData.find_one({"defaultMessages": {"$exists": True}})["defaultMessages"][f"scrim{sub_option}"]
                     DB[str(interaction.guild.id)]["Messages"].update_one({"messages": {"$exists": True}}, {"$set": {f"messages.scrim{sub_option}": default_message}})
 
                     embed = nextcord.Embed(title="Scrimotron Configuration", description=f"**{option} -> {sub_option} -> {action}** Reset To Default Message", color=Green)
-                    await interaction.send(embed=embed, ephemeral=True)
+                    await interaction.response.edit_message(embed=embed, view=None)
                     formatOutput(output=f"{option} {sub_option} Updated by {interaction.user.id} | @{interaction.user.name}", status="Normal", guildID=interaction.guild.id)
 
                     embed = nextcord.Embed(title="Scrimotron Configuration", description=f"**{option} -> {sub_option} -> {action}** Reset To Default Message", color=Green)
@@ -589,19 +407,18 @@ class change_message_view(nextcord.ui.View):
                 elif pressed == "View":
                     message = splitMessage(messages[f'scrim{sub_option}'], interaction.guild.id)
                     embed = nextcord.Embed(title=f"Scrimotron Configuration -> {option} -> {sub_option} -> {action} -> {pressed}", description=f"**Viewing {sub_option} Message**\n\n{message}", color=White)
-                    await interaction.send(embed=embed, view=change_message_view(interaction, option, sub_option, action), ephemeral=True)
-                
-                elif pressed == "Edit":
-                    message_raw = unformatMessage(messages[f'scrim{sub_option}'], interaction.guild.id)
-                    embed = nextcord.Embed(title=f"Scrimotron Configuration -> {option} -> {sub_option} -> {action} -> {pressed}", description=f"**Editing {sub_option} Message, Copy the message and click \"Ready\"**\n\n{message_raw}", color=White)
-                    await interaction.send(embed=embed, view=edit_message_view(interaction, option, sub_option, action), ephemeral=True)
+                    await interaction.response.edit_message(embed=embed, view=ChangeMessageView(interaction, option, sub_option, action))
 
-            except Exception as e:
-                error_traceback = traceback.format_exc()
-                await errorResponse(e, command, interaction, error_traceback)
+                elif pressed == "Edit":
+                    message_raw = unformatMessage(messages[f'scrim{sub_option}'])
+                    embed = nextcord.Embed(title=f"Scrimotron Configuration -> {option} -> {sub_option} -> {action} -> {pressed}", description=f"**Editing {sub_option} Message, Copy the message and click \"Ready\"**\n\n{message_raw}", color=White)
+                    await interaction.response.edit_message(embed=embed, view=EditMessageView(interaction, option, sub_option, action))
+
+            except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
+
         return callback
-    
-class edit_message_view(nextcord.ui.View):
+
+class EditMessageView(nextcord.ui.View):
     def __init__(self, interaction: nextcord.Interaction, option, sub_option, action):
         super().__init__(timeout=None)
         self.interaction = interaction
@@ -616,26 +433,22 @@ class edit_message_view(nextcord.ui.View):
             else: button = nextcord.ui.Button(label=item, style=nextcord.ButtonStyle.grey)
             button.callback = self.create_callback(option, sub_option, action, item)
             self.add_item(button)
-        
+
     def create_callback(self, option, sub_option, action, pressed):
         async def callback(interaction: nextcord.Interaction):
-            config_data = getConfigData(interaction.guild.id)
-            messages = getMessages(interaction.guild.id)
-            channels = getChannels(interaction.guild.id)
             try:
                 if pressed == "Back":
-                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started", color=White)
-                    await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
+                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised\nPick a button below to get started", color=White)
+                    await interaction.response.edit_message(embed=embed, view=MainView(interaction))
 
                 elif pressed == "Ready":
-                    await interaction.response.send_modal(modal=edit_message_modal(interaction, option, sub_option, action))
+                    await interaction.response.send_modal(modal=EditMessageModal(interaction, option, sub_option, action))
 
-            except Exception as e:
-                error_traceback = traceback.format_exc()
-                await errorResponse(e, command, interaction, error_traceback)
+            except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
+
         return callback
 
-class edit_message_modal(nextcord.ui.Modal):
+class EditMessageModal(nextcord.ui.Modal):
     def __init__(self, interaction: nextcord.Interaction, option, sub_option, action):
         super().__init__(title=f"Change {sub_option} Message", timeout=None)
         self.interaction = interaction
@@ -647,226 +460,50 @@ class edit_message_modal(nextcord.ui.Modal):
             style=TextInputStyle.paragraph,
             label=f"Change {sub_option} Message",
             placeholder="Enter Message",
-            min_length=0, 
+            min_length=0,
             max_length=2000)
 
         self.input.callback = self.callback
         self.add_item(self.input)
 
     async def callback(self, interaction: nextcord.Interaction):
-        config_data = getConfigData(interaction.guild.id)
-        messages = getMessages(interaction.guild.id)
         channels = getChannels(interaction.guild.id)
 
         response = self.input.value
         try:
             if response == None:
-                embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n**ERROR** | Message Cannot Be Empty", color=White)
-                await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-            
+                embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised\nPick a button below to get started\n\n**ERROR** | Message Cannot Be Empty", color=White)
+                await interaction.response.edit_message(embed=embed, view=MainView(interaction))
+
             else:
                 DB[str(interaction.guild.id)]["Config"].update_one({"messages": {"$exists": True}}, {"$set": {f"messages.scrim{self.sub_option}": response}})
 
-                scrim_info = getScrimInfo(interaction.guild.id)
-                channel = interaction.guild.get_channel(channels[f'scrim{self.sub_option}Channel'])
+                if self.sub_option == "Rules" or self.sub_option == "Format": 
+                    channel = interaction.guild.get_channel(channels[f"scrim{self.sub_option}Channel"])
 
-                if self.sub_option == "Announcement": # If announcement message is changed
-                    if scrim_info["scrimEpoch"].isnumeric() == True: # A scrim has been scheduled before
-                        scrim_epoch = int(scrim_info["scrimEpoch"])
+                    if channel == None:
+                        note = f"{self.sub_option} has been updated, but could not be sent, no channel has been set"
+                        embed = nextcord.Embed(title="Scrimotron Configuration", description=f"Most aspects of the bot can be customised\nPick a button below to get started\n\n**WARNING** | {self.sub_option} message could not be sent, no channel has been set\nSet the channel and the message will be sent!", color=Yellow)
 
-                        if scrim_epoch < time.time(): 
-                            embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nAnnouncement Message Updated To <#response>, Announcement Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                            await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                                
-                        else: # Scrim has not started yet
-                            if channels[f'scrim{self.sub_option}Channel'] != None:
-                                messages = getMessages(interaction.guild.id)
-                                message = splitMessage(messages[f'scrim{self.sub_option}'], interaction.guild.id)
-                                message_split = message.split("\n")
-                                title = message_split[0]
-                                description = '\n'.join(message_split[1:])
-
-                                embed = nextcord.Embed(title=title, description=description, color=White)
-                                await channel.send(embed=embed)
-
-                                embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nAnnouncement Message Updated To <#response>, Announcement Message Moved", color=White)
-                                await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                            
-                            else: # No Channel Set
-                                embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nAnnouncement Message Updated, Announcement Channel Not Set!", color=White)
-                                await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                            
-                    else: # No scrims have ever been scheduled
-                        embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nAnnouncement Message Updated To <#response>, Announcement Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                        await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                        
-                elif self.sub_option == "Checkin": # If checkin message is changed
-                    if config_data['toggleCheckin'] == True: # Checkins are enabled
-                        if scrim_info["scrimEpoch"].isnumeric() == True:
-                            scrim_epoch = int(scrim_info["scrimEpoch"])
-                            if scrim_epoch > time.time():
-                                scrim_datetime = datetime.datetime.fromtimestamp(scrim_epoch)
-                                current_datetime = datetime.datetime.now()
-                                time_until_start = scrim_datetime - current_datetime
-                                hours_until_start = time_until_start.total_seconds() / 3600
-
-                                if hours_until_start < config_data['toggleCheckinTime']: # If it is time to open checkins
-                                    if channels[f'scrim{self.sub_option}Channel'] != None:
-                                        messages = getMessages(interaction.guild.id)
-                                        message = splitMessage(messages[f'scrim{self.sub_option}'], interaction.guild.id)
-                                        message_split = message.split("\n")
-                                        title = message_split[0]
-                                        description = '\n'.join(message_split[1:])
-
-                                        embed = nextcord.Embed(title=title, description=description, color=White)
-                                        await channel.send(embed=embed)
-
-                                        embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nCheckin Message Updated To <#response>, Checkin Message Moved", color=White)
-                                        await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                                    
-                                    else: # No Channel Set
-                                        embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nCheckin Message Updated, Checkin Channel Not Set!", color=White)
-                                        await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                                    
-                                else: # Not time to open checkins
-                                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nCheckin Message Updated To <#response>, Checkin Message Not Sent (Checkins Not Open)", color=White)
-                                    await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                            
-                            else: # Scrims have already started/ended
-                                embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nCheckin Message Updated To <#response>, Checkin Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                                await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                        else: # No scrims have ever been scheduled
-                            embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nCheckin Message Updated To <#response>, Checkin Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                            await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                    else: # Checkins are disabled
-                        embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nCheckin Message Updated To <#response>, Checkin Message Not Sent (Checkins Disabled)", color=White)
-                        await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                
-                elif self.sub_option == "Rules": # If rules message is changed
-                    if channels[f'scrim{self.sub_option}Channel'] != None:
-                        messages = getMessages(interaction.guild.id)
-                        message = splitMessage(messages[f'scrim{self.sub_option}'], interaction.guild.id)
-                        message_split = message.split("\n")
-                        title = message_split[0]
-                        description = '\n'.join(message_split[1:])
-
-                        embed = nextcord.Embed(title=title, description=description, color=White)
+                    else:
+                        note = f"{self.sub_option} has been updated to the new message"
+                        message = splitMessage(getMessages(command['guildID'])[f"scrim{self.sub_option}"], interaction.guild.id, None)
+                        embed = nextcord.Embed(title=message[0], description=message[1], color=White)
                         await channel.send(embed=embed)
-
-                        embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nRules Message Updated To <#response>, Rules Message Moved", color=White)
-                        await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                    
-                    else: # No Channel Set
-                        embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nRules Message Updated, Rules Channel Not Set!", color=White)
-                        await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                elif self.sub_option == "Format": # If format message is changed
-                    if channels[f'scrim{self.sub_option}Channel'] != None:
-                        messages = getMessages(interaction.guild.id)
-                        message = splitMessage(messages[f'scrim{self.sub_option}'], interaction.guild.id)
-                        message_split = message.split("\n")
-                        title = message_split[0]
-                        description = '\n'.join(message_split[1:])
-
-                        embed = nextcord.Embed(title=title, description=description, color=White)
-                        await channel.send(embed=embed)
-
-                        embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nFormat Message Updated To <#response>, Format Message Moved", color=White)
-                        await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                    
-                    else: # No Channel Set
-                        embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nFormat Message Updated, Format Channel Not Set!", color=White)
-                        await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                elif self.sub_option == "Poi": # If poi message is changed
-                    if config_data['togglePoi'] == True: # Poi selection is enabled
-                        if scrim_info["scrimEpoch"].isnumeric() == True:
-                            scrim_epoch = int(scrim_info["scrimEpoch"])
-                            if scrim_epoch > time.time():
-                                scrim_datetime = datetime.datetime.fromtimestamp(scrim_epoch)
-                                current_datetime = datetime.datetime.now()
-                                time_until_start = scrim_datetime - current_datetime
-                                hours_until_start = time_until_start.total_seconds() / 3600
-
-                                if hours_until_start < config_data['togglePoiTime']: # If it is time to open poi selection
-                                    if channels[f'scrim{self.sub_option}Channel'] != None:
-                                        messages = getMessages(interaction.guild.id)
-                                        message = splitMessage(messages[f'scrim{self.sub_option}'], interaction.guild.id)
-                                        message_split = message.split("\n")
-                                        title = message_split[0]
-                                        description = '\n'.join(message_split[1:])
-
-                                        embed = nextcord.Embed(title=title, description=description, color=White)
-                                        await channel.send(embed=embed)
-
-                                        embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nPoi Message Updated To <#response>, Poi Message Moved", color=White)
-                                        await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                                
-                                    else: # No Channel Set
-                                        embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nPoi Message Updated, Poi Channel Not Set!", color=White)
-                                        await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                                else: # Not time to open poi selection
-                                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nPoi Message Updated To <#response>, Poi Message Not Sent (Poi Selection Not Open)", color=White)
-                                    await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                            
-                            else: # Scrims have already started/ended
-                                embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nPoi Message Updated To <#response>, Poi Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                                await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True) 
-                        
-                        else: # No scrims have ever been scheduled
-                            embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nPoi Message Updated To <#response>, Poi Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                            await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                    
-                    else: # Poi selection is disabled
-                        embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nPoi Message Updated To <#response>, Poi Message Not Sent (Poi Selection Disabled)", color=White)
-                        await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
                 
-                elif self.sub_option == "Registration": # If registration message is changed
-                    if scrim_info["scrimEpoch"].isnumeric() == True: # A scrim has been scheduled before
-                        scrim_epoch = int(scrim_info["scrimEpoch"])
+                else: note = f"Future {self.sub_option.lower()} messages will use the updated message"
 
-                        if scrim_epoch > time.time(): # Scrim has already started/ended
-                            if channels[f'scrim{self.sub_option}Channel'] != None:   
-                                messages = getMessages(interaction.guild.id)
-                                message = splitMessage(messages[f'scrim{self.sub_option}'], interaction.guild.id)
-                                message_split = message.split("\n")
-                                title = message_split[0]
-                                description = '\n'.join(message_split[1:])
-
-                                embed = nextcord.Embed(title=title, description=description, color=White)
-                                await channel.send(embed=embed)
-
-                                embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nRegistration Message Updated To <#response>, Registration Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                                await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                            
-                            else: # No Channel Set
-                                embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nRegistration Message Updated, Registration Channel Not Set!", color=White)
-                                await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                        else:
-                            embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nRegistration Message Updated To <#response>, Registration Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                            await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-                    
-                    else: # No scrims have ever been scheduled
-                        embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n\nRegistration Message Updated To <#response>, Registration Message Not Sent (Scrim in progress/not scheduled)", color=White)
-                        await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
-
-                embed = nextcord.Embed(title="Scrimotron Configuration", description=f"**{self.option} -> {self.sub_option} -> {self.action} -> Edit** Message Updated", color=Green)
-                await interaction.send(embed=embed, ephemeral=True)
+                embed = nextcord.Embed(title="Scrimotron Configuration", description=f"**{self.option} -> {self.sub_option} -> {self.action}** Updated\n{note}", color=Green)
+                await interaction.response.edit_message(embed=embed, view=None)
                 formatOutput(output=f"{self.option} {self.sub_option} Updated by {interaction.user.id} | @{interaction.user.name}", status="Normal", guildID=interaction.guild.id)
 
                 embed.set_footer(text=f"Config Updated by @{interaction.user.name}")
                 channel = interaction.guild.get_channel(channels["scrimLogChannel"])
                 await channel.send(embed=embed)
 
-        except Exception as e:
-            error_traceback = traceback.format_exc()
-            await errorResponse(e, command, interaction, error_traceback)
+        except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
 
-class change_role_modal(nextcord.ui.Modal):
+class ChangeRoleModal(nextcord.ui.Modal):
     def __init__(self, interaction: nextcord.Interaction, option, sub_option, action):
         super().__init__(title=f"Change {sub_option} Role", timeout=None)
         self.interaction = interaction
@@ -878,15 +515,14 @@ class change_role_modal(nextcord.ui.Modal):
             style=TextInputStyle.short,
             label=f"Change {sub_option} Role",
             placeholder="Enter Role ID",
-            min_length=0, 
-            max_length=20)
+            min_length=0,
+            max_length=20
+        )
 
         self.input.callback = self.callback
         self.add_item(self.input)
 
     async def callback(self, interaction: nextcord.Interaction):
-        config_data = getConfigData(interaction.guild.id)
-        messages = getMessages(interaction.guild.id)
         channels = getChannels(interaction.guild.id)
 
         response = self.input.value
@@ -896,14 +532,14 @@ class change_role_modal(nextcord.ui.Modal):
 
                 role = interaction.guild.get_role(response)
                 if role == None:
-                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n**ERROR** | Role ID Must Be A Valid Role", color=White)
-                    await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
+                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised\nPick a button below to get started\n\n**ERROR** | Role ID Must Be A Valid Role", color=White)
+                    await interaction.response.edit_message(embed=embed, view=MainView(interaction))
 
                 else:
                     DB[str(interaction.guild.id)]["Config"].update_one({"config": {"$exists": True}}, {"$set": {"config.casterRole": response}})
 
                     embed = nextcord.Embed(title="Scrimotron Configuration", description=f"**{self.option} -> {self.sub_option} -> {self.action}** Set To <@&{response}>", color=Green)
-                    await interaction.send(embed=embed, ephemeral=True)
+                    await interaction.response.edit_message(embed=embed, view=None)
                     formatOutput(output=f"{self.option} {self.sub_option} Updated by {interaction.user.id} | @{interaction.user.name}", status="Normal", guildID=interaction.guild.id)
 
                     embed.set_footer(text=f"Config Updated by @{interaction.user.name}")
@@ -911,14 +547,12 @@ class change_role_modal(nextcord.ui.Modal):
                     await channel.send(embed=embed)
 
             else:
-                embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started\n **ERROR** | Role ID Must Be A Numerical Value (e.g 123456789)", color=White)
-                await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
+                embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised\nPick a button below to get started\n\n**ERROR** | Role ID Must Be A Numerical Value (e.g 123456789)", color=White)
+                await interaction.response.edit_message(embed=embed, view=MainView(interaction))
 
-        except Exception as e:
-            error_traceback = traceback.format_exc()
-            await errorResponse(e, command, interaction, error_traceback)
+        except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
 
-class reset_view(nextcord.ui.View):
+class ResetView(nextcord.ui.View):
     def __init__(self, interaction: nextcord.Interaction, option):
         super().__init__(timeout=None)
         self.interaction = interaction
@@ -950,54 +584,45 @@ class reset_view(nextcord.ui.View):
 
                     DB[str(interaction.guild.id)]["Config"].update_one({"config": {"$exists": True}}, {"$set": {"channels.scrimLogChannel": log_channel}})
                     formatOutput(output=f"Config Data Reset by {interaction.user.id} | @{interaction.user.name}", status="Normal", guildID=interaction.guild.id)
-                    embed = nextcord.Embed(title="Scrimotron Configuration", description="**CONFIG DATA RESET**\nMost aspects of the bot can be customised with this command\nPick a button below to get started", color=White)
-                    await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
+                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised\nPick a button below to get started\n\n**CONFIG DATA RESET**", color=White)
+                    await interaction.response.edit_message(embed=embed, view=MainView(interaction))
                     embed = nextcord.Embed(title="Scrimotron Configuration", description="**CONFIG DATA RESET**", color=White)
 
                     embed.set_footer(text=f"Config Data Reset by @{interaction.user.name}")
                     channel = interaction.guild.get_channel(log_channel)
                     await channel.send(embed=embed)
 
-                else: 
-                    embed = nextcord.Embed(title="Scrimotron Configuration", description="**CONFIG RESET CANCLED**\nMost aspects of the bot can be customised with this command\nPick a button below to get started", color=White)
-                    await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
+                else:
+                    embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised\nPick a button below to get started\n\n**CONFIG RESET CANCLED**", color=White)
+                    await interaction.response.edit_message(embed=embed, view=MainView(interaction))
 
-            except Exception as e:
-                error_traceback = traceback.format_exc()
-                await errorResponse(e, command, interaction, error_traceback)
+            except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
+
         return callback
 
 class Command_configure_Cog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @nextcord.slash_command(name="configure", description="Configure Scrimotron **Staff Only**", default_member_permissions=(nextcord.Permissions(administrator=True)))
+    @nextcord.slash_command(name="configure", description="Configure Scrimotron **Admin Only**", default_member_permissions=(nextcord.Permissions(administrator=True)))
     async def configure(self, interaction: nextcord.Interaction):
         global command
-        command = interaction.application_command.name
-        userID = interaction.user.id
-        guildID = int(interaction.guild.id)
-        formatOutput(output=f"/{command} Used by {userID} | @{interaction.user.name}", status="Normal", guildID=guildID)
+        command = {"name": interaction.application_command.name, "userID": interaction.user.id, "guildID": interaction.guild.id}
+        formatOutput(output=f"/{command['name']} Used by {command['userID']} | @{interaction.user.name}", status="Normal", guildID=command["guildID"])
 
         try: await interaction.response.defer(ephemeral=True)
-        except: pass
+        except: pass # Discord can sometimes error on defer()
 
-        channels = getChannels(guildID)
+        channels = getChannels(command["guildID"])
+        channel = interaction.guild.get_channel(channels["scrimLogChannel"])
 
-        if channels["scrimLogChannel"] == None: # If the log channel is not set
+        if channel == None: # If the log channel is not set/no longer exists
             embed = nextcord.Embed(title="Scrimotron Configuration", description="**Log Channel Not Set**\nA log channel is nessesary for the bot to function correctly\nThe log channel should be private and only viewable by mods/admins. Copy the Channel ID and click \"Set\"", color=Red)
-            await interaction.send(embed=embed, view=set_log_view(interaction), ephemeral=True)
-        
-        else: 
-            channel = interaction.guild.get_channel(channels["scrimLogChannel"])
+            await interaction.edit_original_message(embed=embed, view=SetLogView(interaction))
 
-            if channel == None: # if the channel is deleted
-                embed = nextcord.Embed(title="Scrimotron Configuration", description="**Log Channel Not Found**\nA log channel is nessesary for the bot to function correctly\nThe log channel should be private and only viewable by mods/admins. Copy the Channel ID and click \"Set\"", color=Red)
-                await interaction.send(embed=embed, view=set_log_view(interaction), ephemeral=True)
-            
-            else:
-                embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised with this command\nPick a button below to get started", color=White)
-                await interaction.send(embed=embed, view=main_view(interaction), ephemeral=True)
+        else: # Log channel exists and is set
+            embed = nextcord.Embed(title="Scrimotron Configuration", description="Most aspects of the bot can be customised\nPick a button below to get started", color=White)
+            await interaction.edit_original_message(embed=embed, view=MainView(interaction))
 
 def setup(bot):
     bot.add_cog(Command_configure_Cog(bot))

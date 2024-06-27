@@ -1,6 +1,5 @@
 import nextcord
 import openpyxl
-import datetime
 import shutil
 from nextcord.ext import commands
 from Main import formatOutput, errorResponse
@@ -55,7 +54,7 @@ class Command_score_Cog(commands.Cog):
 
                         if player["kills"] > highest_kills[1]:
                             highest_kills = [player["playerName"], player["kills"], team["teamName"]]
-            
+
                 leaderboard_data.append("**Other Data**")
                 leaderboard_data.append(f"Highest Damage: {highest_damage[1]} - {highest_damage[0]} ({highest_damage[2]})")
                 leaderboard_data.append(f"Highest Kills: {highest_kills[1]} - {highest_kills[0]} ({highest_kills[2]})")
@@ -68,8 +67,8 @@ class Command_score_Cog(commands.Cog):
                 tournament_name = api_data["ALSData"]["name"]
                 if "/" in tournament_name: tournament_name = tournament_name.replace("/", "-")
                 spreadsheet_name = f"Spreadsheet-{tournament_name}.xlsx"
-                shutil.copy("scrimotron/Spreadsheets/Spreadsheet Template.xlsx", f"scrimotron/Spreadsheets/{spreadsheet_name}")
-                excel_file = openpyxl.load_workbook(f"scrimotron/Spreadsheets/{spreadsheet_name}")
+                shutil.copy("Spreadsheets/Spreadsheet Template.xlsx", f"Spreadsheets/{spreadsheet_name}")
+                excel_file = openpyxl.load_workbook(f"Spreadsheets/{spreadsheet_name}")
                 sheet = excel_file.active
 
                 row = 4
@@ -80,7 +79,7 @@ class Command_score_Cog(commands.Cog):
                     sheet[f"E{row}"] = team["kills"]
 
                     try: # Covers for any out of index errors (if 6 games weren't played)
-                        if rankings[0] <= 0: sheet[f"G{row}"] = 0 
+                        if rankings[0] <= 0: sheet[f"G{row}"] = 0
                         else: sheet[f"G{row}"] = rankings[0]
 
                         if rankings[1] <= 0: sheet[f"J{row}"] = 0
@@ -121,23 +120,21 @@ class Command_score_Cog(commands.Cog):
 
                         row += 1
 
-                excel_file.save(f"scrimotron/Spreadsheets/{spreadsheet_name}")
+                excel_file.save(f"Spreadsheets/{spreadsheet_name}")
                 excel_file.close()
 
-                with open(f'scrimotron/Spreadsheets/{spreadsheet_name}', 'rb') as fp:
+                with open(f'Spreadsheets/{spreadsheet_name}', 'rb') as fp:
                     await interaction.edit_original_message(embed=embed, file=nextcord.File(fp, spreadsheet_name))
-                
+
                 fp.close() # not actually closing the file, restart to be able to delete it
-            
+
             except Exception as e:
                 error_traceback = traceback.format_exc()
                 await errorResponse(e, command, interaction, error_traceback)
 
-        else: 
+        else:
             embed = nextcord.Embed(title="Error", description="Tournament IDs must be numeric (e.g 500)", color=Red)
             await interaction.edit_original_message(embed=embed)
 
 def setup(bot):
     bot.add_cog(Command_score_Cog(bot))
-
-# bot hosting requires scrimotron/(path)
