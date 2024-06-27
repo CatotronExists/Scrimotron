@@ -13,7 +13,7 @@ Dev Versions (v1.x.x-dx) are likely to have breaking issues\
 Preview Versions (v1.x.x-px) are more polished and are for the later stages of update development\
 Final Versions (v1.x.x-FINALx) will be the version released, unless breaking bugs are discovered
 
-## SCRIMOTRON MULTIPLEX (v1.2.0)
+## SCRIMOTRON TOOLKIT (v1.2.0)
 **Major Update v1.2.0 Unpacks new tools to keep scrims running smoothly**
 
 *More information soon...*
