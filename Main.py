@@ -229,7 +229,7 @@ async def on_ready():
     await startScheduler() # Starts Automation
 
     formatOutput(f"BOT VERSION {BOT_VERSION}", status="Normal", guildID="STARTUP")
-    await bot.change_presence(activity=nextcord.Activity(type=nextcord.ActivityType.watching, name="Scrims 24/7"))
+    await bot.change_presence(activity=nextcord.Activity(type=nextcord.ActivityType.watching, name=f"/help | Version {BOT_VERSION}"))
     formatOutput("---------------------------------", status="Normal", guildID="STARTUP")
 
 ##### Scheduler
@@ -536,16 +536,16 @@ async def event_checker(): # Gets events from discord and runs automation
 
                         formatOutput(f"   {scrim_name} has been rescheduled", status="Good", guildID=guildID)
                         await logAction(guildID, "AUTOMATED ACTION", f"Rescheduled {scrim_name}", "Good")
-                    
+    
+                        DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.open.checkin": False}})
+                        DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.open.poi": False}})
+                        DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.complete.poi": False}})
+                        DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.complete.checkin": False}})
+                        DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.complete.setup": False}})
+
                     else: # if not repeating, delete
                         DB[str(guildID)]["ScrimData"].delete_one({"scrimName": scrim_name})
                         await logAction(guildID, "AUTOMATED ACTION", f"Ended {scrim_name}", "Good")
-    
-                    DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.open.checkin": False}})
-                    DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.open.poi": False}})
-                    DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.complete.poi": False}})
-                    DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.complete.checkin": False}})
-                    DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.complete.setup": False}})
 
                     formatOutput(f"   {scrim_name} has Ended", status="Good", guildID=guildID)
 
@@ -564,17 +564,6 @@ async def event_checker(): # Gets events from discord and runs automation
 
         else:
             formatOutput(f"   No Scheduled Scrims Found for {guildID}", status="Warning", guildID=guildID)
-
-async def presence_updater():
-    presence_list = ["Scrims 24/7", "/help", "Catotron Exist", "Your Scrims", f"Version {BOT_VERSION}"]
-    formatOutput("Running Presence Updater Scheduler...", status="Normal", guildID="BACKGROUND TASK")
-
-    try:
-        await bot.change_presence(activity=nextcord.Activity(type=nextcord.ActivityType.watching, name=randint.choice(presence_list)))
-        formatOutput("   Presence Updated", status="Good", guildID="BACKGROUND TASK")
-
-    except Exception as e:
-        formatOutput(f"   Something went wrong while updating presence. Error: {e} | {traceback.format_exc()}", status="Error", guildID="BACKGROUND TASK")
 
 async def global_messager():
     formatOutput("Running Global Messager Scheduler...", status="Normal", guildID="BACKGROUND TASK")
@@ -608,7 +597,6 @@ async def startScheduler():
         formatOutput("Starting Scheduler...", status="Normal", guildID="STARTUP")
         scheduler = AsyncIOScheduler()
         scheduler.add_job(event_checker, 'cron', minute=0) # At xx:00
-        scheduler.add_job(presence_updater, 'cron', minute='*/5') # Every 5 minutes
         scheduler.add_job(global_messager, 'cron', minute='*/1') # Every minute
         scheduler.start()
         formatOutput("Scheduler Started", status="Good", guildID="STARTUP")
