@@ -1,27 +1,33 @@
 ![Scrimotron Multiplex v1 1 0 Header](https://github.com/CatotronExists/Scrimotron/assets/101963814/0a189bae-4d3b-4496-bb03-ff0be482436f)
-# Scrimotron (Scrim-o-tron)
+# Scrimotron
 A discord bot designed to Run and Manage Apex Scrims
 
 Automating the process of check-ins, POI selections and creating team VCs. Plus scoring!
 
+**Found a bug or have any suggestions?**\
+Send them here on GitHub: [Leave a sugestion](https://github.com/CatotronExists/Scrimotron/issues/new?assignees=&labels=&projects=&template=feature_request.md&title=%5BSuggestion%5D) / [Report a bug](https://github.com/CatotronExists/Scrimotron/issues/new?assignees=&labels=&projects=&template=bug_report.md&title=%5BBug%5D)\
+Via Scrimotron using `/feedback`\
+or even just by sending me a message on discord (@Catotron)
+
+[**-->> Invite Scrimotron <<--**](https://discord.com/oauth2/authorize?client_id=1165565006763536445&permissions=8&scope=bot+applications.commands)
+
 ## Dev Branch
 Currently working on v1.2.0 - TOOLKIT\
-Estimated Release: Mid July
+Estimated Release: Mid August
 
 **Versioning**
 Dev Versions (v1.x.x-dx) are likely to have breaking issues\
 Preview Versions (v1.x.x-px) are more polished and are for the later stages of update development\
-Final Versions (v1.x.x-FINALx) will be the version released, unless breaking bugs are discovered
+Final Versions (v1.x.x-FINALx) are the last changes before release, unless breaking bugs are discovered
 
 ## SCRIMOTRON TOOLKIT (v1.2.0)
 **Major Update v1.2.0 Unpacks new tools to keep scrims running smoothly**
 
-*More information soon...*
+New Tools - (Quickly get much needed information with these tools)
+QOL Presets - (Quickly set up scrims with upto 5 presets)
+Old Features Revamped - (Quickly speed through previously slow commands)
 
-Any Suggestions? Leave a sugestion [here](https://github.com/CatotronExists/Scrimotron/issues/new?assignees=&labels=&projects=&template=feature_request.md&title=%5BSuggestion%5D) or via Scrimotron using `/feedback` or even just by sending me a message on discord (@Catotron)\
-Bugs are expected, if you find one please report it [here](https://github.com/CatotronExists/Scrimotron/issues/new?assignees=&labels=&projects=&template=bug_report.md&title=%5BBug%5D) or via Scrimotron using `/feedback` or even just by sending me a message on discord (@Catotron)
-
-[**-->> Invite Scrimotron <<--**](https://discord.com/oauth2/authorize?client_id=1165565006763536445&permissions=8&scope=bot+applications.commands)
+New, Improved and Revamped features to take a load off from scrim organisers, the tools of scrim management have been cleaned up with Scrimotron TOOLKIT
 
 [Full Patch Notes (LATER)](https://github.com/CatotronExists/Scrimotron/releases/tag/v1.2.0)
 
@@ -45,17 +51,19 @@ Keep up to date in the [Dev Branch](https://github.com/CatotronExists/Scrimotron
 ||\
 **v1.1.0** - Scrimotron MULTIPLEX [26/06/2024]\
 ||\
-**v1.2.0** - Scrimotron TOOLKIT (Mid July 2024)\
+**v1.2.0** - Scrimotron TOOLKIT (Mid August 2024)\
 ||\
-**v1.3.0** - Player Statistics (August 2024)\
+**v1.3.0** - Player Statistics (September 2024)\
 ||\
-**v1.4.0** - Alternate BR Modes [Hide and Seek, etc] (September 2024)\
+**v1.4.0** - Scrim Leagues (October 2024)\
 ||\
-**v1.5.0** - Why Just BR Scrims? [Expansion to Mixtape Modes (TDM)] (October 2024)\
+**v1.5.0** - Alternate BR Modes [Hide and Seek, etc] (November 2024)\
 ||\
-**v1.6.0** - Command Overload (November 2024)\
+**v1.6.0** - Why Just BR Scrims? [Expansion to Mixtape Modes (TDM)] (November 2024)\
 ||\
-**v1.7.0** - Major QOL Update (December 2024)\
+**v1.7.0** - Command Overload (December 2024)\
+||\
+**v1.8.0** - Major QOL Update (January 2024)\
 \+ Regular updates and bug fixes. Keeping upto date with apex, New maps and Map changes! (Ongoing)
 
 *Roadmap will change overtime, suggest features and shape scrimotron!*
