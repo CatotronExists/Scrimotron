@@ -38,6 +38,7 @@ class MainDropdown(nextcord.ui.Select):
 
     async def callback(self, interaction: nextcord.Interaction):
         try:
+            await interaction.response.defer(ephemeral=True)
             scrims = getScrims(command['guildID'])
 
             if interaction.data["values"][0] == "View All": # All Scrims
@@ -56,7 +57,7 @@ class MainDropdown(nextcord.ui.Select):
                     else:
                         embed.add_field(name=f"{scrim['scrimName']}", value=f"Teams: {team_display}\nTime: <t:{scrim['scrimEpoch']}:f> (**{scrim['scrimEpoch']}**)\nMaps: **{scrim['scrimConfiguration']['maps']['map1']}** & **{scrim['scrimConfiguration']['maps']['map2']}**\nPOI Selection Mode: **{scrim['scrimConfiguration']['poiSelectionMode']}**\nTeam Type: **{scrim['scrimConfiguration']['teamType']}**\nRegistration Channel: <#{scrim['scrimConfiguration']['registrationChannel']}>", inline=False)
 
-                await interaction.response.edit_message(embed=embed, view=MainView(interaction, scrims, current_view="View All"))
+                await interaction.followup.edit_message(interaction.message.id, embed=embed)
 
             else: # Individual Scrim
                 scrim = scrims['scrimName' == interaction.data["values"][0]]
@@ -84,7 +85,7 @@ class MainDropdown(nextcord.ui.Select):
                 description = "\n".join(information)
                 embed = nextcord.Embed(title=f"Scrim Manager // {scrim['scrimName']}", description=description, color=White)
 
-                await interaction.response.edit_message(embed=embed, view=MainInterface(interaction, scrims, description))
+                await interaction.followup.edit_message(interaction.message.id, embed=embed)
 
         except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
 

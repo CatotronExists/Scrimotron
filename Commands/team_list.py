@@ -21,6 +21,7 @@ class MainDropdown(nextcord.ui.Select):
         super().__init__(placeholder="Select a Scrim", min_values=1, max_values=1, options=options)
 
     async def callback(self, interaction: nextcord.Interaction):
+        await interaction.response.defer(ephemeral=True)
         message = []
         try:
             teams = getTeams(interaction.guild.id, interaction.data["values"][0])
@@ -28,33 +29,33 @@ class MainDropdown(nextcord.ui.Select):
             for team, data in teams.items():
                 if data["teamType"] == "Trios":
                     if data["teamSub1"] == None and data["teamSub2"] == None:
-                        message.append(f"**{data['teamName']}** - **C:** {interaction.guild.get_member(int(data['teamPlayer1'])).mention} - **P:** {interaction.guild.get_member(int(data['teamPlayer2'])).mention} & {interaction.guild.get_member(int(data['teamPlayer3'])).mention}")
+                        message.append(f"{team_count+1} | **{data['teamName']}** - **C:** {interaction.guild.get_member(int(data['teamPlayer1'])).mention} - **P:** {interaction.guild.get_member(int(data['teamPlayer2'])).mention} & {interaction.guild.get_member(int(data['teamPlayer3'])).mention}")
                     elif data["teamSub2"] == None:
                         subs += 1
-                        message.append(f"**{data['teamName']}** - **C:** {interaction.guild.get_member(int(data['teamPlayer1'])).mention} - **P:** {interaction.guild.get_member(int(data['teamPlayer2'])).mention} & {interaction.guild.get_member(int(data['teamPlayer3'])).mention} - **S:** {interaction.guild.get_member(int(data['teamSub1'])).mention}")
+                        message.append(f"{team_count+1} | **{data['teamName']}** - **C:** {interaction.guild.get_member(int(data['teamPlayer1'])).mention} - **P:** {interaction.guild.get_member(int(data['teamPlayer2'])).mention} & {interaction.guild.get_member(int(data['teamPlayer3'])).mention} - **S:** {interaction.guild.get_member(int(data['teamSub1'])).mention}")
                     else:
                         subs += 2
-                        message.append(f"**{data['teamName']}** - **C:** {interaction.guild.get_member(int(data['teamPlayer1'])).mention} - **P:** {interaction.guild.get_member(int(data['teamPlayer2'])).mention} & {interaction.guild.get_member(int(data['teamPlayer3'])).mention} - **S:** {interaction.guild.get_member(int(data['teamSub1'])).mention} & {interaction.guild.get_member(int(data['teamSub2'])).mention}")
+                        message.append(f"{team_count+1} | **{data['teamName']}** - **C:** {interaction.guild.get_member(int(data['teamPlayer1'])).mention} - **P:** {interaction.guild.get_member(int(data['teamPlayer2'])).mention} & {interaction.guild.get_member(int(data['teamPlayer3'])).mention} - **S:** {interaction.guild.get_member(int(data['teamSub1'])).mention} & {interaction.guild.get_member(int(data['teamSub2'])).mention}")
                     players += 3
                     team_count += 1
 
                 elif data["teamType"] == "Duos":
                     if data["teamSub1"] == None:
-                        message.append(f"**{data['teamName']}** - **C:** {interaction.guild.get_member(int(data['teamPlayer1'])).mention} - **P:** {interaction.guild.get_member(int(data['teamPlayer2'])).mention}")
+                        message.append(f"{team_count+1} | **{data['teamName']}** - **C:** {interaction.guild.get_member(int(data['teamPlayer1'])).mention} - **P:** {interaction.guild.get_member(int(data['teamPlayer2'])).mention}")
                     else:
                         subs += 1
-                        message.append(f"**{data['teamName']}** - **C:** {interaction.guild.get_member(int(data['teamPlayer1'])).mention} - **P:** {interaction.guild.get_member(int(data['teamPlayer2'])).mention} - **S:** {interaction.guild.get_member(int(data['teamSub1'])).mention}")
+                        message.append(f"{team_count+1} | **{data['teamName']}** - **C:** {interaction.guild.get_member(int(data['teamPlayer1'])).mention} - **P:** {interaction.guild.get_member(int(data['teamPlayer2'])).mention} - **S:** {interaction.guild.get_member(int(data['teamSub1'])).mention}")
                     players += 2
                     team_count += 1
 
                 elif data["teamType"] == "Solos":
-                    message.append(f"**{data['teamName']}** - **P:** {interaction.guild.get_member(int(data['teamPlayer1'])).mention}")
+                    message.append(f"{team_count+1} | **{data['teamName']}** - **P:** {interaction.guild.get_member(int(data['teamPlayer1'])).mention}")
                     players += 1
                     team_count += 1
-                
+
             embed = nextcord.Embed(title="Registered Teams", description='\n'.join(message), color=White)
             embed.set_footer(text=f"Total Teams: {team_count} | Total Players: {players} | Total Subs: {subs}")
-            await interaction.response.edit_message(embed=embed)
+            await interaction.followup.edit_message(interaction.message.id, embed=embed)
 
         except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
 
