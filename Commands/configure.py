@@ -58,11 +58,11 @@ class SetLogModal(nextcord.ui.Modal):
 
                 else: # Channel Not Found
                     embed = nextcord.Embed(title="Scrimotron Configuration", description="**Log Channel Not Set**\nA log channel is nessesary for the bot to function correctly\nThe log channel should be private and only viewable by mods/admins. Copy the Channel ID and click \"Set\"\n\n**ERROR** | Channel ID Must Be A Valid Channel", color=Red)
-                    await interaction.response.edit_message(embed=embed, view=SetLogView(interaction), ephemeral=True)
+                    await interaction.response.edit_message(embed=embed, view=SetLogView(interaction))
 
             else: # Non numerical input
                 embed = nextcord.Embed(title="Scrimotron Configuration", description="**Log Channel Not Set**\nA log channel is nessesary for the bot to function correctly\nThe log channel should be private and only viewable by mods/admins. Copy the Channel ID and click \"Set\"\n\n**ERROR** | Channel ID Must Be A Numerical Value (e.g 123456789)", color=Red)
-                await interaction.response.edit_message(embed=embed, view=SetLogView(interaction), ephemeral=True)
+                await interaction.response.edit_message(embed=embed, view=SetLogView(interaction))
 
         except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
 
