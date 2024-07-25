@@ -29,17 +29,27 @@ def formatOutput(output, status, guildID):
 ### Error Handler
 async def errorResponse(error, command, interaction: Interaction, error_traceback):
     # RESPOND TO ERROR
-    embed = nextcord.Embed(title="**Error**", description=f"Something went wrong while running `/{command['name']}`.\nDid you mistype an entry or not follow the format?\nError: {error}", color=Red)
-    embed.set_footer(text="Error was automatically sent to Catotron for review.")
-    await interaction.response.edit_message(embed=embed, view=None)
+    try:
+        embed = nextcord.Embed(title="**Error**", description=f"Something went wrong while running `/{command['name']}`.\nDid you mistype an entry or not follow the format?\nError: {error}", color=Red)
+        embed.set_footer(text="Error was automatically sent to Catotron for review.")
+        try:
+            await interaction.response.edit_message(embed=embed, view=None)
+        except: 
+            await interaction.response.send_message(embed=embed, view=None)
+ 
+        formatOutput(output=f"   Something went wrong while running /{command['name']}. Error: {error}", status="Error", guildID=command['guildID'])
+        
+        # SEND ERROR TO CHANNEL
+        embed = nextcord.Embed(title=f"**Error Report**", description=f"Error while running /{command['name']}.\nError: {error} | {error_traceback}", color=Red)
+        embed.set_footer(text=f"Guild: {command['guildID']} | User: {interaction.user.name}/{command['userID']}")
+        channel = await bot.get_guild(1165569173880049664).fetch_channel(1209621162284425267)
+        await channel.send(embed=embed)
 
-    formatOutput(output=f"   Something went wrong while running /{command['name']}. Error: {error}", status="Error", guildID=command['guildID'])
-
-    # SEND ERROR TO CHANNEL
-    embed = nextcord.Embed(title=f"**Error Report**", description=f"Error while running /{command['name']}.\nError: {error} | {error_traceback}", color=Red)
-    embed.set_footer(text=f"Guild: {command['guildID']} | User: {interaction.user.name}/{command['userID']}")
-    channel = await bot.get_guild(1165569173880049664).fetch_channel(1209621162284425267)
-    await channel.send(embed=embed)
+    except Exception as e: # STILL SEND ERROR TO CHANNEL
+        embed = nextcord.Embed(title=f"**Error Report**", description=f"Error while running /{command['name']}.\nError: {error} | {error_traceback}\nFAILED TO NOTIFY USER: {e} {error_traceback}", color=Red)
+        embed.set_footer(text=f"Guild: {command['guildID']} | User: {interaction.user.name}/{command['userID']}")
+        channel = await bot.get_guild(1165569173880049664).fetch_channel(1209621162284425267)
+        await channel.send(embed=embed)
 
 ### Message Splitter
 def splitMessage(base, guildID, scrim_name):
