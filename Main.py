@@ -175,6 +175,10 @@ def getConfigStatus(guildID):
     config_status = DB[str(guildID)]["Config"].find_one({"configureStatus": {"$exists": True}})
     return config_status
 
+def getPresets(guildID):
+    presets = DB[str(guildID)]["Config"].find_one({"presets": {"$exists": True}})["presets"]
+    return presets
+
 ##### Startup Terminal
 start_time = datetime.datetime.now()
 formatOutput(f"{CBOLD} SCRIMOTRON TERMINAL {CLEAR}", status="Good", guildID="STARTUP")
