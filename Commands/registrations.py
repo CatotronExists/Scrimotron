@@ -1,7 +1,7 @@
 import nextcord
 import traceback
 from nextcord.ext import commands
-from Main import formatOutput, errorResponse, getTeams, getScrims
+from Main import formatOutput, errorResponse, getTeams, getScrims, getScrim
 from BotData.colors import *
 
 class MainView(nextcord.ui.View):
@@ -25,6 +25,7 @@ class MainDropdown(nextcord.ui.Select):
         message = []
         try:
             teams = getTeams(interaction.guild.id, interaction.data["values"][0])
+            max_teams = getScrim(interaction.guild.id, interaction.data["values"][0])["scrimConfiguration"]["maxTeams"]
             team_count = players = subs = 0
             for team, data in teams.items():
                 if data["teamType"] == "Trios":
@@ -53,7 +54,9 @@ class MainDropdown(nextcord.ui.Select):
                     players += 1
                     team_count += 1
 
-            embed = nextcord.Embed(title="Registered Teams", description='\n'.join(message), color=White)
+                if team_count == max_teams: message.append("**-------------------RESERVES BELOW-------------------**")
+
+            embed = nextcord.Embed(title=f"Registered Teams - {interaction.data["values"][0]}", description='\n'.join(message), color=White)
             embed.set_footer(text=f"Total Teams: {team_count} | Total Players: {players} | Total Subs: {subs}")
             await interaction.followup.edit_message(interaction.message.id, embed=embed)
 

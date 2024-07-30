@@ -11,8 +11,8 @@ from BotData.colors import *
 import re
 
 # Command Lists
-command_list = admin_command_list = ["team_list", "register_trio", "register_duo", "register_solo", "schedule", "help", "configure", "score", "feedback", "scrims"]
-public_command_list = ["team_list", "register_trio", "register_duo", "register_solo", "help", "feedback"]
+command_list = admin_command_list = ["registrations", "register_trio", "register_duo", "register_solo", "schedule", "help", "configure", "score", "feedback", "scrims"]
+public_command_list = ["registrations", "register_trio", "register_duo", "register_solo", "help", "feedback"]
 
 # Discord Vars
 intents = nextcord.Intents.all()

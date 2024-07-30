@@ -5,11 +5,11 @@ from Main import formatOutput, errorResponse, public_command_list, admin_command
 from BotData.colors import *
 
 help_descriptions = {
-"team_list": {
-    "warning": ":warning: *Majorly Updated in v1.1.0*",
+"registrations": {
+    "warning": ":warning: *Renamed (was `/team_list`)*",
     "small_text": "Shows a full list of teams, players and subs",
     "description": "Shows a full list of teams with players and subs for selected scrim.\nPlus a total team, player and sub count.\n\n**Usage:** \*optional\*\n/team_list",
-    "last_updated": "Last Updated: v1.1.0 | 26/06/2024",
+    "last_updated": "Last Updated: v1.2.0 | xx/07/2024",
     },
 "register_trio": {
     "warning": ":warning: *Renamed and Reworked in v1.1.0 (was `/register`)*",
