@@ -610,8 +610,8 @@ async def startScheduler():
     try:
         formatOutput("Starting Scheduler...", status="Normal", guildID="STARTUP")
         scheduler = AsyncIOScheduler()
-        scheduler.add_job(event_checker, 'cron', minute=0) # At xx:00
-        scheduler.add_job(global_messager, 'cron', minute='*/1') # Every minute
+        scheduler.add_job(event_checker, 'cron', minute=0, misfire_grace_time=600) # At xx:00
+        scheduler.add_job(global_messager, 'cron', minute='*/1', misfire_grace_time=30) # Every minute
         scheduler.start()
         formatOutput("Scheduler Started", status="Good", guildID="STARTUP")
 
