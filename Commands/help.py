@@ -8,7 +8,7 @@ help_descriptions = {
 "registrations": {
     "warning": ":warning: *Renamed (was `/team_list`)*",
     "small_text": "Shows a full list of teams, players and subs",
-    "description": "Shows a full list of teams with players and subs for selected scrim.\nPlus a total team, player and sub count.\n\n**Usage:** \*optional\*\n/team_list",
+    "description": "Shows a full list of teams with players and subs for selected scrim.\nPlus a total team, player and sub count.\n\n**Usage:** \*optional\*\n/registrations",
     "last_updated": "Last Updated: v1.2.0 | xx/07/2024",
     },
 "register_trio": {
@@ -64,6 +64,12 @@ help_descriptions = {
     "small_text": "View and edit all currently scheduled scrims",
     "description": "**Admin Only**\nView and edit all currently scheduled scrims.\nView all scrims with basic information\n**OR**\nView one scrim with all information and option to make edits.\n\n**Usage:** \*optional\*\n`/scrims`",
     "last_updated": "Last Updated: v1.1.0 | 26/06/2024",
+    },
+"team_list": {
+    "warning": ":bulb: *New in v1.2.0*",
+    "small_text": "Shows a full list of teams, players and subs + filters",
+    "description": "**Admin Only Shows a full list of teams with players and subs for selected scrim.\nFilters can be applied to quickly find what your looking for\n\n**Usage:** \*optional\*\n`/team_list`",
+    "last_updated": "Last Updated: v1.2.0 | xx/07/2024",
     },
 }
 

@@ -62,12 +62,12 @@ class MainDropdown(nextcord.ui.Select):
 
         except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
 
-class Command_team_list_Cog(commands.Cog):
+class Command_registrations_Cog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @nextcord.slash_command(name="team_list", description="Shows a list of all the teams that have been registered")
-    async def team_list(self, interaction: nextcord.Interaction):
+    @nextcord.slash_command(name="registrations", description="Shows a list of all the teams that have been registered")
+    async def registrations(self, interaction: nextcord.Interaction):
         global command
         command = {"name": interaction.application_command.name, "userID": interaction.user.id, "guildID": interaction.guild.id}
         formatOutput(output=f"/{command['name']} Used by {command['userID']} | @{interaction.user.name}", status="Normal", guildID=command["guildID"])
@@ -89,4 +89,4 @@ class Command_team_list_Cog(commands.Cog):
         except Exception as e: await errorResponse(e, command, interaction, error_traceback=traceback.format_exc())
 
 def setup(bot):
-    bot.add_cog(Command_team_list_Cog(bot))
+    bot.add_cog(Command_registrations_Cog(bot))
