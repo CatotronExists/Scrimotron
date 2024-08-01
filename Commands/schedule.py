@@ -643,6 +643,7 @@ class ConfirmationView(nextcord.ui.View):
                                 "totalGames": self.schedule_data['total_games'],
                                 "registrationChannel": self.schedule_data['registration_channel'],
                                 "registrationMessages": [],
+                                "playerIDs": [],
                                 "open": {
                                     "checkin": False,
                                     "poi": False
