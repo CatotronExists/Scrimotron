@@ -11,7 +11,7 @@ from BotData.colors import *
 import re
 
 # Command Lists
-command_list = admin_command_list = ["registrations", "register_trio", "register_duo", "register_solo", "schedule", "help", "configure", "score", "feedback", "scrims", "team_list"]
+command_list = admin_command_list = ["registrations", "register_trio", "register_duo", "register_solo", "schedule", "help", "configure", "score", "feedback", "scrims", "team_list", "poi_list"]
 public_command_list = ["registrations", "register_trio", "register_duo", "register_solo", "help", "feedback"]
 
 # Discord Vars
@@ -632,7 +632,7 @@ async def on_guild_join(guild):
 
         default_config = DB["Scrimotron"]["GlobalData"].find_one({"defaultConfig": {"$exists": True}}) # Get default config
 
-        keys_to_replace = {"defaultMessages": "messages", "defaultConfig": "config", "defaultChannels": "channels"}
+        keys_to_replace = {"defaultMessages": "messages", "defaultConfig": "config", "defaultChannels": "channels", "defaultPresets": "presets"} # Keys to replace
 
         for old_key in keys_to_replace: # Format config
             if old_key in default_config:

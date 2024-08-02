@@ -185,7 +185,6 @@ class PresetView(nextcord.ui.View):
                     self.schedule_data["total_games"] = preset["totalGames"]
                     self.schedule_data["interval"] = preset["interval"]
                     self.schedule_data["recurrence"] = preset["recurrence"]
-                    self.schedule_data["next_interval"] = preset["nextInterval"]
 
                     embed = nextcord.Embed(title=f"Scrim Scheduling: {self.schedule_data['scrim_name']} // Registration Channel", description=f"Input the Channel ID for where registrations will be put", color=White)
                     embed.set_footer(text="Step 11/12")

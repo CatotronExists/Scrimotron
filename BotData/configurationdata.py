@@ -66,6 +66,28 @@ Data = {
             "Options": ["Change Message"], # [Change Message, Edit Type]
         }
     },
+    "Presets": {
+        "Preset 1": {
+            "Type": "Preset",
+            "Options": ["Create Preset", "Edit Preset", "Delete Preset"],
+        },
+        "Preset 2": {
+            "Type": "Preset",
+            "Options": ["Create Preset", "Edit Preset", "Delete Preset"],
+        },
+        "Preset 3": {
+            "Type": "Preset",
+            "Options": ["Create Preset", "Edit Preset", "Delete Preset"],
+        },
+        "Preset 4": {
+            "Type": "Preset",
+            "Options": ["Create Preset", "Edit Preset", "Delete Preset"],
+        },
+        "Preset 5": {
+            "Type": "Preset",
+            "Options": ["Create Preset", "Edit Preset", "Delete Preset"],
+        }
+    },
     "Scrims": {
         "Caster": {
             "Type": "Role",
