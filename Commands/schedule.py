@@ -171,9 +171,9 @@ class PresetView(nextcord.ui.View):
                     await interaction.response.edit_message(embed=embed, view=None)
 
                 elif button == "skip":
-                    embed = nextcord.Embed(title=f"Scrim Scheduling: {self.schedule_data['scrim_name']} // Map Selection", description="Select the maps for the scrim", color=White)
+                    embed = nextcord.Embed(title=f"Scrim Scheduling: {self.schedule_data['scrim_name']} // POI Selection Mode", description="Select a POI selection mode from the dropdown below", color=White)
                     embed.set_footer(text="Step 4/12")
-                    await interaction.response.edit_message(embed=embed, view=MapSelectionView(interaction, self.schedule_data))
+                    await interaction.response.edit_message(embed=embed, view=POISelectionView(interaction, self.schedule_data))
 
                 else:
                     preset = getPresets(interaction.guild.id)[id]["presetData"]
@@ -189,84 +189,6 @@ class PresetView(nextcord.ui.View):
                     embed = nextcord.Embed(title=f"Scrim Scheduling: {self.schedule_data['scrim_name']} // Registration Channel", description=f"Input the Channel ID for where registrations will be put", color=White)
                     embed.set_footer(text="Step 11/12")
                     await interaction.response.edit_message(embed=embed, view=RegistrationChannelView(interaction, self.schedule_data))
-
-            except Exception as e: await errorResponse(e, command, interaction, error_traceback=traceback.format_exc())
-        return callback
-
-class MapSelectionView(nextcord.ui.View):
-    def __init__(self, interaction: nextcord.Interaction, schedule_data):
-        super().__init__(timeout=None)
-        self.interaction = interaction
-        self.schedule_data = schedule_data
-        self.add_item(MapDropdown(interaction, schedule_data))
-
-class MapDropdown(nextcord.ui.Select):
-    def __init__(self, interaction: nextcord.Interaction, schedule_data):
-        self.interaction = interaction
-        self.schedule_data = schedule_data
-
-        options = [
-            nextcord.SelectOption(label="World's Edge", value="Worlds Edge"),
-            nextcord.SelectOption(label="Olympus", value="Olympus"),
-            nextcord.SelectOption(label="King's Canyon", value="Kings Canyon"),
-            nextcord.SelectOption(label="Storm Point", value="Storm Point"),
-            nextcord.SelectOption(label="Broken Moon", value="Broken Moon")
-        ]
-
-        super().__init__(placeholder="Select a Map", min_values=1, max_values=1, options=options)
-
-    async def callback(self, interaction: nextcord.Interaction):
-        try:
-            map_name = interaction.data["values"][0]
-
-            if "map_1" not in self.schedule_data: # No map 1 selected yet
-                self.schedule_data["map_1"] = map_name
-                embed = nextcord.Embed(title=f"Scrim Scheduling: {self.schedule_data['scrim_name']} // Map Selection", description=f"Map 1 has been selected: **{map_name}**\nAdd a Second Map or Proceed to POI Selection Mode", color=White)
-                embed.set_footer(text="Step 4/12")
-                await interaction.response.edit_message(embed=embed, view=MoreMapView(interaction, self.schedule_data))
-
-            else: # Map 1 already selected -> Set Map 2
-                self.schedule_data["map_2"] = map_name
-                embed = nextcord.Embed(title=f"Scrim Scheduling: {self.schedule_data['scrim_name']} // POI Selection Mode", description=f"Select a POI selection mode from the dropdown below", color=White)
-                embed.set_footer(text="Step 5/12")
-                await interaction.response.edit_message(embed=embed, view=POISelectionView(interaction, self.schedule_data))
-
-        except Exception as e: await errorResponse(e, command, interaction, error_traceback=traceback.format_exc())
-
-class MoreMapView(nextcord.ui.View):
-    def __init__(self, interaction: nextcord.Interaction, schedule_data):
-        super().__init__(timeout=None)
-        self.interaction = interaction
-        self.schedule_data = schedule_data
-
-        input_button = nextcord.ui.Button(style=nextcord.ButtonStyle.primary, label="Add Map")
-        input_button.callback = self.create_callback("add map")
-        self.add_item(input_button)
-
-        proceed_button = nextcord.ui.Button(style=nextcord.ButtonStyle.success, label="Proceed")
-        proceed_button.callback = self.create_callback("proceed")
-        self.add_item(proceed_button)
-
-        cancel_button = nextcord.ui.Button(style=nextcord.ButtonStyle.danger, label="Cancel")
-        cancel_button.callback = self.create_callback("cancel")
-        self.add_item(cancel_button)
-
-    def create_callback(self, custom_id):
-        async def callback(interaction: nextcord.Interaction):
-            try:
-                if custom_id == "add map":
-                    embed = nextcord.Embed(title=f"Scrim Scheduling: {self.schedule_data['scrim_name']} // Map Selection", description=f"Map 1: **{self.schedule_data['map_1']}**\nSelect the second map for the scrim", color=White)
-                    embed.set_footer(text="Step 4.5/12")
-                    await interaction.response.edit_message(embed=embed, view=MapSelectionView(interaction, self.schedule_data))
-
-                if custom_id == "proceed":
-                    embed = nextcord.Embed(title=f"Scrim Scheduling: {self.schedule_data['scrim_name']} // POI Selection Mode", description=f"Select a POI selection mode from the dropdown below", color=White)
-                    embed.set_footer(text="Step 5/12")
-                    await interaction.response.edit_message(embed=embed, view=POISelectionView(interaction, self.schedule_data))
-
-                elif custom_id == "cancel":
-                    embed = nextcord.Embed(title=f"Scrim Scheduling: {self.schedule_data['scrim_name']} // Scrim Scheduling Cancelled", description="Scrim Scheduling has been cancelled", color=Red)
-                    await interaction.response.edit_message(embed=embed, view=None)
 
             except Exception as e: await errorResponse(e, command, interaction, error_traceback=traceback.format_exc())
         return callback
@@ -297,13 +219,89 @@ class POIDropdown(nextcord.ui.Select):
             poi_selection_mode = interaction.data["values"][0]
             self.schedule_data["poi_selection_mode"] = poi_selection_mode
 
-            if 'map_2' not in self.schedule_data: self.schedule_data["map_2"] = None # No map 2
-
-            embed = nextcord.Embed(title=f"Scrim Scheduling: {self.schedule_data['scrim_name']} // Team Type", description="Select the team type for the scrim", color=White)
-            embed.set_footer(text="Step 6/12")
-            await interaction.response.edit_message(embed=embed, view=TeamTypeView(interaction, self.schedule_data))
+            embed = nextcord.Embed(title=f"Scrim Scheduling: {self.schedule_data['scrim_name']} // Map Selection", description="Select the maps for the scrim", color=White)
+            embed.set_footer(text="Step 5/12")
+            await interaction.response.edit_message(embed=embed, view=MapSelectionView(interaction, self.schedule_data))
 
         except Exception as e: await errorResponse(e, command, interaction, error_traceback=traceback.format_exc())
+
+class MapSelectionView(nextcord.ui.View):
+    def __init__(self, interaction: nextcord.Interaction, schedule_data):
+        super().__init__(timeout=None)
+        self.interaction = interaction
+        self.schedule_data = schedule_data
+        self.add_item(MapDropdown(interaction, schedule_data))
+
+class MapDropdown(nextcord.ui.Select):
+    def __init__(self, interaction: nextcord.Interaction, schedule_data):
+        self.interaction = interaction
+        self.schedule_data = schedule_data
+
+        options = [
+            nextcord.SelectOption(label="World's Edge", value="Worlds Edge"),
+            nextcord.SelectOption(label="Olympus", value="Olympus"),
+            nextcord.SelectOption(label="King's Canyon", value="Kings Canyon"),
+            nextcord.SelectOption(label="Storm Point", value="Storm Point"),
+            nextcord.SelectOption(label="Broken Moon", value="Broken Moon")
+        ]
+
+        super().__init__(placeholder="Select a Map", min_values=1, max_values=1, options=options)
+
+    async def callback(self, interaction: nextcord.Interaction):
+        try:
+            map_name = interaction.data["values"][0]
+
+            if "map_1" not in self.schedule_data: # No map 1 selected yet
+                self.schedule_data["map_1"] = map_name
+                embed = nextcord.Embed(title=f"Scrim Scheduling: {self.schedule_data['scrim_name']} // Map Selection", description=f"Map 1 has been selected: **{map_name}**\nAdd a Second Map or Proceed to Team Type", color=White)
+                embed.set_footer(text="Step 5/12")
+                await interaction.response.edit_message(embed=embed, view=MoreMapView(interaction, self.schedule_data))
+
+            else: # Map 1 already selected -> Set Map 2
+                self.schedule_data["map_2"] = map_name
+                embed = nextcord.Embed(title=f"Scrim Scheduling: {self.schedule_data['scrim_name']} // Team Type", description=f"Select the team type for the scrim", color=White)
+                embed.set_footer(text="Step 6/12")
+                await interaction.response.edit_message(embed=embed, view=TeamTypeView(interaction, self.schedule_data))
+
+        except Exception as e: await errorResponse(e, command, interaction, error_traceback=traceback.format_exc())
+
+class MoreMapView(nextcord.ui.View):
+    def __init__(self, interaction: nextcord.Interaction, schedule_data):
+        super().__init__(timeout=None)
+        self.interaction = interaction
+        self.schedule_data = schedule_data
+
+        input_button = nextcord.ui.Button(style=nextcord.ButtonStyle.primary, label="Add Map")
+        input_button.callback = self.create_callback("add map")
+        self.add_item(input_button)
+
+        proceed_button = nextcord.ui.Button(style=nextcord.ButtonStyle.success, label="Proceed")
+        proceed_button.callback = self.create_callback("proceed")
+        self.add_item(proceed_button)
+
+        cancel_button = nextcord.ui.Button(style=nextcord.ButtonStyle.danger, label="Cancel")
+        cancel_button.callback = self.create_callback("cancel")
+        self.add_item(cancel_button)
+
+    def create_callback(self, custom_id):
+        async def callback(interaction: nextcord.Interaction):
+            try:
+                if custom_id == "add map":
+                    embed = nextcord.Embed(title=f"Scrim Scheduling: {self.schedule_data['scrim_name']} // Map Selection", description=f"Map 1: **{self.schedule_data['map_1']}**\nSelect the second map for the scrim", color=White)
+                    embed.set_footer(text="Step 5.5/12")
+                    await interaction.response.edit_message(embed=embed, view=MapSelectionView(interaction, self.schedule_data))
+
+                if custom_id == "proceed":
+                    embed = nextcord.Embed(title=f"Scrim Scheduling: {self.schedule_data['scrim_name']} // Team Type", description=f"Select the team type for the scrim", color=White)
+                    embed.set_footer(text="Step 6/12")
+                    await interaction.response.edit_message(embed=embed, view=TeamTypeView(interaction, self.schedule_data))
+
+                elif custom_id == "cancel":
+                    embed = nextcord.Embed(title=f"Scrim Scheduling: {self.schedule_data['scrim_name']} // Scrim Scheduling Cancelled", description="Scrim Scheduling has been cancelled", color=Red)
+                    await interaction.response.edit_message(embed=embed, view=None)
+
+            except Exception as e: await errorResponse(e, command, interaction, error_traceback=traceback.format_exc())
+        return callback
 
 class TeamTypeView(nextcord.ui.View):
     def __init__(self, interaction: nextcord.Interaction, schedule_data):
@@ -332,6 +330,7 @@ class TeamTypeView(nextcord.ui.View):
             try:
                 if team_type != "Cancel":
                     self.schedule_data["team_type"] = team_type
+                    if 'map_2' not in self.schedule_data: self.schedule_data["map_2"] = None # No map 2
 
                     embed = nextcord.Embed(title=f"Scrim Scheduling: {self.schedule_data['scrim_name']} // Max Teams", description="How many teams will be participating in the scrim?\nAny teams that sign up over this limit will become reserve teams", color=White)
                     embed.set_footer(text="Step 7/12")
