@@ -183,8 +183,8 @@ class PresetView(nextcord.ui.View):
                     self.schedule_data["team_type"] = preset["teamType"]
                     self.schedule_data["max_teams"] = preset["maxTeams"]
                     self.schedule_data["total_games"] = preset["totalGames"]
-                    self.schedule_data["interval"] = preset["interval"]
-                    self.schedule_data["recurrence"] = preset["recurrence"]
+                    self.schedule_data["recurrence"] = preset["interval"]
+                    self.schedule_data["interval"] = preset["recurrence"]
 
                     embed = nextcord.Embed(title=f"Scrim Scheduling: {self.schedule_data['scrim_name']} // Registration Channel", description=f"Input the Channel ID for where registrations will be put", color=White)
                     embed.set_footer(text="Step 11/12")
@@ -206,10 +206,10 @@ class POIDropdown(nextcord.ui.Select):
         self.schedule_data = schedule_data
 
         options = [
-            nextcord.SelectOption(label="Simple", value="Simple", description="Simply select a whole POI with nothing extra", emoji="📌"),
-            ### RETURNING SOON #nextcord.SelectOption(label="Advanced", value="Advanced", description="Select POI halves and nearby smaller POIs", emoji="📊")
-            ### SOON #nextcord.SelectOption(label="Random", value="Random", description="POIs are randomly assigned to teams when selections would open", emoji="🎲")
-            nextcord.SelectOption(label="No POIs", value="No POIs", description="Disable POI Selection", emoji="❌")
+            nextcord.SelectOption(label="Standard", value="Standard", description="Simply select a whole POI with nothing extra", emoji="📌"),
+            nextcord.SelectOption(label="ALGS", value="ALGS", description="POI Selection based on ALGS ruleset (Forces Only WE & SP Maps)", emoji="⚔"),
+            nextcord.SelectOption(label="Random", value="Random", description="POIs are randomly assigned to teams", emoji="🎲"),
+            nextcord.SelectOption(label="No POIs", value="No POIs", description="Disable POI Selection for this scrim", emoji="❌")
         ]
 
         super().__init__(placeholder="Select a POI Selection Mode", min_values=1, max_values=1, options=options)
@@ -237,13 +237,20 @@ class MapDropdown(nextcord.ui.Select):
         self.interaction = interaction
         self.schedule_data = schedule_data
 
-        options = [
-            nextcord.SelectOption(label="World's Edge", value="Worlds Edge"),
-            nextcord.SelectOption(label="Olympus", value="Olympus"),
-            nextcord.SelectOption(label="King's Canyon", value="Kings Canyon"),
-            nextcord.SelectOption(label="Storm Point", value="Storm Point"),
-            nextcord.SelectOption(label="Broken Moon", value="Broken Moon")
-        ]
+        if self.schedule_data["poi_selection_mode"] == "ALGS":
+            options = [
+                nextcord.SelectOption(label="World's Edge", value="Worlds Edge"),
+                nextcord.SelectOption(label="Storm Point", value="Storm Point")
+            ]
+
+        else:
+            options = [
+                nextcord.SelectOption(label="World's Edge", value="Worlds Edge"),
+                nextcord.SelectOption(label="Olympus", value="Olympus"),
+                nextcord.SelectOption(label="King's Canyon", value="Kings Canyon"),
+                nextcord.SelectOption(label="Storm Point", value="Storm Point"),
+                nextcord.SelectOption(label="Broken Moon", value="Broken Moon")
+            ]
 
         super().__init__(placeholder="Select a Map", min_values=1, max_values=1, options=options)
 
@@ -607,17 +614,15 @@ class ConfirmationView(nextcord.ui.View):
                     formatted_time = nextcord.utils.format_dt(dateandtime, "f")
 
                     try: # Create Event
-                        #image = ""
-                        await interaction.guild.create_scheduled_event(
+                        event = await interaction.guild.create_scheduled_event(
                             name=self.schedule_data['scrim_name'],
                             description="Scrim Scheduled by Scrimotron",
                             entity_type=nextcord.ScheduledEventEntityType.external,
                             metadata=nextcord.EntityMetadata(location=interaction.guild.name),
                             start_time=discord_time,
-                            end_time=discord_time + datetime.timedelta(hours=3),
+                            end_time=discord_time + datetime.timedelta(hours=4),
                             privacy_level=nextcord.ScheduledEventPrivacyLevel.guild_only,
                             reason="Scrim Scheduled by Scrimotron"
-                            #image=image #Breaks due to limitations in discord API. Images have to be local files not URLs, Potential fix/workaround later?
                             )
 
                         # Calculate Next Interval
@@ -662,7 +667,7 @@ class ConfirmationView(nextcord.ui.View):
                                 },
                                 "IDs": {
                                     "vcCategory": None,
-                                    "discordEvent": None,
+                                    "discordEvent": event.id,
                                     "reserveMessage": None
                                 }},
                             "scrimTeams": {}

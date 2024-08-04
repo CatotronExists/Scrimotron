@@ -544,9 +544,31 @@ async def event_checker(): # Gets events from discord and runs automation
                         elif scrim['scrimConfiguration']['interval']['interval'] == "Fortnightly": next_interval = 1209600
                         elif scrim['scrimConfiguration']['interval']['interval'] == "Monthly": next_interval = 2419200
                         new_epoch = scrim_epoch + next_interval
+                        dateandtime = datetime.datetime.fromtimestamp(int(new_epoch))
+                        discord_time = dateandtime.astimezone(datetime.timezone.utc)
 
                         DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimEpoch": new_epoch}})
                         DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.interval.next": new_epoch + next_interval}})
+
+                        await guild.get_scheduled_event(scrim['scrimConfiguration']['IDs']['discordEvent']).delete()
+                        event = await guild.create_scheduled_event(
+                            name=scrim_name,
+                            description="Scrim Scheduled by Scrimotron",
+                            entity_type=nextcord.ScheduledEventEntityType.external,
+                            metadata=nextcord.EntityMetadata(location=guild.name),
+                            start_time=discord_time,
+                            end_time=discord_time + datetime.timedelta(hours=4),
+                            privacy_level=nextcord.ScheduledEventPrivacyLevel.guild_only,
+                            reason="Scrim Scheduled by Scrimotron"
+                        )
+
+                        messages = getMessages(guild.id)
+                        message = splitMessage(messages["scrimRegistration"], guild.id, scrim_name)
+
+                        channel = guild.get_channel(scrim['scrimConfiguration']['registrationChannel'])
+                        embed = nextcord.Embed(title=message[0], description=message[1], color=White)
+                        await channel.send(embed=embed)
+                        await bot.get_channel
 
                         formatOutput(f"   {scrim_name} has been rescheduled", status="Good", guildID=guildID)
                         await logAction(guildID, "AUTOMATED ACTION", f"Rescheduled {scrim_name}", "Good")
@@ -556,8 +578,17 @@ async def event_checker(): # Gets events from discord and runs automation
                         DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.complete.poi": False}})
                         DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.complete.checkin": False}})
                         DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.complete.setup": False}})
+                        DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.IDs.discordEvent": event.id}})
+                        
+                        messages = getMessages(guildID)
+                        message = splitMessage(messages["scrimRegistration"], guildID, scrim_name)
+
+                        channel = bot.get_channel(scrim["scrimConfiguration"]["registrationChannel"])
+                        embed = nextcord.Embed(title=message[0], description=message[1], color=White)
+                        await channel.send(embed=embed)
 
                     else: # if not repeating, delete
+                        await guild.get_scheduled_event(scrim['scrimConfiguration']['IDs']['discordEvent']).delete()
                         DB[str(guildID)]["ScrimData"].delete_one({"scrimName": scrim_name})
                         await logAction(guildID, "AUTOMATED ACTION", f"Ended {scrim_name}", "Good")
 
