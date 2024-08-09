@@ -1,18 +1,19 @@
 import nextcord
 import traceback
 from nextcord.ext import commands
-from Main import formatOutput, errorResponse, getTeams, getScrims
+from Main import formatOutput, errorResponse, getTeams, getScrims, getScrim
 from BotData.colors import *
 
 class MainView(nextcord.ui.View):
-    def __init__(self, interaction: nextcord.Interaction, scrims):
+    def __init__(self, interaction: nextcord.Interaction, scrims, filter):
         super().__init__(timeout=None)
-        self.add_item(MainDropdown(interaction, scrims))
+        self.add_item(MainDropdown(interaction, scrims, filter))
 
 class MainDropdown(nextcord.ui.Select):
-    def __init__(self, interaction: nextcord.Interaction, scrims):
+    def __init__(self, interaction: nextcord.Interaction, scrims, filter):
         self.interaction = interaction
         self.scrims = scrims
+        self.filter = filter
 
         options = []
 
@@ -21,40 +22,57 @@ class MainDropdown(nextcord.ui.Select):
         super().__init__(placeholder="Select a Scrim", min_values=1, max_values=1, options=options)
 
     async def callback(self, interaction: nextcord.Interaction):
+        await interaction.response.defer(ephemeral=True)
         message = []
         try:
             teams = getTeams(interaction.guild.id, interaction.data["values"][0])
-            team_count = players = subs = 0
+            max_teams = getScrim(interaction.guild.id, interaction.data["values"][0])["scrimConfiguration"]["maxTeams"]
+            team_count = 0
+
             for team, data in teams.items():
-                if data["teamType"] == "Trios":
+                if self.filter == "Checked In":
+                    if data['teamStatus']['checkin'] == True:
+                        message.append(f"{team_count+1} | **{data['teamName']}** ✅")
+                        team_count += 1
+
+                elif self.filter == "Not Checked In":
+                    if data['teamStatus']['checkin'] == False:
+                        message.append(f"{team_count+1} | **{data['teamName']}** ❌")
+                        team_count += 1
+
+                elif self.filter == "POIs Selected":
+                    if data['teamStatus']['poiSelction'] == True:
+                        message.append(f"{team_count+1} | **{data['teamName']}** ✅")
+                        team_count += 1
+
+                elif self.filter == "POIs Not Selected":
+                    if data['teamStatus']['pois'] == False:
+                        message.append(f"{team_count+1} | **{data['teamName']}** ❌")
+                        team_count += 1
+
+                elif self.filter == "Has Subs":
+                    if data["teamSub1"] != None or data["teamSub2"] != None: # 2 Subs
+                        message.append(f"{team_count+1} | **{data['teamName']}** 2 Subs - **S:** {interaction.guild.get_member(int(data['teamSub1'])).mention} & {interaction.guild.get_member(int(data['teamSub2'])).mention}")
+                        team_count += 1
+
+                    elif data["teamSub2"] != None: # 1 Sub
+                        message.append(f"{team_count+1} | **{data['teamName']}** 1 Sub - **S:** {interaction.guild.get_member(int(data['teamSub1'])).mention}")
+                        team_count += 1
+
+                elif self.filter == "No Subs":
                     if data["teamSub1"] == None and data["teamSub2"] == None:
-                        message.append(f"**{data['teamName']}** - **C:** {interaction.guild.get_member(int(data['teamPlayer1'])).mention} - **P:** {interaction.guild.get_member(int(data['teamPlayer2'])).mention} & {interaction.guild.get_member(int(data['teamPlayer3'])).mention}")
-                    elif data["teamSub2"] == None:
-                        subs += 1
-                        message.append(f"**{data['teamName']}** - **C:** {interaction.guild.get_member(int(data['teamPlayer1'])).mention} - **P:** {interaction.guild.get_member(int(data['teamPlayer2'])).mention} & {interaction.guild.get_member(int(data['teamPlayer3'])).mention} - **S:** {interaction.guild.get_member(int(data['teamSub1'])).mention}")
-                    else:
-                        subs += 2
-                        message.append(f"**{data['teamName']}** - **C:** {interaction.guild.get_member(int(data['teamPlayer1'])).mention} - **P:** {interaction.guild.get_member(int(data['teamPlayer2'])).mention} & {interaction.guild.get_member(int(data['teamPlayer3'])).mention} - **S:** {interaction.guild.get_member(int(data['teamSub1'])).mention} & {interaction.guild.get_member(int(data['teamSub2'])).mention}")
-                    players += 3
-                    team_count += 1
+                        message.append(f"{team_count+1} | **{data['teamName']}**")
+                        team_count += 1
 
-                elif data["teamType"] == "Duos":
-                    if data["teamSub1"] == None:
-                        message.append(f"**{data['teamName']}** - **C:** {interaction.guild.get_member(int(data['teamPlayer1'])).mention} - **P:** {interaction.guild.get_member(int(data['teamPlayer2'])).mention}")
-                    else:
-                        subs += 1
-                        message.append(f"**{data['teamName']}** - **C:** {interaction.guild.get_member(int(data['teamPlayer1'])).mention} - **P:** {interaction.guild.get_member(int(data['teamPlayer2'])).mention} - **S:** {interaction.guild.get_member(int(data['teamSub1'])).mention}")
-                    players += 2
-                    team_count += 1
+                else: team_count += 1
 
-                elif data["teamType"] == "Solos":
-                    message.append(f"**{data['teamName']}** - **P:** {interaction.guild.get_member(int(data['teamPlayer1'])).mention}")
-                    players += 1
-                    team_count += 1
-                
-            embed = nextcord.Embed(title="Registered Teams", description='\n'.join(message), color=White)
-            embed.set_footer(text=f"Total Teams: {team_count} | Total Players: {players} | Total Subs: {subs}")
-            await interaction.response.edit_message(embed=embed)
+                if team_count == max_teams: message.append("**-------------------RESERVES BELOW-------------------**")
+
+            if message == []: message.append("**No Teams Meet Filtered Criteria**")
+
+            embed = nextcord.Embed(title=f"Registered Teams - {interaction.data["values"][0]}", description='\n'.join(message), color=White)
+            embed.set_footer(text=f"Filtered By: {self.filter}")
+            await interaction.followup.edit_message(interaction.message.id, embed=embed)
 
         except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
 
@@ -62,8 +80,10 @@ class Command_team_list_Cog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @nextcord.slash_command(name="team_list", description="Shows a list of all the teams that have been registered")
-    async def team_list(self, interaction: nextcord.Interaction):
+    @nextcord.slash_command(name="team_list", description="Shows a list of all the teams that have been registered and filters can be used **Admin Only**", default_member_permissions=(nextcord.Permissions(administrator=True)))
+    async def team_list(self, interaction: nextcord.Interaction,
+        filter = nextcord.SlashOption(name="filter", description="Select a filter", choices=["Checked In", "Not Checked In", "POIs Selected", "POIs Not Selected", "Has Subs", "No Subs"], required=True)):
+
         global command
         command = {"name": interaction.application_command.name, "userID": interaction.user.id, "guildID": interaction.guild.id}
         formatOutput(output=f"/{command['name']} Used by {command['userID']} | @{interaction.user.name}", status="Normal", guildID=command["guildID"])
@@ -74,13 +94,14 @@ class Command_team_list_Cog(commands.Cog):
         try:
             scrims = getScrims(command["guildID"])
             if len(scrims) == 0: # No Scrims
-                embed = nextcord.Embed(title=f"Team List", description="No scrims have been scheduled\nSchedule a scrim using `/schedule`", color=Yellow)
+                embed = nextcord.Embed(title=f"Team List - Filter: {filter}", description="No scrims have been scheduled\nSchedule a scrim using `/schedule`", color=Yellow)
                 await interaction.edit_original_message(embed=embed)
                 return
 
             else: # 1 or more scrims
-                embed = nextcord.Embed(title=f"Team List", description="Use the dropdown below to select a scrim to view teams for", color=White)
-                await interaction.edit_original_message(embed=embed, view=MainView(interaction, scrims))
+                embed = nextcord.Embed(title=f"Team List - Filter: {filter}", description="Use the dropdown below to select a scrim to view teams for", color=White)
+                embed.set_footer(text="Filtering may take some time to process")
+                await interaction.edit_original_message(embed=embed, view=MainView(interaction, scrims, filter))
 
         except Exception as e: await errorResponse(e, command, interaction, error_traceback=traceback.format_exc())
 

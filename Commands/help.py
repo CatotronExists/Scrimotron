@@ -5,29 +5,29 @@ from Main import formatOutput, errorResponse, public_command_list, admin_command
 from BotData.colors import *
 
 help_descriptions = {
-"team_list": {
-    "warning": ":warning: *Majorly Updated in v1.1.0*",
+"registrations": {
+    "warning": ":warning: *Renamed (was `/team_list`)*",
     "small_text": "Shows a full list of teams, players and subs",
-    "description": "Shows a full list of teams with players and subs for selected scrim.\nPlus a total team, player and sub count.\n\n**Usage:** \*optional\*\n/team_list",
-    "last_updated": "Last Updated: v1.1.0 | 26/06/2024",
+    "description": "Shows a full list of teams with players and subs for selected scrim.\nPlus a total team, player and sub count.\n\n**Usage:** \*optional\*\n/registrations",
+    "last_updated": "Last Updated: v1.2.0 | 9/08/2024",
     },
 "register_trio": {
-    "warning": ":warning: *Renamed and Reworked in v1.1.0 (was `/register`)*",
+    "warning": ":warning: *New checks added in v1.2.0*",
     "small_text": "Register a trio team for Scrims",
     "description": "Register a trio team for Scrims.\nInclude 3 players, upto 2 subs and an optional team logo.\nA dropdown will appear with all scheduled scrims to join\n\n**Usage:** \*optional\*\n`/register_trio team_name: player1: player2: player3: *sub1*: *sub2*: *logo*:`",
-    "last_updated": "Last Updated: v1.1.0 | 26/06/2024",
+    "last_updated": "Last Updated: v1.2.0 | 9/08/2024",
     },
 "register_duo": {
-    "warning": ":bulb: *New in v1.1.0*",
+    "warning": ":bulb: *New checks added in v1.2.0*",
     "small_text": "Register a duo team for Scrims",
     "description": "Register a duo team for Scrims.\nInclude 2 players, upto 2 subs and an optional team logo.\nA dropdown will appear with all scheduled scrims to join\n\n**Usage:** \*optional\*\n`/register_duo team_name: player1: player2: *sub1*: *sub2*: *logo*:`",
-    "last_updated": "Last Updated: v1.1.0 | 26/06/2024",
+    "last_updated": "Last Updated: v1.2.0 | 9/08/2024",
     },
 "register_solo": {
-    "warning": ":bulb: *New in v1.1.0*",
+    "warning": ":bulb: *New checks added in v1.2.0*",
     "small_text": "Register a solo team for Scrims",
     "description": "Register a solo team for Scrims.\nInclude 1 player and an optional team logo.\nA dropdown will appear with all scheduled scrims to join\n\n**Usage:** \*optional\*\n`/register_solo player_name: *logo*:`",
-    "last_updated": "Last Updated: v1.1.0 | 26/06/2024",
+    "last_updated": "Last Updated: v1.2.0 | 9/08/2024",
     },
 "schedule": {
     "warning": ":warning: *Majorly Updated in v1.1.0*",
@@ -64,6 +64,36 @@ help_descriptions = {
     "small_text": "View and edit all currently scheduled scrims",
     "description": "**Admin Only**\nView and edit all currently scheduled scrims.\nView all scrims with basic information\n**OR**\nView one scrim with all information and option to make edits.\n\n**Usage:** \*optional\*\n`/scrims`",
     "last_updated": "Last Updated: v1.1.0 | 26/06/2024",
+    },
+"team_list": {
+    "warning": ":bulb: *New in v1.2.0*",
+    "small_text": "Shows a full list of teams, players and subs + filters",
+    "description": "**Admin Only**\nShows a full list of teams with players and subs for selected scrim.\nFilters can be applied to quickly find what your looking for\n\n**Usage:** \*optional\*\n`/team_list filter`",
+    "last_updated": "Last Updated: v1.2.0 | 9/08/2024",
+    },
+"poi_list": {
+    "warning": ":bulb: *New in v1.2.0*",
+    "small_text": "Shows a list of all POIs, filters can be used",
+    "description": "**Admin Only**\nShows a list of all POIs, filters can be used.\nFilters can be applied to quickly find what your looking for\n\n**Usage:** \*optional\*\n`/poi_list filter:`",
+    "last_updated": "Last Updated: v1.2.0 | 9/08/2024",
+    },
+"player_list": {
+    "warning": ":bulb: *New in v1.2.0*",
+    "small_text": "Shows a full list of players, filters can be used",
+    "description": "**Admin Only**\nShows a full list of players.\nFilters can be applied to quickly find what your looking for\n\n**Usage:** \*optional\*\n`/player_list filter:`",
+    "last_updated": "Last Updated: v1.2.0 | 9/08/2024",
+    },
+"give_role": {
+    "warning": ":bulb: *New in v1.2.0*",
+    "small_text": "Give roles to filtered users",
+    "description": "**Admin Only**\nGive roles to filtered users\nEasily give roles to signed up users using filters\n\n**Usage:** \*optional\*\n`/give_role role_id: filter:`",
+    "last_updated": "Last Updated: v1.2.0 | 9/08/2024",
+    },
+"save": {
+    "warning": ":bulb: *New in v1.2.0*",
+    "small_text": "Save all players, checkin status and POI Selection to a channel",
+    "description": "**Admin Only**\nSave all players, checkin status and POI Selection to a channel\nUseful for archiving previous scrims\n\n**Usage:** \*optional\*\n`/save channel_id:`",
+    "last_updated": "Last Updated: v1.2.0 | 9/08/2024",
     },
 }
 

@@ -2,7 +2,7 @@ from discord import TextInputStyle
 import nextcord
 import traceback
 from nextcord.ext import commands
-from Main import formatOutput, errorResponse, getConfigData, getChannels, getMessages, DB, splitMessage, unformatMessage
+from Main import formatOutput, errorResponse, getConfigData, getChannels, getMessages, DB, splitMessage, unformatMessage, getPresets, logAction
 from BotData.colors import *
 from BotData.configurationdata import Data
 
@@ -58,11 +58,11 @@ class SetLogModal(nextcord.ui.Modal):
 
                 else: # Channel Not Found
                     embed = nextcord.Embed(title="Scrimotron Configuration", description="**Log Channel Not Set**\nA log channel is nessesary for the bot to function correctly\nThe log channel should be private and only viewable by mods/admins. Copy the Channel ID and click \"Set\"\n\n**ERROR** | Channel ID Must Be A Valid Channel", color=Red)
-                    await interaction.response.edit_message(embed=embed, view=SetLogView(interaction), ephemeral=True)
+                    await interaction.response.edit_message(embed=embed, view=SetLogView(interaction))
 
             else: # Non numerical input
                 embed = nextcord.Embed(title="Scrimotron Configuration", description="**Log Channel Not Set**\nA log channel is nessesary for the bot to function correctly\nThe log channel should be private and only viewable by mods/admins. Copy the Channel ID and click \"Set\"\n\n**ERROR** | Channel ID Must Be A Numerical Value (e.g 123456789)", color=Red)
-                await interaction.response.edit_message(embed=embed, view=SetLogView(interaction), ephemeral=True)
+                await interaction.response.edit_message(embed=embed, view=SetLogView(interaction))
 
         except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
 
@@ -84,11 +84,13 @@ class MainView(nextcord.ui.View):
         async def callback(interaction: nextcord.Interaction):
             try:
                 config_data = getConfigData(interaction.guild.id)
+                preset_data = getPresets(interaction.guild.id)
                 messages = getMessages(interaction.guild.id)
                 channels = getChannels(interaction.guild.id)
 
                 if option != "RESET": # Not Reset
                     embed = nextcord.Embed(title=f"{"Scrimotron Configuration"} -> {option}", description=f"Change {option} Options", color=White)
+                    iteration = 1
                     for sub_option in Data[option]:
                         if Data[option][sub_option]["Type"] == "Automation": value = f"{config_data[f'toggle{sub_option}']} | Set to {config_data[f'toggle{sub_option}Time']} hour(s) before start"
 
@@ -105,7 +107,12 @@ class MainView(nextcord.ui.View):
                             if channels[f"scrim{sub_option}Channel"] == None: value = "**Not Set**"
                             else: value = f"<#{channels[f'scrim{sub_option}Channel']}>"
 
+                        elif Data[option][sub_option]["Type"] == "Preset":
+                            if preset_data[f'preset{iteration}']['presetName'] == None: value = f"Click to Create Preset"
+                            elif preset_data[f'preset{iteration}']['presetName'] != None: value = f"**{preset_data[f'preset{iteration}']['presetName']}** | Click to View/Edit"
+
                         embed.add_field(name=sub_option, value=value, inline=False)
+                        iteration += 1
                     await interaction.response.edit_message(embed=embed, view=SubView(interaction, option))
 
                 else:
@@ -140,6 +147,7 @@ class SubView(nextcord.ui.View):
 
                 else:
                     config_data = getConfigData(interaction.guild.id)
+                    preset_data = getPresets(interaction.guild.id)
                     messages = getMessages(interaction.guild.id)
                     channels = getChannels(interaction.guild.id)
 
@@ -159,6 +167,10 @@ class SubView(nextcord.ui.View):
                         if channels[f"scrim{sub_option}Channel"] == None: value = "**Not Set**"
                         else: value = f"<#{channels[f'scrim{sub_option}Channel']}>"
 
+                    elif Data[self.option][sub_option]["Type"] == "Preset":
+                        if preset_data[sub_option.replace(" ","").lower()]['presetName'] == None: value = f"Click to Create Preset"
+                        elif preset_data[sub_option.replace(" ","").lower()]['presetName'] != None: value = f"**{preset_data[sub_option.replace(" ","").lower()]['presetName']}** | Click to View/Edit"
+
                     embed.add_field(name=sub_option, value=value, inline=False)
                     await interaction.response.edit_message(embed=embed, view=SubSubView(interaction, self.option, sub_option))
 
@@ -174,6 +186,7 @@ class SubSubView(nextcord.ui.View): # Enable/Disable or change view
         self.sub_option = sub_option
 
         config_data = getConfigData(interaction.guild.id)
+        preset_data = getPresets(interaction.guild.id)
 
         for button_label in Data[option][sub_option]["Options"]:
             current = None
@@ -195,6 +208,14 @@ class SubSubView(nextcord.ui.View): # Enable/Disable or change view
                 else:  # Disable button is enabled
                     button = nextcord.ui.Button(label=button_label, style=nextcord.ButtonStyle.danger, disabled=False)
 
+            elif button_label == "Create Preset":
+                if preset_data[sub_option.replace(" ","").lower()]['presetName'] == None: button = nextcord.ui.Button(label=button_label, style=nextcord.ButtonStyle.blurple)
+                else: button = nextcord.ui.Button(label=button_label, disabled=True, style=nextcord.ButtonStyle.blurple)
+
+            elif button_label == "Delete Preset":
+                if preset_data[sub_option.replace(" ","").lower()]['presetName'] == None: button = nextcord.ui.Button(label=button_label, disabled=True, style=nextcord.ButtonStyle.danger)
+                else: button = nextcord.ui.Button(label=button_label, style=nextcord.ButtonStyle.danger)
+
             else: button = nextcord.ui.Button(label=button_label, style=nextcord.ButtonStyle.blurple)
 
             button.callback = self.create_callback(button_label, option, sub_option)
@@ -207,6 +228,7 @@ class SubSubView(nextcord.ui.View): # Enable/Disable or change view
     def create_callback(self, action, option, sub_option):
         async def callback(interaction: nextcord.Interaction):
             config_data = getConfigData(interaction.guild.id)
+            preset_data = getPresets(interaction.guild.id)
             messages = getMessages(interaction.guild.id)
             channels = getChannels(interaction.guild.id)
 
@@ -255,9 +277,234 @@ class SubSubView(nextcord.ui.View): # Enable/Disable or change view
                         else: embed.add_field(name=sub_option, value=f"Set to <@&{config_data['casterRole']}>", inline=False)
                         await interaction.response.send_modal(modal=ChangeRoleModal(interaction, option, sub_option, action))
 
+                    elif action == "Create Preset":
+                        preset = {"Preset Name": None, "Map 1": None, "Map 2": None, "POI Selection Mode": None, "Team Type": None, "Max Teams": None, "Total Games": None, "Interval": None, "Recurrence": None}
+                        embed = nextcord.Embed(title=f"Scrimotron Configuration -> {option} -> {sub_option} -> {action}", color=White)
+                        for key, data in preset.items(): embed.add_field(name=key, value=data, inline=True)
+                        await interaction.response.edit_message(embed=embed, view=EditPresetView(interaction, option, sub_option, action, preset))
+
+                    elif action == "Edit Preset":
+                        preset = {"Preset Name": preset_data[sub_option.replace(" ","").lower()]['presetName'], "Map 1": preset_data[sub_option.replace(" ","").lower()]['presetData']['map_1'], "Map 2": preset_data[sub_option.replace(" ","").lower()]['presetData']['map_2'], "POI Selection Mode": preset_data[sub_option.replace(" ","").lower()]['presetData']['poiSelectionMode'], "Team Type": preset_data[sub_option.replace(" ","").lower()]['presetData']['teamType'], "Max Teams": preset_data[sub_option.replace(" ","").lower()]['presetData']['maxTeams'], "Total Games": preset_data[sub_option.replace(" ","").lower()]['presetData']['totalGames'], "Interval": preset_data[sub_option.replace(" ","").lower()]['presetData']['interval'], "Recurrence": preset_data[sub_option.replace(" ","").lower()]['presetData']['recurrence']}
+                        embed = nextcord.Embed(title=f"Scrimotron Configuration -> {option} -> {sub_option} -> {action}", color=White)
+                        for key, data in preset.items(): embed.add_field(name=key, value=data, inline=True)
+                        await interaction.response.edit_message(embed=embed, view=EditPresetView(interaction, option, sub_option, action, preset))
+
+                    elif action == "Delete Preset":
+                        embed = nextcord.Embed(title=f"Scrimotron Configuration -> {option} -> {sub_option} -> {action}", description=f"Delete {sub_option}", color=White)
+                        await interaction.response.edit_message(embed=embed, view=DeletePresetView(interaction, option, sub_option, action))
+
             except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
 
         return callback
+
+class DeletePresetView(nextcord.ui.View):
+    def __init__(self, interaction: nextcord.Interaction, option, sub_option, action):
+        super().__init__(timeout=None)
+        self.interaction = interaction
+        self.option = option
+        self.sub_option = sub_option
+        self.action = action
+
+        button = nextcord.ui.Button(label="Delete", style=nextcord.ButtonStyle.danger)
+        button.callback = self.create_callback()
+        self.add_item(button)
+
+    def create_callback(self):
+        async def callback(interaction: nextcord.Interaction):
+            try:
+                await logAction(interaction.guild.id, interaction.user.id, f"Deleted Preset {self.sub_option}", "Configuration Edit")
+                DB[str(interaction.guild.id)]["Config"].update_one({f"presets.{self.sub_option.replace(" ","").lower()}": {"$exists": True}}, {"$set": {f"presets.{self.sub_option.replace(" ","").lower()}.presetName": None, f"presets.{self.sub_option.replace(" ","").lower()}.presetData.map_1": None, f"presets.{self.sub_option.replace(" ","").lower()}.presetData.map_2": None, f"presets.{self.sub_option.replace(" ","").lower()}.presetData.poiSelectionMode": None, f"presets.{self.sub_option.replace(" ","").lower()}.presetData.teamType": None, f"presets.{self.sub_option.replace(" ","").lower()}.presetData.maxTeams": None, f"presets.{self.sub_option.replace(" ","").lower()}.presetData.totalGames": None, f"presets.{self.sub_option.replace(" ","").lower()}.presetData.interval": None, f"presets.{self.sub_option.replace(" ","").lower()}.presetData.recurrence": None}})
+                embed = nextcord.Embed(title=f"Scrimotron Configuration -> {self.option} -> {self.sub_option} -> {self.action}", description=f"**{self.sub_option}** Deleted", color=Red)
+                await interaction.response.edit_message(embed=embed, view=None)
+
+            except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
+        return callback
+
+class EditPresetView(nextcord.ui.View):
+    def __init__(self, interaction: nextcord.Interaction, option, sub_option, action, preset):
+        super().__init__(timeout=None)
+        self.interaction = interaction
+        self.option = option
+        self.sub_option = sub_option
+        self.action = action
+        self.preset = preset
+
+        fields = ["Preset Name", "Map 1", "Map 2", "POI Selection Mode", "POI Selection Time", "Team Type", "Max Teams", "Total Games", "Interval", "Recurrence", "Save", "Cancel"]
+
+        for field in fields:
+            if field == "Save": button = nextcord.ui.Button(label=field, style=nextcord.ButtonStyle.success)
+            elif field == "Cancel": button = nextcord.ui.Button(label=field, style=nextcord.ButtonStyle.danger)
+            else: button = nextcord.ui.Button(label=field, style=nextcord.ButtonStyle.blurple)
+
+            button.callback = self.create_callback(field, preset)
+            self.add_item(button)
+
+    def create_callback(self, field, preset):
+        async def callback(interaction: nextcord.Interaction):
+            try:
+                if field == "Save":
+                    await logAction(interaction.guild.id, interaction.user.id, f"Edit Preset {self.sub_option}", "Configuration Edit")
+                    DB[str(interaction.guild.id)]["Config"].update_one({f"presets.{self.sub_option.replace(" ","").lower()}": {"$exists": True}}, {"$set": {f"presets.{self.sub_option.replace(" ","").lower()}.presetName": preset["Preset Name"], f"presets.{self.sub_option.replace(" ","").lower()}.presetData.map_1": preset["Map 1"], f"presets.{self.sub_option.replace(" ","").lower()}.presetData.map_2": preset["Map 2"], f"presets.{self.sub_option.replace(" ","").lower()}.presetData.poiSelectionMode": preset["POI Selection Mode"], f"presets.{self.sub_option.replace(" ","").lower()}.presetData.teamType": preset["Team Type"], f"presets.{self.sub_option.replace(" ","").lower()}.presetData.maxTeams": preset["Max Teams"], f"presets.{self.sub_option.replace(" ","").lower()}.presetData.totalGames": preset["Total Games"], f"presets.{self.sub_option.replace(" ","").lower()}.presetData.interval": preset["Interval"], f"presets.{self.sub_option.replace(" ","").lower()}.presetData.recurrence": preset["Recurrence"], f"presets.{self.sub_option.replace(" ","").lower()}.presetData.poiSelectionTime": preset["POI Selection Time"]}})
+                    embed = nextcord.Embed(title=f"Scrimotron Configuration -> {self.option} -> {self.sub_option} -> {self.action}", description=f"**{preset['Preset Name']}** Saved", color=Green)
+
+                elif field == "Cancel":
+                    embed = nextcord.Embed(title=f"Scrimotron Configuration -> {self.option} -> {self.sub_option} -> {self.action}", description=f"**{preset['Preset Name']}** Cancelled", color=Red)
+
+                elif field == "Preset Name": view = PresetInputModal(interaction, self.option, self.sub_option, self.action, field, preset)
+                elif field == "Map 1" or field == "Map 2": view = PresetDropdownView(interaction, self.option, self.sub_option, self.action, field, preset)
+                elif field == "POI Selection Mode" or field == "Max Teams" or field == "Total Games" or field == "POI Selection Time": view = PresetDropdownView(interaction, self.option, self.sub_option, self.action, field, preset)
+                elif field == "Team Type" or field == "Interval" or field == "Recurrence": view = PresetButtonView(interaction, self.option, self.sub_option, self.action, field, preset)
+
+                if field == "Preset Name": await interaction.response.send_modal(modal=view)
+                elif field == "Save" or field == "Cancel": await interaction.response.edit_message(embed=embed, view=None)
+                else:
+                    embed = nextcord.Embed(title=f"Scrimotron Configuration -> {self.option} -> {self.sub_option} -> {self.action}", description=f"Edit {field}", color=White)
+                    await interaction.response.edit_message(embed=embed, view=view)
+
+            except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
+        return callback
+
+class PresetDropdownView(nextcord.ui.View):
+    def __init__(self, interaction, option, sub_option, action, field, preset):
+        super().__init__(timeout=None)
+        self.interaction = interaction
+        self.option = option
+        self.sub_option = sub_option
+        self.action = action
+        self.field = field
+        self.preset = preset
+        self.add_item(PresetDropdown(interaction, option, sub_option, action, field, preset))
+
+class PresetDropdown(nextcord.ui.Select):
+    def __init__(self, interaction, option, sub_option, action, field, preset):
+        self.interaction = interaction
+        self.option = option
+        self.sub_option = sub_option
+        self.action = action
+        self.field = field
+        self.preset = preset
+
+        options = []
+
+        if field == "Map 1" or field == "Map 2":
+            options.append(nextcord.SelectOption(label="Kings Canyon", value="Kings Canyon"))
+            options.append(nextcord.SelectOption(label="World's Edge", value="World's Edge"))
+            options.append(nextcord.SelectOption(label="Olympus", value="Olympus"))
+            options.append(nextcord.SelectOption(label="Storm Point", value="Storm Point"))
+            options.append(nextcord.SelectOption(label="Broken Moon", value="Broken Moon"))
+
+        elif field == "POI Selection Mode":
+            options.append(nextcord.SelectOption(label="Standard", value="Standard"))
+            options.append(nextcord.SelectOption(label="ALGS", value="ALGS"))
+            options.append(nextcord.SelectOption(label="Random", value="Random"))
+            options.append(nextcord.SelectOption(label="No POIs", value="No POIs"))
+
+        elif field == "POI Selection Type":
+            options.append(nextcord.SelectOption(label="Start Time", value="Start Time"))
+            options.append(nextcord.SelectOption(label="1", value=1))
+            options.append(nextcord.SelectOption(label="2", value=2))
+            options.append(nextcord.SelectOption(label="3", value=3))
+            options.append(nextcord.SelectOption(label="4", value=4))
+            options.append(nextcord.SelectOption(label="5", value=5))
+            options.append(nextcord.SelectOption(label="6", value=6))
+            options.append(nextcord.SelectOption(label="8", value=8))
+            options.append(nextcord.SelectOption(label="10", value=10))
+            options.append(nextcord.SelectOption(label="12", value=12))
+            options.append(nextcord.SelectOption(label="24", value=24))
+            options.append(nextcord.SelectOption(label="Registration", value="Registration"))
+
+        elif field == "Max Teams":
+            if preset['Team Type'] == "Trios":
+                for number in range(20, 4, -1):
+                    options.append(nextcord.SelectOption(label=number), value=number)
+            else:
+                for number in range(30, 9, -1):
+                    options.append(nextcord.SelectOption(label=number), value=number)
+
+        elif field == "Total Games":
+            for number in range(1, 11):
+                options.append(nextcord.SelectOption(label=number), value=number)
+
+        super().__init__(placeholder=f"Select {field}", min_values=1, max_values=1, options=options)
+
+    async def callback(self, interaction: nextcord.Interaction):
+        try:
+            self.preset[self.field] = interaction.data["values"][0]
+
+            embed = nextcord.Embed(title=f"Scrimotron Configuration -> {self.option} -> {self.sub_option} -> {self.action}", description=f"Edit {self.field}", color=White)
+            for key, data in self.preset.items(): embed.add_field(name=key, value=data, inline=True)
+            await interaction.response.edit_message(embed=embed, view=EditPresetView(interaction, self.option, self.sub_option, self.action, self.preset))
+
+        except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
+
+class PresetButtonView(nextcord.ui.View):
+    def __init__(self, interaction, option, sub_option, action, field, preset):
+        super().__init__(timeout=None)
+        self.interaction = interaction
+        self.option = option
+        self.sub_option = sub_option
+        self.action = action
+        self.field = field
+        self.preset = preset
+
+        if field == "Team Type": buttons = ["Trios", "Duos", "Solo"]
+        elif field == "Interval": buttons = ["Daily", "Weekly", "Fortnightly", "Monthly"]
+        elif field == "Recurrence": buttons = ["Enabled", "Disabled"]
+
+        for button in buttons:
+            button = nextcord.ui.Button(label=button, style=nextcord.ButtonStyle.blurple)
+            button.callback = self.create_callback(button.label)
+            self.add_item(button)
+
+    def create_callback(self, pressed):
+        async def callback(interaction: nextcord.Interaction):
+            try:
+                if self.field == "Recurrence":
+                    if pressed == "Enabled": pressed = True
+                    elif pressed == "Disabled": pressed = False
+
+                self.preset[self.field] = pressed
+
+                embed = nextcord.Embed(title=f"Scrimotron Configuration -> {self.option} -> {self.sub_option} -> {self.action}", description=f"Edit {self.field}", color=White)
+                for key, data in self.preset.items(): embed.add_field(name=key, value=data, inline=True)
+                await interaction.response.edit_message(embed=embed, view=EditPresetView(interaction, self.option, self.sub_option, self.action, self.preset))
+
+            except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
+        return callback
+
+class PresetInputModal(nextcord.ui.Modal):
+    def __init__(self, interaction, option, sub_option, action, field, preset):
+        super().__init__(title=field, timeout=None)
+        self.interaction = interaction
+        self.option = option
+        self.sub_option = sub_option
+        self.action = action
+        self.field = field
+        self.preset = preset
+
+        self.input = nextcord.ui.TextInput(
+            label=field,
+            style=nextcord.TextInputStyle.short,
+            placeholder=f"Enter {field}",
+            min_length=0,
+            max_length=30)
+
+        self.input.callback = self.callback
+        self.add_item(self.input)
+
+    async def callback(self, interaction: nextcord.Interaction):
+        response = self.input.value
+        try:
+            if response != "":
+                if self.field == "Preset Name": self.preset["Preset Name"] = response
+                embed = nextcord.Embed(title=f"Scrimotron Configuration -> {self.option} -> {self.sub_option} -> {self.action}", color=White)
+                for key, data in self.preset.items(): embed.add_field(name=key, value=data, inline=True)
+                await interaction.response.edit_message(embed=embed, view=EditPresetView(interaction, self.option, self.sub_option, self.action, self.preset))
+
+            else:
+                embed = nextcord.Embed(title="Scrimotron Configuration", description=f"Most aspects of the bot can be customised\nPick a button below to get started\n\n**ERROR** | {self.field} Cannot Be Empty", color=White)
+
+        except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
 
 class ChangeTimingModal(nextcord.ui.Modal):
     def __init__(self, interaction, option, sub_option, action):
@@ -275,7 +522,7 @@ class ChangeTimingModal(nextcord.ui.Modal):
 
         self.input.callback = self.callback
         self.add_item(self.input)
-    
+
     async def callback(self, interaction: nextcord.Interaction):
         channels = getChannels(interaction.guild.id)
 
@@ -478,7 +725,7 @@ class EditMessageModal(nextcord.ui.Modal):
             else:
                 DB[str(interaction.guild.id)]["Config"].update_one({"messages": {"$exists": True}}, {"$set": {f"messages.scrim{self.sub_option}": response}})
 
-                if self.sub_option == "Rules" or self.sub_option == "Format": 
+                if self.sub_option == "Rules" or self.sub_option == "Format":
                     channel = interaction.guild.get_channel(channels[f"scrim{self.sub_option}Channel"])
 
                     if channel == None:
@@ -490,7 +737,7 @@ class EditMessageModal(nextcord.ui.Modal):
                         message = splitMessage(getMessages(command['guildID'])[f"scrim{self.sub_option}"], interaction.guild.id, None)
                         embed = nextcord.Embed(title=message[0], description=message[1], color=White)
                         await channel.send(embed=embed)
-                
+
                 else: note = f"Future {self.sub_option.lower()} messages will use the updated message"
 
                 embed = nextcord.Embed(title="Scrimotron Configuration", description=f"**{self.option} -> {self.sub_option} -> {self.action}** Updated\n{note}", color=Green)
@@ -575,12 +822,14 @@ class ResetView(nextcord.ui.View):
                     message_data = DB.Scrimotron.GlobalData.find_one({"defaultMessages": {"$exists": True}})["defaultMessages"]
                     config_data = DB.Scrimotron.GlobalData.find_one({"defaultConfig": {"$exists": True}})["defaultConfig"]
                     channel_data = DB.Scrimotron.GlobalData.find_one({"defaultChannels": {"$exists": True}})["defaultChannels"]
+                    preset_data = DB.Scrimotron.GlobalData.find_one({"defaultPresets": {"$exists": True}})["defaultPresets"]
 
                     DB[str(interaction.guild.id)]["Config"].delete_one({"messages": {"$exists": "true"}})
                     DB[str(interaction.guild.id)]["Config"].delete_one({"config": {"$exists": "true"}})
                     DB[str(interaction.guild.id)]["Config"].delete_one({"channels": {"$exists": "true"}})
+                    DB[str(interaction.guild.id)]["Config"].delete_one({"presets": {"$exists": "true"}})
 
-                    DB[str(interaction.guild.id)]["Config"].insert_one({"messages": message_data, "config": config_data, "channels": channel_data})
+                    DB[str(interaction.guild.id)]["Config"].insert_one({"messages": message_data, "config": config_data, "channels": channel_data, "presets": preset_data})
 
                     DB[str(interaction.guild.id)]["Config"].update_one({"config": {"$exists": True}}, {"$set": {"channels.scrimLogChannel": log_channel}})
                     formatOutput(output=f"Config Data Reset by {interaction.user.id} | @{interaction.user.name}", status="Normal", guildID=interaction.guild.id)

@@ -11,8 +11,8 @@ from BotData.colors import *
 import re
 
 # Command Lists
-command_list = admin_command_list = ["team_list", "register_trio", "register_duo", "register_solo", "schedule", "help", "configure", "score", "feedback", "scrims"]
-public_command_list = ["team_list", "register_trio", "register_duo", "register_solo", "help", "feedback"]
+command_list = admin_command_list = ["registrations", "register_trio", "register_duo", "register_solo", "schedule", "help", "configure", "score", "feedback", "scrims", "team_list", "poi_list", "player_list", "give_role", "save"]
+public_command_list = ["registrations", "register_trio", "register_duo", "register_solo", "help", "feedback"]
 
 # Discord Vars
 intents = nextcord.Intents.all()
@@ -29,17 +29,27 @@ def formatOutput(output, status, guildID):
 ### Error Handler
 async def errorResponse(error, command, interaction: Interaction, error_traceback):
     # RESPOND TO ERROR
-    embed = nextcord.Embed(title="**Error**", description=f"Something went wrong while running `/{command['name']}`.\nDid you mistype an entry or not follow the format?\nError: {error}", color=Red)
-    embed.set_footer(text="Error was automatically sent to Catotron for review.")
-    await interaction.response.edit_message(embed=embed, view=None)
+    try:
+        embed = nextcord.Embed(title="**Error**", description=f"Something went wrong while running `/{command['name']}`.\nDid you mistype an entry or not follow the format?\nError: {error}", color=Red)
+        embed.set_footer(text="Error was automatically sent to Catotron for review.")
+        try:
+            await interaction.response.edit_message(embed=embed, view=None)
+        except:
+            await interaction.response.send_message(embed=embed, view=None)
 
-    formatOutput(output=f"   Something went wrong while running /{command['name']}. Error: {error}", status="Error", guildID=command['guildID'])
+        formatOutput(output=f"   Something went wrong while running /{command['name']}. Error: {error}", status="Error", guildID=command['guildID'])
 
-    # SEND ERROR TO CHANNEL
-    embed = nextcord.Embed(title=f"**Error Report**", description=f"Error while running /{command['name']}.\nError: {error} | {error_traceback}", color=Red)
-    embed.set_footer(text=f"Guild: {command['guildID']} | User: {interaction.user.name}/{command['userID']}")
-    channel = await bot.get_guild(1165569173880049664).fetch_channel(1209621162284425267)
-    await channel.send(embed=embed)
+        # SEND ERROR TO CHANNEL
+        embed = nextcord.Embed(title=f"**Error Report**", description=f"Error while running /{command['name']}.\nError: {error} | {error_traceback}", color=Red)
+        embed.set_footer(text=f"Guild: {command['guildID']} | User: {interaction.user.name}/{command['userID']}")
+        channel = await bot.get_guild(1165569173880049664).fetch_channel(1209621162284425267)
+        await channel.send(embed=embed)
+
+    except Exception as e: # STILL SEND ERROR TO CHANNEL
+        embed = nextcord.Embed(title=f"**Error Report**", description=f"Error while running /{command['name']}.\nError: {error} | {error_traceback}\nFAILED TO NOTIFY USER: {e} {error_traceback}", color=Red)
+        embed.set_footer(text=f"Guild: {command['guildID']} | User: {interaction.user.name}/{command['userID']}")
+        channel = await bot.get_guild(1165569173880049664).fetch_channel(1209621162284425267)
+        await channel.send(embed=embed)
 
 ### Message Splitter
 def splitMessage(base, guildID, scrim_name):
@@ -78,7 +88,7 @@ def splitMessage(base, guildID, scrim_name):
         "{timing_countdown}": f"<t:{scrim_epoch}:R>",
         "{}": "\n"
     }
-    
+
     for part in parts:
         if part in placeholders:
             parts[parts.index(part)] = placeholders[part]
@@ -165,6 +175,10 @@ def getConfigStatus(guildID):
     config_status = DB[str(guildID)]["Config"].find_one({"configureStatus": {"$exists": True}})
     return config_status
 
+def getPresets(guildID):
+    presets = DB[str(guildID)]["Config"].find_one({"presets": {"$exists": True}})["presets"]
+    return presets
+
 ##### Startup Terminal
 start_time = datetime.datetime.now()
 formatOutput(f"{CBOLD} SCRIMOTRON TERMINAL {CLEAR}", status="Good", guildID="STARTUP")
@@ -229,7 +243,7 @@ async def on_ready():
     await startScheduler() # Starts Automation
 
     formatOutput(f"BOT VERSION {BOT_VERSION}", status="Normal", guildID="STARTUP")
-    await bot.change_presence(activity=nextcord.Activity(type=nextcord.ActivityType.watching, name="Scrims 24/7"))
+    await bot.change_presence(activity=nextcord.Activity(type=nextcord.ActivityType.watching, name=f"/help | Version {BOT_VERSION}"))
     formatOutput("---------------------------------", status="Normal", guildID="STARTUP")
 
 ##### Scheduler
@@ -239,7 +253,7 @@ async def registration_updater(config_data, guildID, scrim_name, type): # Edits 
         channels = getChannels(guildID)
         scrim = getScrim(guildID, scrim_name)
         teams = getTeams(guildID, scrim_name)
-        
+
         from Commands.register_trio import AutomatedRegisterView
         for team, team_data in teams.items():
             messageID = team_data["messageID"]
@@ -508,9 +522,9 @@ async def event_checker(): # Gets events from discord and runs automation
                             messageID = data["messageID"]
                             message = await bot.get_channel(scrim["scrimConfiguration"]["registrationChannel"]).fetch_message(messageID)
                             await message.delete()
-                        
+
                         formatOutput(f"   Deleted Registrations for {scrim_name}", status="Good", guildID=guildID)
-                    
+
                     except Exception as e:
                         formatOutput(f"   Failed to delete Registrations for {scrim_name}. Error: {e} {traceback.format_exc()}", status="Error", guildID=guildID)
                         await logAction(guildID, "AUTOMATED ACTION", f"Failed to delete Registrations. Error: {e}", "Error")
@@ -530,22 +544,53 @@ async def event_checker(): # Gets events from discord and runs automation
                         elif scrim['scrimConfiguration']['interval']['interval'] == "Fortnightly": next_interval = 1209600
                         elif scrim['scrimConfiguration']['interval']['interval'] == "Monthly": next_interval = 2419200
                         new_epoch = scrim_epoch + next_interval
+                        dateandtime = datetime.datetime.fromtimestamp(int(new_epoch))
+                        discord_time = dateandtime.astimezone(datetime.timezone.utc)
 
                         DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimEpoch": new_epoch}})
                         DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.interval.next": new_epoch + next_interval}})
 
+                        await guild.get_scheduled_event(scrim['scrimConfiguration']['IDs']['discordEvent']).delete()
+                        event = await guild.create_scheduled_event(
+                            name=scrim_name,
+                            description="Scrim Scheduled by Scrimotron",
+                            entity_type=nextcord.ScheduledEventEntityType.external,
+                            metadata=nextcord.EntityMetadata(location=guild.name),
+                            start_time=discord_time,
+                            end_time=discord_time + datetime.timedelta(hours=4),
+                            privacy_level=nextcord.ScheduledEventPrivacyLevel.guild_only,
+                            reason="Scrim Scheduled by Scrimotron"
+                        )
+
+                        messages = getMessages(guild.id)
+                        message = splitMessage(messages["scrimRegistration"], guild.id, scrim_name)
+
+                        channel = guild.get_channel(scrim['scrimConfiguration']['registrationChannel'])
+                        embed = nextcord.Embed(title=message[0], description=message[1], color=White)
+                        await channel.send(embed=embed)
+                        await bot.get_channel
+
                         formatOutput(f"   {scrim_name} has been rescheduled", status="Good", guildID=guildID)
                         await logAction(guildID, "AUTOMATED ACTION", f"Rescheduled {scrim_name}", "Good")
-                    
+
+                        DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.open.checkin": False}})
+                        DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.open.poi": False}})
+                        DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.complete.poi": False}})
+                        DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.complete.checkin": False}})
+                        DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.complete.setup": False}})
+                        DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.IDs.discordEvent": event.id}})
+
+                        messages = getMessages(guildID)
+                        message = splitMessage(messages["scrimRegistration"], guildID, scrim_name)
+
+                        channel = bot.get_channel(scrim["scrimConfiguration"]["registrationChannel"])
+                        embed = nextcord.Embed(title=message[0], description=message[1], color=White)
+                        await channel.send(embed=embed)
+
                     else: # if not repeating, delete
+                        await guild.get_scheduled_event(scrim['scrimConfiguration']['IDs']['discordEvent']).delete()
                         DB[str(guildID)]["ScrimData"].delete_one({"scrimName": scrim_name})
                         await logAction(guildID, "AUTOMATED ACTION", f"Ended {scrim_name}", "Good")
-    
-                    DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.open.checkin": False}})
-                    DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.open.poi": False}})
-                    DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.complete.poi": False}})
-                    DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.complete.checkin": False}})
-                    DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.complete.setup": False}})
 
                     formatOutput(f"   {scrim_name} has Ended", status="Good", guildID=guildID)
 
@@ -564,17 +609,6 @@ async def event_checker(): # Gets events from discord and runs automation
 
         else:
             formatOutput(f"   No Scheduled Scrims Found for {guildID}", status="Warning", guildID=guildID)
-
-async def presence_updater():
-    presence_list = ["Scrims 24/7", "/help", "Catotron Exist", "Your Scrims", f"Version {BOT_VERSION}"]
-    formatOutput("Running Presence Updater Scheduler...", status="Normal", guildID="BACKGROUND TASK")
-
-    try:
-        await bot.change_presence(activity=nextcord.Activity(type=nextcord.ActivityType.watching, name=randint.choice(presence_list)))
-        formatOutput("   Presence Updated", status="Good", guildID="BACKGROUND TASK")
-
-    except Exception as e:
-        formatOutput(f"   Something went wrong while updating presence. Error: {e} | {traceback.format_exc()}", status="Error", guildID="BACKGROUND TASK")
 
 async def global_messager():
     formatOutput("Running Global Messager Scheduler...", status="Normal", guildID="BACKGROUND TASK")
@@ -607,9 +641,8 @@ async def startScheduler():
     try:
         formatOutput("Starting Scheduler...", status="Normal", guildID="STARTUP")
         scheduler = AsyncIOScheduler()
-        scheduler.add_job(event_checker, 'cron', minute=0) # At xx:00
-        scheduler.add_job(presence_updater, 'cron', minute='*/5') # Every 5 minutes
-        scheduler.add_job(global_messager, 'cron', minute='*/1') # Every minute
+        scheduler.add_job(event_checker, 'cron', minute=0, misfire_grace_time=600) # At xx:00
+        scheduler.add_job(global_messager, 'cron', minute='*/1', misfire_grace_time=30) # Every minute
         scheduler.start()
         formatOutput("Scheduler Started", status="Good", guildID="STARTUP")
 
@@ -630,7 +663,7 @@ async def on_guild_join(guild):
 
         default_config = DB["Scrimotron"]["GlobalData"].find_one({"defaultConfig": {"$exists": True}}) # Get default config
 
-        keys_to_replace = {"defaultMessages": "messages", "defaultConfig": "config", "defaultChannels": "channels"}
+        keys_to_replace = {"defaultMessages": "messages", "defaultConfig": "config", "defaultChannels": "channels", "defaultPresets": "presets"} # Keys to replace
 
         for old_key in keys_to_replace: # Format config
             if old_key in default_config:

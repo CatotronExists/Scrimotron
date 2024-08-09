@@ -16,7 +16,7 @@ maker.py
 **/__pycache__
 
 # Unfinished
-**/Commands/better_select_poi.py
+**/Commands/pois.py
 
 # AI Testing
 **.png
