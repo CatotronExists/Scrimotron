@@ -37,7 +37,7 @@ class MainDropdown(nextcord.ui.Select):
                 mode = scrim['scrimConfiguration']['poiSelectionMode']
 
                 for map in maps:
-                    if map == None: 
+                    if map == None:
                         map_number += 1
                         continue
                     message.append(f"\n**{maps[map]}**")
@@ -55,19 +55,19 @@ class MainDropdown(nextcord.ui.Select):
                     #         if mode == "ALGS":
                     #             if data['ID'] != None: message.append(f"{name} | @{data['ID']}")
                     #             else: continue
-                            
+
                     #         elif mode == "Simple": message.append(name)
-                        
+
                     #         team_count += 1
 
                     #     if self.filter == "POI List": # Add contests & sort
                     #         if mode == "ALGS": message.sort(key=lambda x: int(x.split("@")[1])) # Sort by ALGS @ID
                     #         else: message.sort() # Sort alphabetically for simple pois
-                    
+
                 embed = nextcord.Embed(title=f"POI List - {interaction.data["values"][0]} - Filter: {self.filter}", description='\n'.join(message), color=White)
                 embed.set_footer(text=f"Filtered By: {self.filter}")
                 await interaction.followup.edit_message(interaction.message.id, embed=embed)
-            
+
             else: # No POIs
                 embed = nextcord.Embed(title=f"POI List - {interaction.data["values"][0]} - Filter: {self.filter}", description="POIs are not being chosen for this scrim", color=Yellow)
                 await interaction.followup.edit_message(interaction.message.id, embed=embed)

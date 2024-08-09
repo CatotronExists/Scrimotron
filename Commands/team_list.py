@@ -34,22 +34,22 @@ class MainDropdown(nextcord.ui.Select):
                     if data['teamStatus']['checkin'] == True:
                         message.append(f"{team_count+1} | **{data['teamName']}** ✅")
                         team_count += 1
-                
+
                 elif self.filter == "Not Checked In":
                     if data['teamStatus']['checkin'] == False:
                         message.append(f"{team_count+1} | **{data['teamName']}** ❌")
                         team_count += 1
-                
+
                 elif self.filter == "POIs Selected":
                     if data['teamStatus']['poiSelction'] == True:
                         message.append(f"{team_count+1} | **{data['teamName']}** ✅")
                         team_count += 1
-                
+
                 elif self.filter == "POIs Not Selected":
                     if data['teamStatus']['pois'] == False:
                         message.append(f"{team_count+1} | **{data['teamName']}** ❌")
                         team_count += 1
-                
+
                 elif self.filter == "Has Subs":
                     if data["teamSub1"] != None or data["teamSub2"] != None: # 2 Subs
                         message.append(f"{team_count+1} | **{data['teamName']}** 2 Subs - **S:** {interaction.guild.get_member(int(data['teamSub1'])).mention} & {interaction.guild.get_member(int(data['teamSub2'])).mention}")
@@ -58,7 +58,7 @@ class MainDropdown(nextcord.ui.Select):
                     elif data["teamSub2"] != None: # 1 Sub
                         message.append(f"{team_count+1} | **{data['teamName']}** 1 Sub - **S:** {interaction.guild.get_member(int(data['teamSub1'])).mention}")
                         team_count += 1
-                
+
                 elif self.filter == "No Subs":
                     if data["teamSub1"] == None and data["teamSub2"] == None:
                         message.append(f"{team_count+1} | **{data['teamName']}**")

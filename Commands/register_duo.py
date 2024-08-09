@@ -89,7 +89,7 @@ class RegisterView(nextcord.ui.View):
 
             except Exception as e: await errorResponse(e, command, interaction, error_traceback=traceback.format_exc())
         return callback
-    
+
 class AutomatedRegisterView(nextcord.ui.View):
     def __init__(self, interaction: nextcord.Interaction, type, guildID, channelID):
         super().__init__(timeout=None)
@@ -115,7 +115,7 @@ class AutomatedRegisterView(nextcord.ui.View):
             checkin_button = nextcord.ui.Button(style=nextcord.ButtonStyle.success, label="Check In ✅")
             checkin_button.callback = self.create_callback("checkin", scrim)
             self.add_item(checkin_button)
-        
+
         if type == "poi" or scrim["scrimConfiguration"]["open"]["poi"] == True:
             poi_button = nextcord.ui.Button(style=nextcord.ButtonStyle.success, label="POI Selection")
             poi_button.callback = self.create_callback("poi", scrim)
@@ -197,7 +197,7 @@ class AutomatedRegisterView(nextcord.ui.View):
                     else:
                         embed = nextcord.Embed(title="Only the Team Captain can check in!", color=Red)
                         await interaction.response.send_message(embed=embed, ephemeral=True)
-                
+
                 elif custom_id == "poi":
                     if interaction.user.id == team["teamPlayer1"]:
                         if scrim["scrimConfiguration"]["poiSelectionMode"] == "Simple": embed = nextcord.Embed(title=f"Select a POI for Map 1 ({scrim['scrimConfiguration']['maps']['map1']})", description="Selection Mode: Simple - Pick one POI per map\nGray Buttons indicate no team has chosen that POI yet,\nRed Buttons indicate that another team has picked that POI")
@@ -247,7 +247,7 @@ class POIView(nextcord.ui.View):
                         embed = nextcord.Embed(f"Select a POI for Map 2 ({self.scrim['scrimConfiguration']['maps']['map2']})\nSelection Mode: Simple - Pick one POI per map\nGray Buttons indicate no team has chosen that POI yet,\nRed Buttons indicate that another team has picked that POI")
                         embed.set_footer(text=f"Map 1 Selection - {poi}")
                         await interaction.response.edit_message(embed=embed, view=POIView(interaction, self.scrim, self.team, map_num=2))
-                
+
                 else:
                     message = DB[str(interaction.guild.id)]["TeamData"].find_one({"teamName": self.team["teamName"]})["messageID"]
                     channel = interaction.guild.get_channel(self.scrim["scrimConfiguration"]["registrationChannel"])
@@ -260,7 +260,7 @@ class POIView(nextcord.ui.View):
 
                     embed = nextcord.Embed(title="POI Selection Confirmed", description=f"**{self.team['teamName']}** has selected **{poi}** for **{self.scrim['scrimName']}**", color=Green)
                     await interaction.response.edit_message(embed=embed, view=None)
-        
+
             except Exception as e: await errorResponse(e, command, interaction, error_traceback=traceback.format_exc())
         return callback
 
@@ -287,7 +287,7 @@ class RegisterDropdown(nextcord.ui.Select):
                 for id in self.IDs[1:-2]: # Check if players are in other teams
                     if id == None: continue
                     if id in scrim['scrimConfiguration']['playerIDs']: repeat = True
-                
+
                 if repeat != True:
                     embed = nextcord.Embed(title=self.team_data[0], description=f"Player 1 - <@{self.IDs[1]}>\nPlayer 2 - <@{self.IDs[2]}>\nSub 1 - {self.IDs[6]}")
                     embed.set_thumbnail(url=self.team_data[1])
@@ -297,7 +297,7 @@ class RegisterDropdown(nextcord.ui.Select):
                     DB[str(command['guildID'])]["ScrimData"].update_one({"scrimName": scrim['scrimName']}, {"$push": {"scrimConfiguration.registrationMessages": message.id}})
                     for id in self.IDs[1:-2]:
                         if id != None: DB[str(command['guildID'])]["ScrimData"].update_one({"scrimName": scrim['scrimName']}, {"$push": {"scrimConfiguration.playerIDs": id}})
-                
+
                     DB[str(interaction.guild.id)]["ScrimData"].update_one(
                         {"scrimName": scrim['scrimName']},
                         {"$set": {f"scrimTeams.{self.team_data[0]}": {
@@ -402,8 +402,8 @@ class Command_register_duo_Cog(commands.Cog):
                 else: sub1_display = "**None**"
 
                 IDs = [None, player1, player2, None, sub1, sub1_display, None, None]
-                
-                if player1 == interaction.user.id: 
+
+                if player1 == interaction.user.id:
                     seen = set()
                     for id in IDs[1:-2]: # Check for duplicate players
                         if id == None: continue

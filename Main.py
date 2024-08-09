@@ -34,11 +34,11 @@ async def errorResponse(error, command, interaction: Interaction, error_tracebac
         embed.set_footer(text="Error was automatically sent to Catotron for review.")
         try:
             await interaction.response.edit_message(embed=embed, view=None)
-        except: 
+        except:
             await interaction.response.send_message(embed=embed, view=None)
- 
+
         formatOutput(output=f"   Something went wrong while running /{command['name']}. Error: {error}", status="Error", guildID=command['guildID'])
-        
+
         # SEND ERROR TO CHANNEL
         embed = nextcord.Embed(title=f"**Error Report**", description=f"Error while running /{command['name']}.\nError: {error} | {error_traceback}", color=Red)
         embed.set_footer(text=f"Guild: {command['guildID']} | User: {interaction.user.name}/{command['userID']}")
@@ -88,7 +88,7 @@ def splitMessage(base, guildID, scrim_name):
         "{timing_countdown}": f"<t:{scrim_epoch}:R>",
         "{}": "\n"
     }
-    
+
     for part in parts:
         if part in placeholders:
             parts[parts.index(part)] = placeholders[part]
@@ -253,7 +253,7 @@ async def registration_updater(config_data, guildID, scrim_name, type): # Edits 
         channels = getChannels(guildID)
         scrim = getScrim(guildID, scrim_name)
         teams = getTeams(guildID, scrim_name)
-        
+
         from Commands.register_trio import AutomatedRegisterView
         for team, team_data in teams.items():
             messageID = team_data["messageID"]
@@ -522,9 +522,9 @@ async def event_checker(): # Gets events from discord and runs automation
                             messageID = data["messageID"]
                             message = await bot.get_channel(scrim["scrimConfiguration"]["registrationChannel"]).fetch_message(messageID)
                             await message.delete()
-                        
+
                         formatOutput(f"   Deleted Registrations for {scrim_name}", status="Good", guildID=guildID)
-                    
+
                     except Exception as e:
                         formatOutput(f"   Failed to delete Registrations for {scrim_name}. Error: {e} {traceback.format_exc()}", status="Error", guildID=guildID)
                         await logAction(guildID, "AUTOMATED ACTION", f"Failed to delete Registrations. Error: {e}", "Error")
@@ -572,14 +572,14 @@ async def event_checker(): # Gets events from discord and runs automation
 
                         formatOutput(f"   {scrim_name} has been rescheduled", status="Good", guildID=guildID)
                         await logAction(guildID, "AUTOMATED ACTION", f"Rescheduled {scrim_name}", "Good")
-    
+
                         DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.open.checkin": False}})
                         DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.open.poi": False}})
                         DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.complete.poi": False}})
                         DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.complete.checkin": False}})
                         DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.complete.setup": False}})
                         DB[str(guildID)]["ScrimData"].find_one_and_update({"scrimName": scrim_name}, {"$set": {"scrimConfiguration.IDs.discordEvent": event.id}})
-                        
+
                         messages = getMessages(guildID)
                         message = splitMessage(messages["scrimRegistration"], guildID, scrim_name)
 

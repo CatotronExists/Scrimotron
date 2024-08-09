@@ -12,7 +12,7 @@ MapData = {
         "Climatizer East": {
             "ID": 23,
             "Type": ["ALGS"]
-        },       
+        },
         "Climatizer West": {
             "ID": 22,
             "Type": ["ALGS"]
@@ -113,7 +113,7 @@ MapData = {
             "ID": None,
             "Type": ["Main"]
         },
-    }, 
+    },
     "Olympus":
         {"Bonsai Plaza": {
             "ID": None,
@@ -199,7 +199,7 @@ MapData = {
             "ID": None,
             "Type": ["Main"]
         },
-    }, 
+    },
     "Kings Canyon":
         {"Airbase": {
             "ID": None,
@@ -273,7 +273,7 @@ MapData = {
             "ID": None,
             "Type": ["Main"]
         },
-    }, 
+    },
     "Broken Moon":
         {"Alpha Base": {
             "ID": None,
@@ -347,7 +347,7 @@ MapData = {
             "ID": None,
             "Type": ["Main"]
         },
-    }, 
+    },
     "Storm Point":
         {"Barometer": {
             "ID": None,

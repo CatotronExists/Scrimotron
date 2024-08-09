@@ -110,7 +110,7 @@ class Command_feedback_Cog(commands.Cog):
             embed = nextcord.Embed(title="Feedback Form", description="Select the type of feedback you would like to submit.", color=White)
             embed.set_footer(text="Clicking on any button will immediately open a text input to submit your feedback.")
             await interaction.edit_original_message(embed=embed, view=FeedbackView(interaction))
-        
+
         except Exception as e: await errorResponse(e, command, interaction, error_traceback=traceback.format_exc())
 
 def setup(bot):

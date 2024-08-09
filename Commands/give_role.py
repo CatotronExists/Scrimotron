@@ -29,18 +29,18 @@ class MainDropdown(nextcord.ui.Select):
             for team, data in teams.items():
                 if self.filter == "Captains":
                     await interaction.guild.get_member(int(data['teamPlayer1'])).add_roles(self.role)
-                
+
                 elif self.filter == "Players":
                     if data["teamType"] == "Trios": await interaction.guild.get_member(int(data['teamPlayer1'])).add_roles(self.role), await interaction.guild.get_member(int(data['teamPlayer2'])).add_roles(self.role), await interaction.guild.get_member(int(data['teamPlayer3'])).add_roles(self.role)
                     elif data["teamType"] == "Duos": await interaction.guild.get_member(int(data['teamPlayer1'])).add_roles(self.role), await interaction.guild.get_member(int(data['teamPlayer2'])).add_roles(self.role)
                     elif data["teamType"] == "Solos": await interaction.guild.get_member(int(data['teamPlayer1'])).add_roles(self.role)
-                
+
                 elif self.filter == "Subs":
                     if data["teamSub1"] == None and data["teamSub2"] == None: continue
                     elif data["teamSub2"] == None: await interaction.guild.get_member(int(data['teamSub1'])).add_roles(self.role), await interaction.guild.get_member(int(data['teamSub2'])).add_roles(self.role)
-                    else: await interaction.guild.get_member(int(data['teamSub1'])).add_roles(self.role)                    
-                
-                elif self.filter == "All":                
+                    else: await interaction.guild.get_member(int(data['teamSub1'])).add_roles(self.role)
+
+                elif self.filter == "All":
                     if data["teamType"] == "Trios":
                         await interaction.guild.get_member(int(data['teamPlayer1'])).add_roles(self.role), await interaction.guild.get_member(int(data['teamPlayer2'])).add_roles(self.role), await interaction.guild.get_member(int(data['teamPlayer3'])).add_roles(self.role)
                         if data["teamSub1"] == None and data["teamSub2"] == None: await interaction.guild.get_member(int(data['teamSub1'])).add_roles(self.role), await interaction.guild.get_member(int(data['teamSub2'])).add_roles(self.role)
@@ -81,14 +81,14 @@ class Command_give_role_Cog(commands.Cog):
                 embed = nextcord.Embed(title=f"Give role @{roleID} - Filter: {filter}", description="Role ID must be numerical", color=Red)
                 await interaction.edit_original_message(embed=embed)
                 return
-            
+
             else:
                 role = interaction.guild.get_role(int(roleID))
                 if role == None: # Role not found
                     embed = nextcord.Embed(title=f"Give role @{roleID} - Filter: {filter}", description="Role not found", color=Red)
                     await interaction.edit_original_message(embed=embed)
                     return
-                
+
                 else:
                     scrims = getScrims(command["guildID"])
                     if len(scrims) == 0: # No Scrims

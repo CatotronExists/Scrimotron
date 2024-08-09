@@ -10,7 +10,7 @@ Data = {
             "Options": ["Enable", "Disable", "Change Timing"],
         },
         "Checkin" : {
-            "Type": "Automation",            
+            "Type": "Automation",
             "Options": ["Enable", "Disable", "Change Timing"],
         },
     },

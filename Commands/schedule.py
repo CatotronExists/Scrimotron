@@ -150,11 +150,11 @@ class PresetView(nextcord.ui.View):
             button.callback = self.create_callback(id, preset_name)
             self.add_item(button)
             preset_buttons += 1
-        
+
         if preset_buttons == 0: # No presets set
             button = nextcord.ui.Button(style=nextcord.ButtonStyle.gray, label="No Presets have been created, create them in /configure", disabled=True)
             self.add_item(button)
-        
+
         cancel_button = nextcord.ui.Button(style=nextcord.ButtonStyle.danger, label="Cancel")
         cancel_button.callback = self.create_callback(None, "cancel")
         self.add_item(cancel_button)

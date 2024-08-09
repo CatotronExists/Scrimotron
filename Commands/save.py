@@ -83,13 +83,13 @@ class MainDropdown(nextcord.ui.Select):
                     if scrim_data['scrimConfiguration']['open']['checkin'] != False: message.append(f"**Checkin Status:** {data['teamStatus']['checkin']}")
 
                 if team_count == scrim_data['scrimConfiguration']['maxTeams']: message.append("**-------------------RESERVES BELOW-------------------**")
-            
+
             message.append(f"\n**Total Teams:** {team_count} | **Total Players:** {players} | **Total Subs:** {subs}")
 
             embed = nextcord.Embed(title=f"{scrim_data['scrimName']} - Archive", description='\n'.join(message), color=White)
             embed.set_footer(text=f"Saved by @{interaction.user.name}")
             await interaction.guild.get_channel(int(channelID)).send(embed=embed)
-    
+
             embed = nextcord.Embed(title=f"Save Complete", description=f"Scrim data for **{scrim_data['scrimName']}** has been saved to <#{channelID}>", color=Green)
             await interaction.followup.edit_message(interaction.message.id, embed=embed)
 
@@ -114,15 +114,15 @@ class Command_save_Cog(commands.Cog):
                 embed = nextcord.Embed(title=f"Save Error", description="The channel ID you entered is not a number", color=Red)
                 await interaction.edit_original_message(embed=embed)
                 return
-            
-            else: 
+
+            else:
                 channel = self.bot.get_channel(int(channelID))
                 if channel == None: # Channel not found
                     embed = nextcord.Embed(title=f"Save Error", description="The channel ID you entered was not found", color=Red)
                     await interaction.edit_original_message(embed=embed)
                     return
-                
-                else: 
+
+                else:
                     scrims = getScrims(command["guildID"])
                     if len(scrims) == 0: # No Scrims
                         embed = nextcord.Embed(title=f"Save Select", description="No scrims have been scheduled, there is nothing to save!\nSchedule a scrim using `/schedule`", color=Yellow)

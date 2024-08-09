@@ -115,7 +115,7 @@ class MainInterface(nextcord.ui.View):
                     embed = nextcord.Embed(title=f"Scrim Manager // {self.scrim[0]['scrimName']}", description=f"{self.description}\n\n**Select a setting to edit**", color=White)
                     await interaction.response.edit_message(embed=embed, view=EditView(interaction, self.scrim))
 
-                elif value == "Return": 
+                elif value == "Return":
                     await returnToMain(interaction, scrims=getScrims(command['guildID']), current_view=None, note=None)
 
                 elif value == "Danger Zone":
@@ -224,7 +224,7 @@ class MapView(nextcord.ui.View):
         self.scrim = scrim
 
         buttons = ["Edit Map 1"]
-        if scrim[0]['scrimConfiguration']['maps']['map2'] != None: 
+        if scrim[0]['scrimConfiguration']['maps']['map2'] != None:
             buttons.append("Edit Map 2")
             buttons.append("Remove Map 2")
         else: buttons.append("Add Map 2")
@@ -260,10 +260,10 @@ class MapView(nextcord.ui.View):
 
                     if value == "Edit Map 1" or value == "Edit Map 2":
                         await interaction.response.edit_message(embed=embed, view=MapViewOpen(interaction, self.scrim, map=value.split(" ")[2], action="Edit"))
-                    
+
                     elif value == "Add Map 2":
                         await interaction.response.edit_message(embed=embed, view=MapViewOpen(interaction, self.scrim, map=2, action="Add"))
-                    
+
                     elif value == "Remove Map 2":
                         DB[str(command['guildID'])]["ScrimData"].update_one({"scrimName": self.scrim[0]['scrimName']}, {"$set": {"scrimConfiguration.maps.map2": None}})
                         note = f"Map 2 Removed"
@@ -291,23 +291,23 @@ class MapViewDropdown(nextcord.ui.Select):
         self.scrim = scrim
         self.map = map
         self.action = action
-        
+
         options = []
 
-        if scrim[0]['scrimConfiguration']['maps']['map2'] == None: 
+        if scrim[0]['scrimConfiguration']['maps']['map2'] == None:
             map1 = scrim[0]['scrimConfiguration']['maps']['map1']
             map2 = None
-        
+
         else:
             map1 = scrim[0]['scrimConfiguration']['maps']['map1']
             map2 = scrim[0]['scrimConfiguration']['maps']['map2']
-        
+
         for map in MapData:
             if map == map1 or map == map2: continue
             options.append(nextcord.SelectOption(label=map, value=map))
 
         super().__init__(placeholder="Select a Map", min_values=1, max_values=1, options=options)
-    
+
     async def callback(self, interaction: nextcord.Interaction):
         try:
             if self.action == "Edit":
@@ -335,8 +335,8 @@ class IntervalView(nextcord.ui.View):
             edit_button = nextcord.ui.Button(style=nextcord.ButtonStyle.blurple, label="Edit Interval")
             edit_button.callback = self.create_callback("Edit Interval")
             self.add_item(edit_button)
-        
-        else: 
+
+        else:
             add_button = nextcord.ui.Button(style=nextcord.ButtonStyle.green, label="Add Interval")
             add_button.callback = self.create_callback("Add Interval")
             self.add_item(add_button)
@@ -369,14 +369,14 @@ class IntervalView(nextcord.ui.View):
                     await returnToMain(interaction, scrims=getScrims(command['guildID']), current_view=None, note=None)
 
             except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
-        
+
         return callback
 
 class IntervalViewOpen(nextcord.ui.View):
     def __init__(self, interaction: nextcord.Interaction, scrim, action):
         super().__init__(timeout=None)
         self.add_item(IntervalViewDropdown(interaction, scrim, action))
-    
+
 class IntervalViewDropdown(nextcord.ui.Select):
     def __init__(self, interaction: nextcord.Interaction, scrim, action):
         self.interaction = interaction
@@ -388,7 +388,7 @@ class IntervalViewDropdown(nextcord.ui.Select):
         for option in options:
             if option == self.scrim[0]['scrimConfiguration']['interval']['interval']: continue
             else: option_list.append(nextcord.SelectOption(label=option, value=option))
-        
+
         super().__init__(placeholder="Select an Interval", min_values=1, max_values=1, options=option_list)
 
     async def callback(self, interaction: nextcord.Interaction):

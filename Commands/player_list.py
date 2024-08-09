@@ -33,20 +33,20 @@ class MainDropdown(nextcord.ui.Select):
                 if self.filter == "Captains":
                     message.append(f"{team_count+1} | **{data['teamName']}** - **C:** {interaction.guild.get_member(int(data['teamPlayer1'])).mention}")
                     team_count += 1
-                
+
                 elif self.filter == "Players":
                     if data["teamType"] == "Trios": message.append(f"{team_count+1} | **{data['teamName']}** - **P:** {interaction.guild.get_member(int(data['teamPlayer2'])).mention} & {interaction.guild.get_member(int(data['teamPlayer3'])).mention}")
                     elif data["teamType"] == "Duos": message.append(f"{team_count+1} | **{data['teamName']}** - **P:** {interaction.guild.get_member(int(data['teamPlayer2'])).mention}")
                     elif data["teamType"] == "Solos": message.append(f"{team_count+1} | **{data['teamName']}** - **P:** {interaction.guild.get_member(int(data['teamPlayer1'])).mention}")
                     team_count += 1
-                
+
                 elif self.filter == "Subs":
                     if data["teamSub1"] == None and data["teamSub2"] == None: continue
                     elif data["teamSub2"] == None: message.append(f"{team_count+1} | **{data['teamName']}** - **S:** {interaction.guild.get_member(int(data['teamSub1'])).mention} & {interaction.guild.get_member(int(data['teamSub2'])).mention}")
                     else: message.append(f"{team_count+1} | **{data['teamName']}** - **S:** {interaction.guild.get_member(int(data['teamSub1'])).mention}")
                     team_count += 1
-                
-                elif self.filter == "None":                
+
+                elif self.filter == "None":
                     if data["teamType"] == "Trios":
                         if data["teamSub1"] == None and data["teamSub2"] == None: message.append(f"{team_count+1} | **{data['teamName']}** - **C:** {interaction.guild.get_member(int(data['teamPlayer1'])).mention} - **P:** {interaction.guild.get_member(int(data['teamPlayer2'])).mention} & {interaction.guild.get_member(int(data['teamPlayer3'])).mention}")
                         elif data["teamSub2"] == None: message.append(f"{team_count+1} | **{data['teamName']}** - **C:** {interaction.guild.get_member(int(data['teamPlayer1'])).mention} - **P:** {interaction.guild.get_member(int(data['teamPlayer2'])).mention} & {interaction.guild.get_member(int(data['teamPlayer3'])).mention} - **S:** {interaction.guild.get_member(int(data['teamSub1'])).mention}")
