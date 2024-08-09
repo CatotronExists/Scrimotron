@@ -23,8 +23,8 @@ Final Versions (v1.x.x-FINALx) are the last changes before release, unless break
 ## SCRIMOTRON TOOLKIT (v1.2.0)
 **Major Update v1.2.0 Unpacks new tools to keep scrims running smoothly**
 
-New Tools - (Quickly get much needed information with these tools)
-QOL Presets - (Quickly set up scrims with upto 5 presets)
+New Tools - (Quickly get much needed information with these tools)\
+QOL Presets - (Quickly set up scrims with upto 5 presets)\
 Old Features Revamped - (Quickly speed through previously slow commands)
 
 New, Improved and Revamped features to take a load off from scrim organisers, the tools of scrim management have been cleaned up with Scrimotron TOOLKIT
@@ -36,13 +36,18 @@ New, Improved and Revamped features to take a load off from scrim organisers, th
 - `/register_solo`: Register for a solo scrim (1 Player + team logo & no subs)
 - `/register_duo`: Register for a duo scrim (2 Players + team logo & 1 sub)
 - `/register_trio`: Register for a trio scrim (3 Players + team logo & 2 subs)
-- `/team_list`: Shows a list of all the teams that have been registered
+- `/registrations`: Shows a full list of teams, players and subs
 - `/feedback`: Submit Feedback/Suggestions/Bug Reports to Catotron
 
 - `/configure`: Configure Scrimotron **Admin Only**
 - `/schedule`: Schedule Scrims using a series of menus (Max 5 Scrims at a time) **Admin Only**
 - `/end`: Ends scrims **Admin Only**
 - `/scrims`: View and edit all currently scheduled scrims **Admin Only**
+- `/team_list`: Shows a full list of teams, players and subs + filters **Admin Only**
+- `/poi_list`: Shows a list of all POIs, filters can be used **Admin Only**
+- `/player_list`: Shows a full list of players, filters can be used **Admin Only**
+- `/give_role`: Give roles to filtered users **Admin Only**
+- `/save`: Save all players, checkin status and POI Selection to a channel **Admin Only**
 
 ## Roadmap
 **v1.0.0 is not the end**\
@@ -64,6 +69,8 @@ Keep up to date in the [Dev Branch](https://github.com/CatotronExists/Scrimotron
 **v1.7.0** - Command Overload (December 2024)\
 ||\
 **v1.8.0** - Major QOL Update (January 2024)\
+||\
+**v2.0.0** - ?????? (March 2025)
 \+ Regular updates and bug fixes. Keeping upto date with apex, New maps and Map changes! (Ongoing)
 
 *Roadmap will change overtime, suggest features and shape scrimotron!*

@@ -15,6 +15,9 @@ maker.py
 # Cache
 **/__pycache__
 
+# Unfinished
+**/Commands/pois.py
+
 # AI Testing
 **.png
 text test.py
