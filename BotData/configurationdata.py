@@ -13,10 +13,6 @@ Data = {
             "Type": "Automation",            
             "Options": ["Enable", "Disable", "Change Timing"],
         },
-        "Poi" : {
-            "Type": "Automation",
-            "Options": ["Enable", "Disable", "Change Timing"],
-        }
     },
     "Channels": {
         "Announcement" : {

@@ -329,7 +329,7 @@ class EditPresetView(nextcord.ui.View):
         self.action = action
         self.preset = preset
 
-        fields = ["Preset Name", "Map 1", "Map 2", "POI Selection Mode", "Team Type", "Max Teams", "Total Games", "Interval", "Recurrence", "Save", "Cancel"]
+        fields = ["Preset Name", "Map 1", "Map 2", "POI Selection Mode", "POI Selection Time", "Team Type", "Max Teams", "Total Games", "Interval", "Recurrence", "Save", "Cancel"]
 
         for field in fields:
             if field == "Save": button = nextcord.ui.Button(label=field, style=nextcord.ButtonStyle.success)
@@ -344,7 +344,7 @@ class EditPresetView(nextcord.ui.View):
             try:
                 if field == "Save": 
                     await logAction(interaction.guild.id, interaction.user.id, f"Edit Preset {self.sub_option}", "Configuration Edit")
-                    DB[str(interaction.guild.id)]["Config"].update_one({f"presets.{self.sub_option.replace(" ","").lower()}": {"$exists": True}}, {"$set": {f"presets.{self.sub_option.replace(" ","").lower()}.presetName": preset["Preset Name"], f"presets.{self.sub_option.replace(" ","").lower()}.presetData.map_1": preset["Map 1"], f"presets.{self.sub_option.replace(" ","").lower()}.presetData.map_2": preset["Map 2"], f"presets.{self.sub_option.replace(" ","").lower()}.presetData.poiSelectionMode": preset["POI Selection Mode"], f"presets.{self.sub_option.replace(" ","").lower()}.presetData.teamType": preset["Team Type"], f"presets.{self.sub_option.replace(" ","").lower()}.presetData.maxTeams": preset["Max Teams"], f"presets.{self.sub_option.replace(" ","").lower()}.presetData.totalGames": preset["Total Games"], f"presets.{self.sub_option.replace(" ","").lower()}.presetData.interval": preset["Interval"], f"presets.{self.sub_option.replace(" ","").lower()}.presetData.recurrence": preset["Recurrence"]}})
+                    DB[str(interaction.guild.id)]["Config"].update_one({f"presets.{self.sub_option.replace(" ","").lower()}": {"$exists": True}}, {"$set": {f"presets.{self.sub_option.replace(" ","").lower()}.presetName": preset["Preset Name"], f"presets.{self.sub_option.replace(" ","").lower()}.presetData.map_1": preset["Map 1"], f"presets.{self.sub_option.replace(" ","").lower()}.presetData.map_2": preset["Map 2"], f"presets.{self.sub_option.replace(" ","").lower()}.presetData.poiSelectionMode": preset["POI Selection Mode"], f"presets.{self.sub_option.replace(" ","").lower()}.presetData.teamType": preset["Team Type"], f"presets.{self.sub_option.replace(" ","").lower()}.presetData.maxTeams": preset["Max Teams"], f"presets.{self.sub_option.replace(" ","").lower()}.presetData.totalGames": preset["Total Games"], f"presets.{self.sub_option.replace(" ","").lower()}.presetData.interval": preset["Interval"], f"presets.{self.sub_option.replace(" ","").lower()}.presetData.recurrence": preset["Recurrence"], f"presets.{self.sub_option.replace(" ","").lower()}.presetData.poiSelectionTime": preset["POI Selection Time"]}})
                     embed = nextcord.Embed(title=f"Scrimotron Configuration -> {self.option} -> {self.sub_option} -> {self.action}", description=f"**{preset['Preset Name']}** Saved", color=Green)
                 
                 elif field == "Cancel":
@@ -352,7 +352,7 @@ class EditPresetView(nextcord.ui.View):
     
                 elif field == "Preset Name": view = PresetInputModal(interaction, self.option, self.sub_option, self.action, field, preset)
                 elif field == "Map 1" or field == "Map 2": view = PresetDropdownView(interaction, self.option, self.sub_option, self.action, field, preset)
-                elif field == "POI Selection Mode" or field == "Max Teams" or field == "Total Games": view = PresetDropdownView(interaction, self.option, self.sub_option, self.action, field, preset)
+                elif field == "POI Selection Mode" or field == "Max Teams" or field == "Total Games" or field == "POI Selection Time": view = PresetDropdownView(interaction, self.option, self.sub_option, self.action, field, preset)
                 elif field == "Team Type" or field == "Interval" or field == "Recurrence": view = PresetButtonView(interaction, self.option, self.sub_option, self.action, field, preset)
 
                 if field == "Preset Name": await interaction.response.send_modal(modal=view)
@@ -394,20 +394,36 @@ class PresetDropdown(nextcord.ui.Select):
             options.append(nextcord.SelectOption(label="Broken Moon", value="Broken Moon"))
 
         elif field == "POI Selection Mode":
+            options.append(nextcord.SelectOption(label="Standard", value="Standard"))
+            options.append(nextcord.SelectOption(label="ALGS", value="ALGS"))
+            options.append(nextcord.SelectOption(label="Random", value="Random"))
             options.append(nextcord.SelectOption(label="No POIs", value="No POIs"))
-            options.append(nextcord.SelectOption(label="Simple", value="Simple"))
+        
+        elif field == "POI Selection Type":
+            options.append(nextcord.SelectOption(label="Start Time", value="Start Time"))
+            options.append(nextcord.SelectOption(label="1", value=1))
+            options.append(nextcord.SelectOption(label="2", value=2))
+            options.append(nextcord.SelectOption(label="3", value=3))
+            options.append(nextcord.SelectOption(label="4", value=4))
+            options.append(nextcord.SelectOption(label="5", value=5))
+            options.append(nextcord.SelectOption(label="6", value=6))
+            options.append(nextcord.SelectOption(label="8", value=8))
+            options.append(nextcord.SelectOption(label="10", value=10))
+            options.append(nextcord.SelectOption(label="12", value=12))
+            options.append(nextcord.SelectOption(label="24", value=24))
+            options.append(nextcord.SelectOption(label="Registration", value="Registration"))
 
         elif field == "Max Teams":
             if preset['Team Type'] == "Trios": 
                 for number in range(20, 4, -1):
-                    options.append(nextcord.SelectOption(label=str(number), value=str(number)))
+                    options.append(nextcord.SelectOption(label=number), value=number)
             else:             
                 for number in range(30, 9, -1):
-                    options.append(nextcord.SelectOption(label=str(number), value=str(number)))
+                    options.append(nextcord.SelectOption(label=number), value=number)
 
         elif field == "Total Games":
             for number in range(1, 11):
-                options.append(nextcord.SelectOption(label=str(number), value=str(number)))
+                options.append(nextcord.SelectOption(label=number), value=number)
 
         super().__init__(placeholder=f"Select {field}", min_values=1, max_values=1, options=options)
 
@@ -443,6 +459,10 @@ class PresetButtonView(nextcord.ui.View):
     def create_callback(self, pressed):
         async def callback(interaction: nextcord.Interaction):
             try:
+                if self.field == "Recurrence":
+                    if pressed == "Enabled": pressed = True
+                    elif pressed == "Disabled": pressed = False
+
                 self.preset[self.field] = pressed
 
                 embed = nextcord.Embed(title=f"Scrimotron Configuration -> {self.option} -> {self.sub_option} -> {self.action}", description=f"Edit {self.field}", color=White)

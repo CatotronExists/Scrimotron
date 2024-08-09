@@ -1,7 +1,7 @@
 import nextcord
 import traceback
 from nextcord.ext import commands
-from Main import formatOutput, errorResponse, DB, getScrims, getScrim, getTeam, getMessages, splitMessage, bot
+from Main import formatOutput, errorResponse, DB, getScrims, getScrim, getTeam, getMessages, splitMessage, bot, getConfigData
 from BotData.mapdata import MapData
 from BotData.colors import *
 
@@ -45,11 +45,11 @@ class RegisterView(nextcord.ui.View):
 
                         # Reserve Message Editing
                         if len(msgindex) < scrim['scrimConfiguration']['maxTeams'] - 1: # If there are less than max_teams (-1 to remove unregistered team)
-                            if scrim['scrimConfiguration']['reserveMessage'] != None: # and a reserve message exists, delete it
-                                reserve_message = await interaction.channel.fetch_message(scrim['scrimConfiguration']['reserveMessage'])
+                            if scrim['scrimConfiguration']['IDs']['reserveMessage'] != None: # and a reserve message exists, delete it
+                                reserve_message = await interaction.channel.fetch_message(scrim['scrimConfiguration']['IDs']['reserveMessage'])
                                 await reserve_message.delete()
 
-                                DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim_name}, {"scrimConfiguration.reserveMessage": None})
+                                DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim_name}, {"scrimConfiguration.IDs.reserveMessage": None})
                                 DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim_name}, {"$pull": {"scrimConfiguration.registrationMessages": reserve_message.id}})
 
                         elif len(msgindex) >= scrim['scrimConfiguration']['maxTeams'] - 1: # If there are max_teams or more (-1 to remove unregistered team)
@@ -117,9 +117,10 @@ class AutomatedRegisterView(nextcord.ui.View):
             self.add_item(checkin_button)
         
         if type == "poi" or scrim["scrimConfiguration"]["open"]["poi"] == True:
-            poi_button = nextcord.ui.Button(style=nextcord.ButtonStyle.success, label="POI Selection")
-            poi_button.callback = self.create_callback("poi", scrim)
-            self.add_item(poi_button)
+            if scrim["scrimConfiguration"]["poiSelectionMode"] != "Random":
+                poi_button = nextcord.ui.Button(style=nextcord.ButtonStyle.success, label="POI Selection")
+                poi_button.callback = self.create_callback("poi", scrim)
+                self.add_item(poi_button)
 
     def create_callback(self, custom_id, scrim):
         async def callback(interaction: nextcord.Interaction):
@@ -141,10 +142,10 @@ class AutomatedRegisterView(nextcord.ui.View):
                         # Reserve Message Editing
                         if len(msgindex) < scrim['scrimConfiguration']['maxTeams'] - 1: # If there are less than max_teams (-1 to remove unregistered team)
                             if scrim['scrimConfiguration']['IDs']['reserveMessage'] != None: # and a reserve message exists, delete it
-                                reserve_message = await interaction.channel.fetch_message(scrim['scrimConfiguration']['reserveMessage'])
+                                reserve_message = await interaction.channel.fetch_message(scrim['scrimConfiguration']['IDs']['reserveMessage'])
                                 await reserve_message.delete()
 
-                                DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim["scrimName"]}, {"scrimConfiguration.reserveMessage": None})
+                                DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim["scrimName"]}, {"scrimConfiguration.IDs.reserveMessage": None})
                                 DB[str(interaction.guild.id)]["ScrimData"].update_one({"scrimName": scrim["scrimName"]}, {"$pull": {"scrimConfiguration.registrationMessages": reserve_message.id}})
 
                         elif len(msgindex) >= scrim['scrimConfiguration']['maxTeams'] - 1: # If there are max_teams or more (-1 to remove unregistered team)
@@ -200,18 +201,24 @@ class AutomatedRegisterView(nextcord.ui.View):
                 
                 elif custom_id == "poi":
                     if interaction.user.id == team["teamPlayer1"]:
-                        if scrim["scrimConfiguration"]["poiSelectionMode"] == "Simple": embed = nextcord.Embed(title=f"Select a POI for Map 1 ({scrim['scrimConfiguration']['maps']['map1']})", description="Selection Mode: Simple - Pick one POI per map\nGray Buttons indicate no team has chosen that POI yet,\nRed Buttons indicate that another team has picked that POI")
-                        elif scrim["scrimConfiguration"]["poiSelectionMode"] == "Advanced": embed = nextcord.Embed(title=f"Select a POI for Map 1 ({scrim['scrimConfiguration']['maps']['map1']})", description="Selection Mode: Advanced - Option to pick Secondary POIs and Tridents\nGray Buttons indicate no team has chosen that POI yet,\nRed Buttons indicate that another team has picked that POI")
+                        if scrim["scrimConfiguration"]["poiSelectionMode"] == "Simple": 
+                            embed = nextcord.Embed(title=f"Select a POI for Map 1 ({scrim['scrimConfiguration']['maps']['map1']})", description="Selection Mode: Simple - Pick one POI per map\nGreen Buttons indicate no team has chosen that POI yet\nGray buttons indicate that a POI is selected by another team\nRed Buttons indicate that a POI is at maximum selections")
+                            view = POIView(interaction, scrim, team, map_num=1)
+                        elif scrim["scrimConfiguration"]["poiSelectionMode"] == "ALGS":
+                            embed = nextcord.Embed(title=f"Select a POI for Map 1 ({scrim['scrimConfiguration']['maps']['map1']})", description="Selection Mode: ALGS - Pick one POI per map\nGreen Buttons indicate no team has chosen that POI yet\nGray buttons indicate that a POI is selected by another team\nRed Buttons indicate that a POI is at maximum selections")
+                            view = POIView(interaction, scrim, team, map_num=1)
+                        elif scrim['scrimConfiguration']['poiSelectionMode'] == "Random": 
+                            embed = nextcord.Embed(title="Random POI Selection", description="This scrim is using Random POI Selection, POIs cannot be selected!", color=Red)
+                            view = None
 
-                        await interaction.response.send_message(embed=embed, view=POIView(interaction, scrim, team, map_num=1), ephemeral=True)
+                        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
                     else:
-                        embed = nextcord.Embed(title="Only the Team Captain can open POI Selection!", color=Red)
+                        embed = nextcord.Embed(title="Only the Team Captain can select POIs!", color=Red)
                         await interaction.response.send_message(embed=embed, ephemeral=True)
 
             except Exception as e: await errorResponse(e, command, interaction, error_traceback=traceback.format_exc())
         return callback
-
 
 class POIView(nextcord.ui.View):
     def __init__(self, interaction: nextcord.Interaction, scrim, team, map_num):
@@ -219,13 +226,36 @@ class POIView(nextcord.ui.View):
         self.interaction = interaction
         self.scrim = scrim
         self.team = team
+        max_contests = getConfigData(interaction.guild.id)["maxContests"]
 
-        for poi in MapData[f"{scrim['scrimConfiguration']['maps'][f'map{map_num}']}"]:
-            if poi not in [team["teamPois"][f"map{map_num}"][f"map{map_num}POI"] for team in self.scrim["scrimTeams"].values()]: button = nextcord.ui.Button(label=poi, style=nextcord.ButtonStyle.gray)
-            else: button = nextcord.ui.Button(label=poi, style=nextcord.ButtonStyle.red, disabled=True)
-
-            button.callback = self.create_callback(poi, map_num)
-            self.add_item(button)
+        available_pois = {} # Calculate times taken
+        if scrim['scrimConfiguration']['poiSelectionMode'] == "Standard":
+            for poi, data in MapData[f"{scrim['scrimConfiguration']['maps'][f'map{map_num}']}"].items():
+                available_pois[poi] = 0
+            
+            for team in self.scrim["scrimTeams"].values(): # Add to times picked
+                if team["teamPois"][f"map{map_num}"][f"map{map_num}POI"] != None:
+                    available_pois[poi] += 1
+        
+        elif scrim['scrimConfiguration']['poiSelectionMode'] == "ALGS": 
+            for poi, data in MapData[f"{scrim['scrimConfiguration']['maps'][f'map{map_num}']}"].items():
+                if data["ID"] != None: # Is ALGS POI
+                    available_pois[poi] = 0
+            
+            for team in self.scrim["scrimTeams"].values(): # Add to times picked
+                if team["teamPois"][f"map{map_num}"][f"map{map_num}POI"] != None:
+                    available_pois[poi] += 1
+                
+        for name, number in available_pois.items():
+            if number < max_contests: # Not at max contests
+                button = nextcord.ui.button(style=nextcord.ButtonStyle.green, label=name)
+                button.callback = self.create_callback(name, map_num)
+                self.add_item(button)
+            else: # At max contests
+                button = nextcord.ui.button(style=nextcord.ButtonStyle.red, label=name, disabled=True)
+                self.add_item(button)
+        
+        print(available_pois)
 
     def create_callback(self, poi, map_num):
         async def callback(interaction: nextcord.Interaction):
@@ -245,7 +275,8 @@ class POIView(nextcord.ui.View):
                         await interaction.response.edit_message(embed=embed, view=None)
 
                     else: # Open map 2 selection
-                        embed = nextcord.Embed(f"Select a POI for Map 2 ({self.scrim['scrimConfiguration']['maps']['map2']})\nSelection Mode: Simple - Pick one POI per map\nGray Buttons indicate no team has chosen that POI yet,\nRed Buttons indicate that another team has picked that POI")
+                        if self.scrim["scrimConfiguration"]["poiSelectionMode"] == "Simple": embed = nextcord.Embed(title=f"Select a POI for Map 2 ({self.scrim['scrimConfiguration']['maps']['map2']})", description="Selection Mode: Simple - Pick one POI per map\nGreen Buttons indicate no team has chosen that POI yet\nGray buttons indicate that a POI is selected by another team\nRed Buttons indicate that a POI is at maximum selections")
+                        elif self.scrim["scrimConfiguration"]["poiSelectionMode"] == "ALGS":embed = nextcord.Embed(title=f"Select a POI for Map 2 ({self.scrim['scrimConfiguration']['maps']['map2']})", description="Selection Mode: ALGS - Pick one POI per map\nGreen Buttons indicate no team has chosen that POI yet\nGray buttons indicate that a POI is selected by another team\nRed Buttons indicate that a POI is at maximum selections")
                         embed.set_footer(text=f"Map 1 Selection - {poi}")
                         await interaction.response.edit_message(embed=embed, view=POIView(interaction, self.scrim, self.team, map_num=2))
                 
@@ -254,7 +285,7 @@ class POIView(nextcord.ui.View):
                     embed_title = message.embeds[0].title
                     embed_description = message.embeds[0].description
 
-                    embed = nextcord.Embed(title=embed_title, description=f"POI: {poi}\n{embed_description}")
+                    embed = nextcord.Embed(title=embed_title, description=f"POIs: {poi}\n{embed_description}")
                     await message.edit(embed=embed)
 
                     embed = nextcord.Embed(title="POI Selection Confirmed", description=f"**{self.team['teamName']}** has selected **{poi}** for **{self.scrim['scrimName']}**", color=Green)
@@ -410,7 +441,7 @@ class Command_register_trio_Cog(commands.Cog):
 
                 IDs = [None, player1, player2, player3, sub1, sub2, sub1_display, sub2_display]
 
-                if player1 == interaction.user.id: 
+                if player1 == interaction.user.id or interaction.user.guild_permissions.administrator == True: # Player 1 is the user or the user is an admin
                     seen = set()
                     for id in IDs[1:-2]: # Check for duplicate players
                         if id == None: continue
