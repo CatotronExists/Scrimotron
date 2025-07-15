@@ -12,7 +12,7 @@ from Keys import BOT_TOKEN, DB, BOT_VERSION
 
 # Command Lists
 command_list = admin_command_list = ["registrations", "register", "schedule", "help", "configure", "score", "feedback", "scrims", "team_list", "poi_list", "player_list", "give_role", "save", "poi_draft", "create_team"]
-public_command_list = ["registrations", "register", "help", "feedback"]
+public_command_list = ["registrations", "register", "help", "feedback", "create_team"]
 
 # Discord Vars
 intents = nextcord.Intents.all()
