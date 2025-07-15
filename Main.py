@@ -1,14 +1,14 @@
 import nextcord
-from nextcord import Interaction
-from nextcord.ext import commands
-from Keys import BOT_TOKEN, DB, BOT_VERSION
+import asyncio
 import traceback
 import datetime
+from nextcord import Interaction
+from nextcord.ext import commands
 from datetime import date
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import random as randint
-from BotData.colors import *
-import re
+import asyncio
+from Tasks import *
 
 # Command Lists
 command_list = admin_command_list = ["registrations", "register", "schedule", "help", "configure", "score", "feedback", "scrims", "team_list", "poi_list", "player_list", "give_role", "save", "poi_draft", "create_team"]
