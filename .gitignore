@@ -10,7 +10,6 @@ maker.py
 
 # Template
 **/Commands/atemplate.py
-**/Spreadsheets/Spreadsheet Backup.xlsx
 
 # Cache
 **/__pycache__
@@ -19,5 +18,6 @@ maker.py
 **/Commands/pois.py
 
 # AI Testing
+**/Commands/test_command.py
 **.png
 text test.py
