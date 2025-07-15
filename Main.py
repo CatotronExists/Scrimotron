@@ -27,15 +27,18 @@ def formatOutput(output, status, guildID):
     elif status == "Warning": print(f"{CYELLOW}| {current_time} || {CBOLD} {guildID} {CLEAR} {output} {CLEAR}")
 
 ### Error Handler
-async def errorResponse(error, command, interaction: Interaction, error_traceback):
-    # RESPOND TO ERROR
-    try:
-        embed = nextcord.Embed(title="**Error**", description=f"Something went wrong while running `/{command['name']}`.\nDid you mistype an entry or not follow the format?\nError: {error}", color=Red)
-        embed.set_footer(text="Error was automatically sent to Catotron for review.")
-        try:
-            await interaction.response.edit_message(embed=embed, view=None)
-        except:
-            await interaction.response.send_message(embed=embed, view=None)
+async def errorResponse(error, command, interaction: nextcord.Interaction, error_traceback):
+    embed = nextcord.Embed(title="**Error**", description=f"Something went wrong while running `/{command['name']}`.\nnError: {error}", color=Red)
+    embed.set_footer(text="Error was automatically sent to Catotron for review")
+    try: # Try to edit response message
+        await interaction.response.edit_message(embed=embed, view=None)
+    except: # Try to send as response
+        try: await interaction.response.send_message(embed=embed)
+        except: # Try to send as followup
+            try: await interaction.followup.send(embed=embed)
+            except: # Try to send as new ephemeral message
+                try: await interaction.send(embed=embed, ephemeral=True)
+                except: pass # If all else fails, do nothing
 
         formatOutput(output=f"   Something went wrong while running /{command['name']}. Error: {error}", status="Error", guildID=command['guildID'])
 
