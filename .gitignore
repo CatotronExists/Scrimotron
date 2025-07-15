@@ -1,9 +1,3 @@
-# Notes
-Notes.txt
-
-# Keys
-Keys.py
-
 # Tools
 Database_Interactor.py
 maker.py
@@ -11,13 +5,10 @@ maker.py
 # Template
 **/Commands/atemplate.py
 
+# Other
+Keys.py
+Notes.txt
+Logo.png
+
 # Cache
 **/__pycache__
-
-# Unfinished
-**/Commands/pois.py
-
-# AI Testing
-**/Commands/test_command.py
-**.png
-text test.py
