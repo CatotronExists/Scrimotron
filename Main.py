@@ -559,36 +559,22 @@ async def startScheduler():
         formatOutput(f"Something went wrong while starting scheduler. Error: {e} | {traceback.format_exc()}", status="Error", guildID="STARTUP")
 
 @bot.event
-async def on_guild_join(guild):
+async def on_guild_join(guild: nextcord.guild.Guild):
     try:
         formatOutput(f"Joined {guild.name} ({guild.id})", status="Good", guildID=f"{CBOLD} JOINED GUILD {CLEAR}")
         embed = nextcord.Embed(title="Scrimotron has Arrived", description=f"Ready to Supercharge and automate your scrims? Run `/configure`! and customise the bot to your needs!\n\nOpen Source Apex Scrim Bot.\nhttps://github.com/CatotronExists/Scrimotron", color=White)
-        embed.set_footer(text=f"Created by @Catotron | v1.1.0 MULTIPLEX")
+        embed.set_footer(text=f"Created by @Catotron | {BOT_VERSION}")
         await guild.system_channel.send(embed=embed)
 
-        if str(guild.id) in DB.list_database_names(): # Check for existing DB
-            formatOutput(f"   {guild.name} already has a database", status="Normal", guildID=f"{CBOLD} ON GUILD JOIN {CLEAR}")
+        if str(guild.id) in DB.list_database_names(): # Check for existing guild DB
+            formatOutput(f"   {guild.name} ({guild.id}) already has a database", status="Normal", guildID=f"{CBOLD} ON GUILD JOIN {CLEAR}")
             return
 
-        default_config = DB["Scrimotron"]["GlobalData"].find_one({"defaultConfig": {"$exists": True}}) # Get default config
-
-        keys_to_replace = {"defaultMessages": "messages", "defaultConfig": "config", "defaultChannels": "channels", "defaultPresets": "presets"} # Keys to replace
-
-        for old_key in keys_to_replace: # Format config
-            if old_key in default_config:
-                default_config[keys_to_replace[old_key]] = default_config.pop(old_key)
-
-        # Create Database
-        DB[str(guild.id)]["Main"].insert_one({
-            "guildID": guild.id,
-            "guildName": guild.name,
-            "botJoinDate": date.today().strftime('%d/%m/%Y')})
-
-        DB[str(guild.id)]["Config"].insert_one(default_config) # Insert default config
+        default_config = getDefaults("Config")
+        DB[str(guild.id)]["Config"].insert_one(default_config)
 
     except Exception as e:
         formatOutput(output=f"   Something went wrong while joining {guild.name}. Error: {e} | {traceback.format_exc()}", status="Error", guildID=f"{CBOLD} ON GUILD JOIN {CLEAR}")
-
         embed = nextcord.Embed(title="**Error Encountered**", description=f"There was an issue when joining this server, Catotron has been notifed and this should be fixed soon!", color=Red)
         await guild.system_channel.send(embed=embed)
 
