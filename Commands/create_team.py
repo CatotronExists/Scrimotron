@@ -116,7 +116,7 @@ class create_team_Cog(commands.Cog):
             template["teamLogo"] = team_logo
             template = {team_name: template}
 
-            DB[str(1165569173880049664)]["Teams"].insert_one(template)
+            DB[command["guildID"]]["Teams"].insert_one(template)
 
             embed = nextcord.Embed(title="Team created successfully!", description=f"Your team **{team_name}** has been created.\nYou can now manage your team via `/team`", color=Green)
             await interaction.send(embed=embed, ephemeral=True)
