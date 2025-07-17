@@ -46,29 +46,34 @@ async def errorResponse(error, command, interaction: nextcord.Interaction, error
     channel = await bot.get_guild(1165569173880049664).fetch_channel(1209621162284425267)
     await channel.send(embed=embed)
 
+### Handy Functions
 def getAllGuilds():
     guilds = []
-    for i in DB.list_database_names():
-        if i == "Scrimotron" or i == "local" or i == "admin": continue
-        guilds.append(int(i))
-    return guilds
+    for db in DB.list_database_names():
+        if db == "Scrimotron" or db == "local" or db == "admin": continue # Ignore Global and Default DBs
+        guilds.append(int(db))
 
-def getChannels(guildID):
-    channels = DB[str(guildID)]["Config"].find_one({"config": {"$exists": True}})['channels']
-    return channels
+def getDefaults(type):
+    default_data = DB["Scrimotron"]["Defaults"].find_one({type: {'$exists': True}})[type]
+    default_data = {type: default_data} # Removes ObjectId
+    return default_data
 
-def getTeams(guildID, scrim_name):
-    team_data = {}
-    for team in DB[str(guildID)]["ScrimData"].find_one({"scrimName": scrim_name})['scrimTeams']:
-        key = team
-        data = DB[str(guildID)]["ScrimData"].find_one({"scrimName": scrim_name})['scrimTeams'][team]
-        team_data[key] = data # {teamName: teamData}
+def getGuildConfig(guildID):
+    config_data = DB[str(guildID)]['Config'].find_one({'Config': {'$exists': True}})['Config']
+    return config_data
 
-    return team_data
+def getGuildData(guildID):
+    guild_data = DB[str(guildID)]['GuildData'].find_one({'guildID': guildID})
+    return guild_data
 
-def getTeam(guildID, scrim_name, team_name):
-    team_data = DB[str(guildID)]["ScrimData"].find_one({"scrimName": scrim_name})['scrimTeams'][team_name]
-    return team_data
+def getGuildTeams(guildID, teamName=None): # Specify team_name to get a specific team -> otherwise return all
+    teams = list(DB[str(guildID)]["Teams"].find({}))
+    if teamName:
+        for team in teams:
+            if teamName in team.keys():
+                return team[teamName]
+    else:
+        return teams
 
 def getScrims(guildID):
     scrims = list(DB[str(guildID)]["ScrimData"].find({}))
@@ -82,26 +87,6 @@ def getScrimInfo(guildID, scrim_name): # Remove (All scrim data to come from get
     scrim_data = DB[str(guildID)]["ScrimData"].find_one({"scrimName": scrim_name})
     scrim_info = {"scrimName": scrim_data["scrimName"], "scrimEpoch": scrim_data["scrimEpoch"]}
     return scrim_info
-
-def getConfigData(guildID):
-    config_data = DB[str(guildID)]["Config"].find_one({"config": {"$exists": True}})["config"]
-    return config_data
-
-def getMessages(guildID):
-    messages = DB[str(guildID)]["Config"].find_one({"messages": {"$exists": True}})["messages"]
-    return messages
-
-def getMainData(guildID):
-    main_data = DB[str(guildID)]["Main"].find({})
-    return main_data
-
-def getConfigStatus(guildID):
-    config_status = DB[str(guildID)]["Config"].find_one({"configureStatus": {"$exists": True}})
-    return config_status
-
-def getPresets(guildID):
-    presets = DB[str(guildID)]["Config"].find_one({"presets": {"$exists": True}})["presets"]
-    return presets
 
 ##### Startup Terminal
 start_time = datetime.datetime.now()
