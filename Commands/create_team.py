@@ -103,9 +103,23 @@ class create_team_Cog(commands.Cog):
             await interaction.edit_original_message(embed=embed, view=ButtonView(interaction, permission))
 
             # Save team data to database
+            template = getDefaults("Team")["Team"]
 
-            # embed = nextcord.Embed(title="Team created successfully!", description=f"Your team **{team_name}** has been created.\nYou can now manage your team via /team", color=Green)
-            # await interaction.send(embed=embed, ephemeral=True)
+            template["teamName"] = team_name
+            template["teamCaptain"] = command["userID"]
+            template["teamPlayer2"] = team_player2.id
+            template["teamPlayer3"] = team_player3.id
+            if team_sub1: template["teamSub1"] = team_sub1.id
+            if team_sub2: template["teamSub2"] = team_sub2.id
+            if team_coach: template["teamCoach"] = team_coach.id
+            template["createdAt"] = created_time
+            template["teamLogo"] = team_logo
+            template = {team_name: template}
+
+            DB[str(1165569173880049664)]["Teams"].insert_one(template)
+
+            embed = nextcord.Embed(title="Team created successfully!", description=f"Your team **{team_name}** has been created.\nYou can now manage your team via `/team`", color=Green)
+            await interaction.send(embed=embed, ephemeral=True)
 
         except Exception as e: await errorResponse(e, interaction, traceback.format_exc())
 
