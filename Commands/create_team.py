@@ -43,7 +43,7 @@ class ButtonView(nextcord.ui.View):
         async def callback(interaction: nextcord.Interaction):
             try:
                 pass # Add logic here
-            except Exception as e: await errorResponse(e, interaction, traceback.format_exc())
+            except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
         return callback
 
 class create_team_Cog(commands.Cog):
@@ -163,7 +163,7 @@ class create_team_Cog(commands.Cog):
             embed = nextcord.Embed(title="Team created successfully!", description=f"Your team **{team_name}** has been created.\nYou can now manage your team via `/team`", color=Green)
             await interaction.send(embed=embed, ephemeral=True)
 
-        except Exception as e: await errorResponse(e, interaction, traceback.format_exc())
+        except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
 
 def setup(bot):
     bot.add_cog(create_team_Cog(bot))
