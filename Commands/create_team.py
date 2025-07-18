@@ -148,7 +148,7 @@ class create_team_Cog(commands.Cog):
             template = getDefaults("Team")["Team"]
 
             template["teamName"] = team_name
-            template["teamCaptain"] = command["userID"]
+            template["teamCaptain"] = interaction.user.id
             template["teamPlayer2"] = team_player2.id
             template["teamPlayer3"] = team_player3.id
             if team_sub1: template["teamSub1"] = team_sub1.id
@@ -158,7 +158,7 @@ class create_team_Cog(commands.Cog):
             template["teamLogo"] = team_logo
             template = {team_name: template}
 
-            DB[command["guildID"]]["Teams"].insert_one(template)
+            DB[str(interaction.guild.id)]["Teams"].insert_one(template)
 
             embed = nextcord.Embed(title="Team created successfully!", description=f"Your team **{team_name}** has been created.\nYou can now manage your team via `/team`", color=Green)
             await interaction.send(embed=embed, ephemeral=True)
