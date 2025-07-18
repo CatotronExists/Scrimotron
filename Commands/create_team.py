@@ -147,9 +147,23 @@ class create_team_Cog(commands.Cog):
 
             await interaction.edit_original_message(embed=embed, view=ButtonView(interaction, permission))
 
+            # Create team role
+            role = await interaction.guild.create_role(
+                name=team_name,
+                mentionable=True,
+                color=nextcord.Color.from_rgb(0, 0, 0),
+                reason=f"Scrimotron: Create team role for {team_name}",
+            )
+
+            # Hand out team role
+            for id in player_ids:
+                member = interaction.guild.get_member(id)
+                await member.add_roles(role, reason=f"Scrimotron: Add {member.name} to team {team_name}")
+
             # Save team data to database
             template = getDefaults("Team")["Team"]
 
+            template["roleID"] = role.id
             template["teamName"] = team_name
             template["teamCaptain"] = interaction.user.id
             template["teamPlayer2"] = team_player2.id
