@@ -33,10 +33,10 @@ async def errorResponse(error, command, interaction: nextcord.Interaction, error
     try: # Try to edit response message
         await interaction.response.edit_message(embed=embed, view=None)
     except: # Try to send as response
-        try: await interaction.response.send_message(embed=embed)
+        try: await interaction.response.send_message(embed=embed, ephemeral=True)
         except: # Try to send as followup
-            try: await interaction.followup.send(embed=embed)
-            except: # Try to send as new ephemeral message
+            try: await interaction.followup.send(embed=embed, ephemeral=True)
+            except: # Try to send as new message
                 try: await interaction.send(embed=embed, ephemeral=True)
                 except: pass # If all else fails, do nothing
 
