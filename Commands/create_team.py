@@ -58,7 +58,7 @@ class create_team_Cog(commands.Cog):
         team_sub1: nextcord.Member = nextcord.SlashOption(name="team_sub1", description="The first substitute for your team", required=False),
         team_sub2: nextcord.Member = nextcord.SlashOption(name="team_sub2", description="The second substitute for your team", required=False),
         team_coach: nextcord.Member = nextcord.SlashOption(name="team_coach", description="The coach for your team", required=False),
-        team_logo: str = nextcord.SlashOption(name="team_logo", description="The logo for your team, enter a discord image link", required=False)):
+        team_logo: str = nextcord.SlashOption(name="team_logo", description="The logo for your team, use Dyno's /serverinfo in your server to grab the icon", required=False)):
 
         global command
         command = {'name': interaction.application_command.name, 'guildID': interaction.guild.id, 'userID': interaction.user.id}
@@ -133,15 +133,18 @@ class create_team_Cog(commands.Cog):
             embed.add_field(name="Sub 2", value=team_sub2.mention if team_sub2 else "-# None", inline=True)
             embed.add_field(name="Coach", value=team_coach.mention if team_coach else "-# None", inline=True)
             if team_logo: # If no logo is provided, use a default image
-                if team_logo.startswith("https://cdn.discordapp.com/attachments/"):
+                if team_logo.startswith("https://cdn.discordapp.com/icons/"): # Must submit a link to a server icon, for permanent access
+                    embed.set_thumbnail(url=team_logo)
+                    embed.set_footer(text=f"NOTE: Custom team logo is subject to moderation by server admins. If your logo is removed it will be replaced with a default image.")
+
+                else:
+                    team_logo = placeholder_img
                     embed.set_thumbnail(url=team_logo)
 
-                    # Discord deletes images after 24 hours, new system is required
+            else:
+                team_logo = placeholder_img
+                embed.set_thumbnail(url=team_logo)
 
-                else: 
-                    embed.set_thumbnail(url=placeholder_img)
-
-            else: embed.set_thumbnail(url=placeholder_img)
             await interaction.edit_original_message(embed=embed, view=ButtonView(interaction, permission))
 
             # Save team data to database
