@@ -73,7 +73,13 @@ def getGuildTeams(guildID, teamName=None): # Specify team_name to get a specific
             if teamName in team.keys():
                 return team[teamName]
     else:
-        return teams
+        formatted_list = []
+        for team in teams:
+            for team_name, team in team.items():
+                if team_name != '_id':
+                    formatted_list.append(team)
+
+        return formatted_list
 
 def getScrims(guildID):
     scrims = list(DB[str(guildID)]["ScrimData"].find({}))
