@@ -69,14 +69,57 @@ class create_team_Cog(commands.Cog):
             embed = nextcord.Embed(title="Validating team...", description="This may take a few minutes, please wait", color=White)
             await interaction.edit_original_message(embed=embed)
 
+            player_ids = set() 
+            player_ids.add(interaction.user.id)
+            player_ids.add(team_player2.id)
+            player_ids.add(team_player3.id)
+            if team_sub1: player_ids.add(team_sub1.id)
+            if team_sub2: player_ids.add(team_sub2.id)
+            if team_coach: player_ids.add(team_coach.id)
+
+            # Check if a user is listed multiple times
+            if len(player_ids) < 3 + (1 if team_sub1 else 0) + (1 if team_sub2 else 0) + (1 if team_coach else 0):
+                embed = nextcord.Embed(title="Team Creation Error", description="You cannot have the same player listed multiple times!", color=Red)
+                await interaction.edit_original_message(embed=embed)
+                return
+
             # Check if team is valid (name, players, etc.)
-            #teams = getGuildTeams(interaction.guild.id)
+            teams = getGuildTeams(interaction.guild.id)
+
+            bot_list = checks = []
+            if team_player2.bot == True: bot_list.append(str(team_player2.name))
+            if team_player3.bot == True: bot_list.append(str(team_player3.name))
+            if team_sub1 and team_sub1.bot == True: bot_list.append(str(team_sub1.name))
+            if team_sub2 and team_sub2.bot == True: bot_list.append(str(team_sub2.name))
+            if team_coach and team_coach.bot == True: bot_list.append(str(team_coach.name))
+
+            if len(bot_list) > 0:
+                embed = nextcord.Embed(title="Team Creation Error", description=f"The following users are bots and cannot be added to teams:\n{'\n'.join(bot_list)}", color=Red)
+                await interaction.edit_original_message(embed=embed)
+                return
+
+            for team in teams:
+                if team["teamName"].lower() == team_name.lower(): # Check if name is taken
+                    embed = nextcord.Embed(title="Team Creation Error", description=f"Team name: **{team_name}** is already taken!", color=Red)
+                    await interaction.edit_original_message(embed=embed)
+                    return
+
+                current_team_players = [team["teamCaptain"], team["teamPlayer2"], team["teamPlayer3"]]
+                if team_sub1: current_team_players.append(team["teamSub1"])
+                if team_sub2: current_team_players.append(team["teamSub2"])
+                if team_coach: current_team_players.append(team["teamCoach"])
+
+                for player_id in player_ids:
+                    if player_id in current_team_players:
+                        checks.append(player_id)
+
+            if len(checks) > 0: # If any of the players are already in a team
+                embed = nextcord.Embed(title="Team Creation Error", description=f"The following users are already in a team:\n{', '.join(f'<@{id}>' for id in checks)}", color=Red)
+                await interaction.edit_original_message(embed=embed)
+                return
 
             embed = nextcord.Embed(title="Creating team...", description="This may take a few minutes, please wait", color=White)
             await interaction.edit_original_message(embed=embed)
-
-            #team_template = getDefaults("team_template")
-            # Drop and replace template with new team data
 
             permission = "Captain"
             # Permissions | Admin, Captain, Player, Sub, Coach, Public = Everyone Else
@@ -89,7 +132,6 @@ class create_team_Cog(commands.Cog):
             embed.add_field(name="Sub 1", value=team_sub1.mention if team_sub1 else "-# None", inline=True)
             embed.add_field(name="Sub 2", value=team_sub2.mention if team_sub2 else "-# None", inline=True)
             embed.add_field(name="Coach", value=team_coach.mention if team_coach else "-# None", inline=True)
-            embed.set_footer(text=f"Permission level: {permission}")
             if team_logo: # If no logo is provided, use a default image
                 if team_logo.startswith("https://cdn.discordapp.com/attachments/"):
                     embed.set_thumbnail(url=team_logo)
