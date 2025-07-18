@@ -1,50 +1,12 @@
 import nextcord
 import traceback
-from nextcord.ext import commands
-from Main import formatOutput, errorResponse#, getGuildTeams, getDefaults
-from BotData.colors import *
 import time
+from nextcord.ext import commands
+from Main import formatOutput, errorResponse, getGuildTeams, getDefaults
+from Keys import DB
+from BotData.colors import *
 
 placeholder_img = "https://github.com/user-attachments/assets/126753ee-e9a9-43d0-a21e-cbc32e555ff2"
-
-class ButtonView(nextcord.ui.View):
-    def __init__(self, interaction: nextcord.Interaction, permission):
-        super().__init__(timeout=None)
-        self.interaction = interaction
-        self.permission = permission
-
-        buttons = {
-            "Edit Team Name": {"id": "edit_name", "color": "gray", "Permission": ["Admin", "Captain"]},
-            "Edit Team Logo": {"id": "edit_logo", "color": "gray", "Permission": ["Admin", "Captain"]},
-            "Modify Team Members": {"id": "modify_members", "color": "red", "Permission": ["Admin", "Captain"]},
-            "View Recent Performance": {"id": "view_performance", "color": "main", "Permission": ["Admin", "Captain", "Player", "Sub", "Coach", "Public"]},
-            "View Team Stats": {"id": "view_stats", "color": "main", "Permission": ["Admin", "Captain", "Player", "Sub", "Coach", "Public"]},
-            "Disband Team": {"id": "disband_team", "color": "red", "Permission": ["Captain"]},
-            "Delete Team": {"id": "delete_team", "color": "red", "Permission": ["Admin"]},
-            "Leave Team": {"id": "leave_team", "color": "red", "Permission": ["Player", "Sub", "Coach"]},
-            "Transfer Captain": {"id": "transfer_captain", "color": "red", "Permission": ["Captain"]}
-        }
-
-        for label, data in buttons.items():
-            if self.permission not in data["Permission"] and self.permission != "Admin":
-                continue
-            if data["color"] == "gray":
-                button = nextcord.ui.Button(style=nextcord.ButtonStyle.secondary, label=label)
-            elif data["color"] == "main":
-                button = nextcord.ui.Button(style=nextcord.ButtonStyle.primary, label=label)
-            elif data["color"] == "green":
-                button = nextcord.ui.Button(style=nextcord.ButtonStyle.success, label=label)
-            elif data["color"] == "red":
-                button = nextcord.ui.Button(style=nextcord.ButtonStyle.danger, label=label)
-            button.callback = self.create_callback(data["id"])
-            self.add_item(button)
-
-    def create_callback(self, custom_id):
-        async def callback(interaction: nextcord.Interaction):
-            try:
-                pass # Add logic here
-            except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
-        return callback
 
 class create_team_Cog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -69,7 +31,7 @@ class create_team_Cog(commands.Cog):
             embed = nextcord.Embed(title="Validating team...", description="This may take a few minutes, please wait", color=White)
             await interaction.edit_original_message(embed=embed)
 
-            player_ids = set() 
+            player_ids = set()
             player_ids.add(interaction.user.id)
             player_ids.add(team_player2.id)
             player_ids.add(team_player3.id)
@@ -121,9 +83,6 @@ class create_team_Cog(commands.Cog):
             embed = nextcord.Embed(title="Creating team...", description="This may take a few minutes, please wait", color=White)
             await interaction.edit_original_message(embed=embed)
 
-            permission = "Captain"
-            # Permissions | Admin, Captain, Player, Sub, Coach, Public = Everyone Else
-
             created_time = int(time.time())
             embed = nextcord.Embed(title=team_name, description=f"-# Founded at <t:{created_time}:f>", color=White)
             embed.add_field(name="Captain", value=interaction.user.mention, inline=True)
@@ -145,7 +104,7 @@ class create_team_Cog(commands.Cog):
                 team_logo = placeholder_img
                 embed.set_thumbnail(url=team_logo)
 
-            await interaction.edit_original_message(embed=embed, view=ButtonView(interaction, permission))
+            await interaction.edit_original_message(embed=embed)
 
             # Create team role
             role = await interaction.guild.create_role(
