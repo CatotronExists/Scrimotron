@@ -28,7 +28,7 @@ def formatOutput(output, status, guildID):
 
 ### Error Handler
 async def errorResponse(error, command, interaction: nextcord.Interaction, error_traceback):
-    embed = nextcord.Embed(title="**Error**", description=f"Something went wrong while running `/{command['name']}`.\nnError: {error}", color=Red)
+    embed = nextcord.Embed(title="**Error**", description=f"Something went wrong while running `/{command['name']}`.\nError: {error}", color=Red)
     embed.set_footer(text="Error was automatically sent to Catotron for review")
     try: # Try to edit response message
         await interaction.response.edit_message(embed=embed, view=None)
