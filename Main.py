@@ -67,12 +67,12 @@ def getGuildData(guildID):
     return guild_data
 
 def getGuildTeams(guildID, teamName=None): # Specify team_name to get a specific team -> otherwise return all
-    teams = list(DB[str(guildID)]["Teams"].find({}))
     if teamName:
-        for team in teams:
-            if teamName in team.keys():
-                return team[teamName]
+        team = DB[str(guildID)]["Teams"].find_one({teamName: {'$exists': True}})[teamName]
+        return team
+
     else:
+        teams = list(DB[str(guildID)]["Teams"].find({}))
         formatted_list = []
         for team in teams:
             for team_name, team in team.items():
