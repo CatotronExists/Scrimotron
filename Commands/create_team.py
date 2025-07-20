@@ -91,10 +91,10 @@ class create_team_Cog(commands.Cog):
             embed.add_field(name="Sub 1", value=team_sub1.mention if team_sub1 else "-# None", inline=True)
             embed.add_field(name="Sub 2", value=team_sub2.mention if team_sub2 else "-# None", inline=True)
             embed.add_field(name="Coach", value=team_coach.mention if team_coach else "-# None", inline=True)
+            embed.set_footer(text="This is a preview of your team, please wait while we create it")
             if team_logo: # If no logo is provided, use a default image
                 if team_logo.startswith("https://cdn.discordapp.com/icons/"): # Must submit a link to a server icon, for permanent access
                     embed.set_thumbnail(url=team_logo)
-                    embed.set_footer(text=f"NOTE: Custom team logo is subject to moderation by server admins. If your logo is removed it will be replaced with a default image.")
 
                 else:
                     team_logo = placeholder_img
@@ -136,8 +136,12 @@ class create_team_Cog(commands.Cog):
 
             DB[str(interaction.guild.id)]["Teams"].insert_one(template)
 
-            embed = nextcord.Embed(title="Team created successfully!", description=f"Your team **{team_name}** has been created.\nYou can now manage your team via `/team`", color=Green)
-            await interaction.send(embed=embed, ephemeral=True)
+            embed.set_footer(text=f"Team created successfully! You can now manage your team via /team")
+            await interaction.edit_original_message(embed=embed)
+
+            if team_logo != placeholder_img: # Send notice about custom logos
+                embed = nextcord.Embed(title="Team Logo Notice", description="Custom team logo is subject to moderation by server admins. If your logo is removed it will be replaced with a default image.", color=Yellow)
+                await interaction.followup.send(embed=embed, ephemeral=True)
 
         except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
 
