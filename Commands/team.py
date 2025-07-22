@@ -15,24 +15,30 @@ class ButtonView(nextcord.ui.View):
         self.permission = permission
 
         buttons = {
-            "Edit Team Name": {"id": "edit_name", "color": "gray", "Permission": ["Admin", "Captain"]},
-            "Edit Team Logo": {"id": "edit_logo", "color": "gray", "Permission": ["Admin", "Captain"]},
-            "Modify Team Members": {"id": "modify_members", "color": "red", "Permission": ["Admin", "Captain"]},
-            "View Recent Performance": {"id": "view_performance", "color": "main", "Permission": ["Admin", "Captain", "Player", "Sub", "Coach", "Public"]},
-            "View Team Stats": {"id": "view_stats", "color": "main", "Permission": ["Admin", "Captain", "Player", "Sub", "Coach", "Public"]},
-            "View Logs": {"id": "view_logs", "color": "main", "Permission": ["Admin", "Captain", "Player", "Sub", "Coach", "Public"]},
-            "Disband Team": {"id": "disband_team", "color": "red", "Permission": ["Captain"]},
-            "Delete Team": {"id": "delete_team", "color": "red", "Permission": ["Admin"]},
-            "Leave Team": {"id": "leave_team", "color": "red", "Permission": ["Player", "Sub", "Coach"]},
-            "Transfer Captain": {"id": "transfer_captain", "color": "red", "Permission": ["Admin", "Captain"]}
+            "Edit:": {"id": "edit_placeholder", "color": "gray", "Permission":["Admin", "Captain"], "placeholder": True, "row": 1},
+            "Name": {"id": "edit_name", "color": "gray", "Permission": ["Admin", "Captain"], "placeholder": False, "row": 1},
+            "Logo": {"id": "edit_logo", "color": "gray", "Permission": ["Admin", "Captain"], "placeholder": False, "row": 1},
+            "Members": {"id": "edit_members", "color": "gray", "Permission": ["Admin", "Captain"], "placeholder": False, "row": 1},
+
+            "View:": {"id": "view_placeholder", "color": "main", "Permission":["Admin", "Captain", "Player", "Sub", "Coach", "Public"], "placeholder": True, "row": 2},
+            "Recent Performance": {"id": "view_performance", "color": "main", "Permission": ["Admin", "Captain", "Player", "Sub", "Coach", "Public"], "placeholder": False, "row": 2},
+            "Stats": {"id": "view_stats", "color": "main", "Permission": ["Admin", "Captain", "Player", "Sub", "Coach", "Public"], "placeholder": False, "row": 2},
+            "Logs": {"id": "view_logs", "color": "main", "Permission": ["Admin", "Captain", "Player", "Sub", "Coach", "Public"], "placeholder": False, "row": 2},
+
+            "Danger:": {"id": "danger_placeholder", "color": "red", "Permission":["Admin", "Captain", "Player", "Sub", "Coach"], "placeholder": True, "row": 3},
+            "Disband Team": {"id": "disband_team", "color": "red", "Permission": ["Captain"], "placeholder": False, "row": 3},
+            "Delete Team": {"id": "delete_team", "color": "red", "Permission": ["Admin"], "placeholder": False, "row": 3},
+            "Leave Team": {"id": "leave_team", "color": "red", "Permission": ["Player", "Sub", "Coach"], "placeholder": False, "row": 3},
+            "Transfer Captain": {"id": "transfer_captain", "color": "red", "Permission": ["Admin", "Captain"], "placeholder": False, "row": 3}
         }
 
         for label, data in buttons.items():
             if self.permission not in data["Permission"]: continue
-            if data["color"] == "gray": button = nextcord.ui.Button(style=nextcord.ButtonStyle.secondary, label=label)
-            elif data["color"] == "main": button = nextcord.ui.Button(style=nextcord.ButtonStyle.primary, label=label)
-            elif data["color"] == "green": button = nextcord.ui.Button(style=nextcord.ButtonStyle.success, label=label)
-            elif data["color"] == "red": button = nextcord.ui.Button(style=nextcord.ButtonStyle.danger, label=label)
+            if data["color"] == "red": style = nextcord.ButtonStyle.danger
+            elif data["color"] == "gray": style = nextcord.ButtonStyle.secondary
+            elif data["color"] == "main": style = nextcord.ButtonStyle.primary
+            button = nextcord.ui.Button(style=style, label=label, disabled=data["placeholder"], row=data["row"])
+
             button.callback = self.create_callback(data["id"])
             self.add_item(button)
 
