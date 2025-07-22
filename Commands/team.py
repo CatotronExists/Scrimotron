@@ -39,8 +39,8 @@ class DefaultView(nextcord.ui.View):
             "Members": {"id": "edit_members", "color": "gray", "Permission": ["Admin", "Captain"], "placeholder": False, "row": 1},
 
             "View:": {"id": "view_placeholder", "color": "main", "Permission":["Admin", "Captain", "Player", "Sub", "Coach", "Public"], "placeholder": True, "row": 2},
-            "Recent Performance": {"id": "view_performance", "color": "main", "Permission": ["Admin", "Captain", "Player", "Sub", "Coach", "Public"], "placeholder": False, "row": 2},
-            "Stats": {"id": "view_stats", "color": "main", "Permission": ["Admin", "Captain", "Player", "Sub", "Coach", "Public"], "placeholder": False, "row": 2},
+            "Recent Performance": {"id": "view_recent_performance", "color": "main", "Permission": ["Admin", "Captain", "Player", "Sub", "Coach", "Public"], "placeholder": False, "row": 2},
+            "Stats": {"id": "view_team_stats", "color": "main", "Permission": ["Admin", "Captain", "Player", "Sub", "Coach", "Public"], "placeholder": False, "row": 2},
             "Logs": {"id": "view_logs", "color": "main", "Permission": ["Admin", "Captain", "Player", "Sub", "Coach", "Public"], "placeholder": False, "row": 2},
 
             "Danger:": {"id": "danger_placeholder", "color": "red", "Permission":["Admin", "Captain", "Player", "Sub", "Coach"], "placeholder": True, "row": 3},
@@ -50,8 +50,17 @@ class DefaultView(nextcord.ui.View):
             "Transfer Captain": {"id": "transfer_captain", "color": "red", "Permission": ["Admin", "Captain"], "placeholder": False, "row": 3}
         }
 
+        permssion_overrides = getGuildConfig(interaction.guild.id).get("TeamViewerOverrides")
         for label, data in buttons.items():
             if self.permission not in data["Permission"]: continue
+
+            if self.permission == "Public": # When public permission, check overrides
+                if data["id"] == "view_recent_performance" or data["id"] == "view_team_stats" or data["id"] == "view_logs":
+                    key = data["id"].split('_')
+                    result = []
+                    for part in key[1:]: result.append(part.capitalize())
+                    if not permssion_overrides[f"view{''.join(result)}"]: data["placeholder"] = True
+
             if data["color"] == "red": style = nextcord.ButtonStyle.danger
             elif data["color"] == "gray": style = nextcord.ButtonStyle.secondary
             elif data["color"] == "main": style = nextcord.ButtonStyle.primary
