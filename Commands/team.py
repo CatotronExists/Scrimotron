@@ -2,16 +2,34 @@ import nextcord
 import traceback
 import time
 from nextcord.ext import commands
-from Main import formatOutput, errorResponse, getGuildTeams, getDefaults
+from Main import formatOutput, errorResponse, getGuildTeams, getGuildConfig
 from Keys import DB
 from BotData.colors import *
 
 placeholder_img = "https://github.com/user-attachments/assets/126753ee-e9a9-43d0-a21e-cbc32e555ff2"
 
-class ButtonView(nextcord.ui.View):
-    def __init__(self, interaction: nextcord.Interaction, permission):
+def updateTeam(interaction: nextcord.Interaction, team_name, field, value):
+    if field == "teamName": # Since the team name is being updated, its not as simple as a k:v replace
+        team_data = getGuildTeams(interaction.guild.id, team_name)
+
+        DB[str(interaction.guild.id)]["Teams"].find_one_and_update(
+            {team_name: {'$exists': True}},
+            {"$set": {value: team_data}}
+        )
+
+        DB[str(interaction.guild.id)]["Teams"].find_one_and_update(
+            {team_name: {'$exists': True}},
+            {"$unset": {team_name: ""}}
+        )
+        team_name = value
+
+    DB[str(interaction.guild.id)]["Teams"].find_one_and_update({team_name: {'$exists': True}}, {"$set": {f"{team_name}.{field}": value}})
+
+class DefaultView(nextcord.ui.View):
+    def __init__(self, interaction: nextcord.Interaction, team_name, permission):
         super().__init__(timeout=None)
         self.interaction = interaction
+        self.team_name = team_name
         self.permission = permission
 
         buttons = {
@@ -45,9 +63,39 @@ class ButtonView(nextcord.ui.View):
     def create_callback(self, custom_id):
         async def callback(interaction: nextcord.Interaction):
             try:
-                pass # Add logic here
+                if custom_id == "edit_name" or custom_id == "edit_logo": await interaction.response.send_modal(TextModal(interaction, self.team_name, self.permission, name=custom_id.split('_')[1]))
+                elif "view_" in custom_id: pass
             except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
         return callback
+
+class TextModal(nextcord.ui.Modal):
+    def __init__(self, interaction: nextcord.Interaction, team_name, permission, name):
+        super().__init__(title=name, timeout=None)
+        self.interaction = interaction
+        self.team_name = team_name
+        self.permission = permission
+        self.name = name
+
+        if name == "name": params = {"label": "Edit Team Name", "placeholder": "Enter a new unique name", "min": 3, "max": 20}
+        elif name == "logo": params = {"label": "Edit Team Logo", "placeholder": "Paste a new URL or leave blank to use a default logo", "min": 10, "max": 99} 
+
+        self.input = nextcord.ui.TextInput(
+            label=params["label"],
+            style=nextcord.TextInputStyle.short,
+            placeholder=params["placeholder"],
+            min_length=params["min"],
+            max_length=params["max"]
+        )
+
+        self.input.callback = self.callback
+        self.add_item(self.input)
+
+    async def callback(self, interaction: nextcord.Interaction):
+        try:
+            # TODO:Add check to team name (see if taken)
+            print(f"RAW INPUT '{self.input.value}'")
+            updateTeam(interaction, self.team_name, field=f"team{self.name.capitalize()}", value=self.input.value)
+        except Exception as e: await errorResponse(e, command, interaction, error_traceback=traceback.format_exc())
 
 class team_Cog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -74,7 +122,7 @@ class team_Cog(commands.Cog):
 
             # Permissions | Admin, Captain, Player, Sub, Coach, Public = Everyone Else
             if interaction.user.guild_permissions.administrator: permission = "Admin"
-            if interaction.user.id == team_data['teamCaptain']: permission = "Captain"
+            if interaction.user.id == team_data['teamCaptain']: permission = "Captain" # override Admin if Captain
             elif interaction.user.id == team_data['teamPlayer2']: permission = "Player"
             elif interaction.user.id == team_data['teamPlayer3']: permission = "Player"
             elif interaction.user.id == team_data['teamSub1']: permission = "Sub"
@@ -98,7 +146,7 @@ class team_Cog(commands.Cog):
                 team_logo = placeholder_img
                 embed.set_thumbnail(url=team_logo)
 
-            await interaction.edit_original_message(embed=embed, view=ButtonView(interaction, permission))
+            await interaction.edit_original_message(embed=embed, view=DefaultView(interaction, team_name, permission))
 
         except Exception as e: await errorResponse(e, command, interaction, traceback.format_exc())
 
